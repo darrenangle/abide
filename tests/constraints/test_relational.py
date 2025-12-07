@@ -1,7 +1,5 @@
 """Tests for relational constraints."""
 
-import pytest
-
 from abide.constraints import (
     Acrostic,
     EndWordPattern,

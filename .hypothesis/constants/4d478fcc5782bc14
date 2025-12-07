@@ -1,4 +1,0 @@
-# file: /home/darren/abide/src/abide/constraints/__init__.py
-# hypothesis_version: 6.148.7
-
-['Acrostic', 'And', 'AtLeast', 'AtMost', 'BoundType', 'Constraint', 'ConstraintType', 'EndWordPattern', 'LineCount', 'Not', 'NumericBound', 'NumericConstraint', 'Or', 'Refrain', 'RhymeScheme', 'RubricItem', 'StanzaCount', 'StanzaSizes', 'SyllablesPerLine', 'TotalSyllables', 'VerificationResult', 'WeightedSum']

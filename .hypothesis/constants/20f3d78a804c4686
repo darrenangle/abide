@@ -1,4 +1,0 @@
-# file: /home/darren/abide/src/abide/verifiers/__init__.py
-# hypothesis_version: 6.148.7
-
-['PoeticFormReward', 'make_reward_function']

@@ -1,7 +1,5 @@
 """Tests for structural constraints."""
 
-import pytest
-
 from abide.constraints import (
     LineCount,
     NumericBound,
@@ -149,7 +147,7 @@ class TestStanzaSizes:
         """Villanelle: 5 tercets + 1 quatrain."""
         stanzas = []
         for i in range(5):
-            stanzas.append(f"L{i*3+1}\nL{i*3+2}\nL{i*3+3}")
+            stanzas.append(f"L{i * 3 + 1}\nL{i * 3 + 2}\nL{i * 3 + 3}")
         stanzas.append("L16\nL17\nL18\nL19")  # quatrain
         poem = "\n\n".join(stanzas)
 
@@ -161,7 +159,7 @@ class TestStanzaSizes:
         """Sestina: 6 sestets + 1 tercet (envoi)."""
         stanzas = []
         for i in range(6):
-            stanzas.append("\n".join([f"Line {i*6+j+1}" for j in range(6)]))
+            stanzas.append("\n".join([f"Line {i * 6 + j + 1}" for j in range(6)]))
         stanzas.append("L37\nL38\nL39")  # envoi
         poem = "\n\n".join(stanzas)
 

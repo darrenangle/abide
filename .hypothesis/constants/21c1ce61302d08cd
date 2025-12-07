@@ -1,4 +1,0 @@
-# file: /home/darren/abide/src/abide/forms/__init__.py
-# hypothesis_version: 6.148.7
-
-['Haiku', 'Limerick', 'PetrarchanSonnet', 'Sestina', 'ShakespeareanSonnet', 'Sonnet', 'SpenserianSonnet', 'Tanka', 'Villanelle']

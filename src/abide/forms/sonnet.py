@@ -6,19 +6,21 @@ Various sonnet forms: Shakespearean, Petrarchan, Spenserian.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from abide.constraints import (
     And,
     Constraint,
     ConstraintType,
     LineCount,
-    NumericBound,
     RhymeScheme,
-    StanzaCount,
     SyllablesPerLine,
     VerificationResult,
     WeightedSum,
 )
-from abide.primitives import PoemStructure
+
+if TYPE_CHECKING:
+    from abide.primitives import PoemStructure
 
 
 class Sonnet(Constraint):
@@ -62,6 +64,7 @@ class Sonnet(Constraint):
             tolerance=syllable_tolerance,
         )
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([self._line_count, self._syllables])
         else:
@@ -132,12 +135,15 @@ class ShakespeareanSonnet(Constraint):
             threshold=rhyme_threshold,
         )
 
+        self._constraint: Constraint
         if strict:
-            self._constraint = And([
-                self._line_count,
-                self._syllables,
-                self._rhyme_scheme,
-            ])
+            self._constraint = And(
+                [
+                    self._line_count,
+                    self._syllables,
+                    self._rhyme_scheme,
+                ]
+            )
         else:
             self._constraint = WeightedSum(
                 [
@@ -221,12 +227,15 @@ class PetrarchanSonnet(Constraint):
             threshold=rhyme_threshold,
         )
 
+        self._constraint: Constraint
         if strict:
-            self._constraint = And([
-                self._line_count,
-                self._syllables,
-                self._rhyme_scheme,
-            ])
+            self._constraint = And(
+                [
+                    self._line_count,
+                    self._syllables,
+                    self._rhyme_scheme,
+                ]
+            )
         else:
             self._constraint = WeightedSum(
                 [
@@ -297,12 +306,15 @@ class SpenserianSonnet(Constraint):
             threshold=rhyme_threshold,
         )
 
+        self._constraint: Constraint
         if strict:
-            self._constraint = And([
-                self._line_count,
-                self._syllables,
-                self._rhyme_scheme,
-            ])
+            self._constraint = And(
+                [
+                    self._line_count,
+                    self._syllables,
+                    self._rhyme_scheme,
+                ]
+            )
         else:
             self._constraint = WeightedSum(
                 [

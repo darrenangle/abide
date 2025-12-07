@@ -203,9 +203,7 @@ def parse_structure(text: str, normalize: bool = True) -> PoemStructure:
         if not raw_stanza:
             continue
 
-        stanza_lines = tuple(
-            line for line in raw_stanza.split("\n") if line.strip()
-        )
+        stanza_lines = tuple(line for line in raw_stanza.split("\n") if line.strip())
         if stanza_lines:
             stanzas.append(stanza_lines)
             all_lines.extend(stanza_lines)
@@ -247,7 +245,7 @@ def extract_end_word(line: str) -> str:
 
     # Remove trailing punctuation (preserving internal)
     # Handle quotes, parentheses, and standard punctuation
-    while line and line[-1] in '.,;:!?\'")-]}>':
+    while line and line[-1] in ".,;:!?'\")-]}>":
         line = line[:-1]
 
     line = line.strip()
@@ -262,7 +260,7 @@ def extract_end_word(line: str) -> str:
     word = words[-1].lower()
 
     # Remove any leading punctuation from the word
-    while word and word[0] in '\'"([{<':
+    while word and word[0] in "'\"([{<":
         word = word[1:]
 
     return word
