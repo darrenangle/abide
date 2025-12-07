@@ -25,6 +25,7 @@ from abide.constraints import (
     ConstraintType,
     VerificationResult,
 )
+from abide.specs import FormSpec
 from abide.version import __version__
 
 
@@ -45,6 +46,7 @@ def verify(poem: str, constraint: Constraint) -> VerificationResult:
 __all__ = [
     "Constraint",
     "ConstraintType",
+    "FormSpec",
     "VerificationResult",
     "__version__",
     "verify",

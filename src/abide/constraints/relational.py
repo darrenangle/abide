@@ -146,6 +146,12 @@ class RhymeScheme(Constraint):
     def describe(self) -> str:
         return f"Has rhyme scheme {self.scheme}"
 
+    def instruction(self) -> str:
+        """Plain English instruction for LLM prompts."""
+        # Format scheme with spaces for readability (e.g., ABAB CDCD -> "A B A B C D C D")
+        " ".join(self.scheme)
+        return f"Follow the rhyme scheme {self.scheme}, where lines with the same letter must rhyme (e.g., all A lines rhyme with each other)."
+
 
 class Refrain(Constraint):
     """
@@ -269,6 +275,11 @@ class Refrain(Constraint):
     def describe(self) -> str:
         positions = ", ".join(str(p + 1) for p in self.repeat_at)
         return f"Line {self.reference_line + 1} repeats at lines {positions}"
+
+    def instruction(self) -> str:
+        """Plain English instruction for LLM prompts."""
+        positions = ", ".join(str(p + 1) for p in self.repeat_at)
+        return f"Line {self.reference_line + 1} must be repeated exactly (as a refrain) at lines {positions}."
 
 
 class EndWordPattern(Constraint):
@@ -438,6 +449,15 @@ class EndWordPattern(Constraint):
             f"Has {self.num_words}-word end-word rotation pattern across {self.num_stanzas} stanzas"
         )
 
+    def instruction(self) -> str:
+        """Plain English instruction for LLM prompts."""
+        return (
+            f"Use exactly {self.num_words} end words in the first stanza, then rotate these same words "
+            f"through all {self.num_stanzas} stanzas following the sestina pattern: each stanza uses "
+            f"the same {self.num_words} words but in a different order, with the last word of each stanza "
+            f"becoming the end word of the first line in the next stanza."
+        )
+
 
 class Acrostic(Constraint):
     """
@@ -537,3 +557,7 @@ class Acrostic(Constraint):
 
     def describe(self) -> str:
         return f"First letters spell '{self.word}'"
+
+    def instruction(self) -> str:
+        """Plain English instruction for LLM prompts."""
+        return f"Write an acrostic where the first letter of each line spells out '{self.word}'."
