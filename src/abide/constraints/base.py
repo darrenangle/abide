@@ -65,6 +65,20 @@ class Constraint(ABC):
         """
         ...
 
+    def instruction(self) -> str:
+        """
+        Return plain English instruction for LLM prompts.
+
+        Should be phrased as a directive, e.g., "Write exactly 14 lines."
+        Default implementation converts describe() to instruction form.
+        Override for more specific/natural instructions.
+        """
+        desc = self.describe()
+        # Convert "Has X" to "Write with X" style
+        if desc.startswith("Has "):
+            return "Write a poem that has " + desc[4:].lower() + "."
+        return desc + "."
+
     def _ensure_structure(self, poem: str | PoemStructure) -> PoemStructure:
         """Convert string to PoemStructure if needed."""
         if isinstance(poem, str):
