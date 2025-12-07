@@ -3,14 +3,33 @@ Phonetic encoding and analysis for poetry.
 
 Provides phonetic encoders (Soundex, Metaphone) and CMU dictionary
 integration for pronunciation-based analysis including rhyme detection.
+
+Rhyme Types:
+- Perfect: Identical rhyme parts (night/light, cat/hat)
+- Near/Slant: Similar but not identical sounds (love/move, prove/shove)
+- Assonance: Matching vowels only (fate/lake, time/mine)
+- Consonance: Matching consonants only (blank/think, send/hand)
+- Family: Same consonant ending (cat/cut, bell/ball)
 """
 
 from __future__ import annotations
 
+from enum import Enum
 from functools import lru_cache
 
 import jellyfish
 import pronouncing
+
+
+class RhymeType(Enum):
+    """Types of rhyme for scoring."""
+
+    PERFECT = "perfect"  # Identical rhyme parts (highest)
+    NEAR = "near"  # Similar sounds, not identical
+    ASSONANCE = "assonance"  # Matching vowels only
+    CONSONANCE = "consonance"  # Matching final consonants
+    FAMILY = "family"  # Same consonant ending, different vowel
+    NONE = "none"  # No detectable rhyme
 
 # ============================================================================
 # Phonetic Encoders (via jellyfish)
@@ -324,16 +343,189 @@ def _suffix_rhyme(word1: str, word2: str, min_suffix: int = 2) -> bool:
     return common >= min_suffix
 
 
-def rhyme_score(word1: str, word2: str) -> float:
+# Standard CMU vowel phonemes (without stress markers)
+CMU_VOWELS = frozenset([
+    "AA", "AE", "AH", "AO", "AW", "AY", "EH", "ER", "EY", "IH",
+    "IY", "OW", "OY", "UH", "UW",
+])
+
+
+def _is_vowel_phoneme(phoneme: str) -> bool:
+    """Check if a phoneme is a vowel (strip stress first)."""
+    base = "".join(c for c in phoneme if not c.isdigit())
+    return base in CMU_VOWELS
+
+
+def _extract_vowels(phonemes: tuple[str, ...]) -> tuple[str, ...]:
+    """Extract just the vowel phonemes (without stress)."""
+    return tuple(
+        "".join(c for c in p if not c.isdigit())
+        for p in phonemes
+        if _is_vowel_phoneme(p)
+    )
+
+
+def _extract_consonants(phonemes: tuple[str, ...]) -> tuple[str, ...]:
+    """Extract just the consonant phonemes."""
+    return tuple(p for p in phonemes if not _is_vowel_phoneme(p))
+
+
+def _get_final_consonants(phonemes: tuple[str, ...]) -> tuple[str, ...]:
+    """Get consonants after the last vowel."""
+    result = []
+    found_last_vowel = False
+    for p in reversed(phonemes):
+        if _is_vowel_phoneme(p):
+            found_last_vowel = True
+            break
+        result.insert(0, p)
+    return tuple(result) if found_last_vowel else ()
+
+
+def classify_rhyme(word1: str, word2: str) -> tuple[RhymeType, float]:
     """
-    Compute a rhyme similarity score between two words.
+    Classify the type and quality of rhyme between two words.
+
+    Returns both the rhyme type and a confidence score for that classification.
 
     Args:
         word1: First word
         word2: Second word
 
     Returns:
-        Score in [0, 1] where 1.0 = perfect rhyme
+        Tuple of (RhymeType, confidence score 0-1)
+
+    Examples:
+        >>> classify_rhyme("night", "light")
+        (RhymeType.PERFECT, 1.0)
+        >>> classify_rhyme("love", "move")[0]
+        RhymeType.NEAR
+        >>> classify_rhyme("cat", "dog")[0]
+        RhymeType.NONE
+    """
+    if not word1 or not word2:
+        return (RhymeType.NONE, 0.0)
+
+    if word1.lower() == word2.lower():
+        return (RhymeType.NONE, 0.0)  # Same word doesn't rhyme
+
+    phonemes1 = get_phonemes(word1)
+    phonemes2 = get_phonemes(word2)
+
+    if not phonemes1 or not phonemes2:
+        # Fallback classification for words not in CMU
+        return _classify_rhyme_fallback(word1, word2)
+
+    # Check all pronunciation combinations, return best
+    best_type = RhymeType.NONE
+    best_score = 0.0
+
+    for p1 in phonemes1:
+        for p2 in phonemes2:
+            rhyme1 = strip_stress(get_rhyme_part(p1))
+            rhyme2 = strip_stress(get_rhyme_part(p2))
+
+            # Perfect rhyme: identical rhyme parts
+            if rhyme1 == rhyme2:
+                return (RhymeType.PERFECT, 1.0)
+
+            # Check assonance (matching vowels in rhyme part)
+            vowels1 = _extract_vowels(rhyme1)
+            vowels2 = _extract_vowels(rhyme2)
+
+            # Check consonance (matching final consonants)
+            final_cons1 = _get_final_consonants(rhyme1)
+            final_cons2 = _get_final_consonants(rhyme2)
+
+            # Family rhyme: same final consonants, different vowel
+            if final_cons1 and final_cons1 == final_cons2 and vowels1 != vowels2:
+                if best_type in (RhymeType.NONE,):
+                    best_type = RhymeType.FAMILY
+                    best_score = 0.7
+
+            # Assonance: matching vowels
+            if vowels1 and vowels1 == vowels2:
+                if best_type in (RhymeType.NONE, RhymeType.FAMILY):
+                    best_type = RhymeType.ASSONANCE
+                    best_score = 0.6
+
+            # Consonance: matching final consonants (even if vowels also match partially)
+            if final_cons1 and final_cons1 == final_cons2:
+                if best_type in (RhymeType.NONE,):
+                    best_type = RhymeType.CONSONANCE
+                    best_score = 0.5
+
+            # Near rhyme: partial phoneme match
+            if rhyme1 and rhyme2:
+                max_len = max(len(rhyme1), len(rhyme2))
+                matches = 0
+                for i in range(1, min(len(rhyme1), len(rhyme2)) + 1):
+                    if rhyme1[-i] == rhyme2[-i]:
+                        matches += 1
+                    else:
+                        break
+                if matches > 0:
+                    partial = matches / max_len
+                    if partial >= 0.5 and best_type in (RhymeType.NONE, RhymeType.CONSONANCE):
+                        best_type = RhymeType.NEAR
+                        best_score = max(best_score, 0.4 + partial * 0.4)
+
+    return (best_type, best_score)
+
+
+def _classify_rhyme_fallback(word1: str, word2: str) -> tuple[RhymeType, float]:
+    """Fallback rhyme classification using suffix matching."""
+    w1, w2 = word1.lower(), word2.lower()
+
+    # Find longest common suffix
+    common = 0
+    for i in range(1, min(len(w1), len(w2)) + 1):
+        if w1[-i] == w2[-i]:
+            common = i
+        else:
+            break
+
+    if common >= 3:
+        return (RhymeType.PERFECT, 0.9)
+    elif common >= 2:
+        return (RhymeType.NEAR, 0.6)
+    elif common >= 1:
+        return (RhymeType.FAMILY, 0.3)
+
+    return (RhymeType.NONE, 0.0)
+
+
+# Default rhyme type weights for scoring
+DEFAULT_RHYME_WEIGHTS: dict[RhymeType, float] = {
+    RhymeType.PERFECT: 1.0,
+    RhymeType.NEAR: 0.7,
+    RhymeType.ASSONANCE: 0.5,
+    RhymeType.CONSONANCE: 0.4,
+    RhymeType.FAMILY: 0.6,
+    RhymeType.NONE: 0.0,
+}
+
+
+def rhyme_score(
+    word1: str,
+    word2: str,
+    *,
+    rhyme_weights: dict[RhymeType, float] | None = None,
+    require_type: RhymeType | None = None,
+) -> float:
+    """
+    Compute a rhyme similarity score between two words.
+
+    Args:
+        word1: First word
+        word2: Second word
+        rhyme_weights: Custom weights for each rhyme type (default: perfect=1.0,
+            near=0.7, assonance=0.5, consonance=0.4, family=0.6, none=0.0)
+        require_type: If specified, only score this rhyme type as 1.0,
+            others as 0.0. Use for strict form validation.
+
+    Returns:
+        Score in [0, 1] where 1.0 = perfect rhyme (or required type match)
 
     Examples:
         >>> rhyme_score("night", "light") > 0.9
@@ -342,6 +534,12 @@ def rhyme_score(word1: str, word2: str) -> float:
         True
         >>> rhyme_score("cat", "dog") < 0.3
         True
+        >>> # Only count perfect rhymes
+        >>> rhyme_score("love", "move", require_type=RhymeType.PERFECT)
+        0.0
+        >>> # Accept near rhymes at full credit
+        >>> rhyme_score("love", "move", rhyme_weights={RhymeType.NEAR: 1.0})
+        1.0
     """
     if not word1 or not word2:
         return 0.0
@@ -349,47 +547,18 @@ def rhyme_score(word1: str, word2: str) -> float:
     if word1.lower() == word2.lower():
         return 0.0  # Same word doesn't rhyme
 
-    phonemes1 = get_phonemes(word1)
-    phonemes2 = get_phonemes(word2)
+    rhyme_type, confidence = classify_rhyme(word1, word2)
 
-    if not phonemes1 or not phonemes2:
-        # Fallback to suffix matching
-        w1, w2 = word1.lower(), word2.lower()
-        common = 0
-        for i in range(1, min(len(w1), len(w2)) + 1):
-            if w1[-i] == w2[-i]:
-                common = i
-            else:
-                break
-        if common == 0:
-            return 0.0
-        avg_len = (len(w1) + len(w2)) / 2
-        return min(1.0, common / (avg_len * 0.5))
+    # If requiring specific type, binary score
+    if require_type is not None:
+        return 1.0 if rhyme_type == require_type else 0.0
 
-    # Find best rhyme score across all pronunciation combinations
-    best_score = 0.0
+    # Use custom or default weights
+    weights = rhyme_weights if rhyme_weights is not None else DEFAULT_RHYME_WEIGHTS
 
-    for p1 in phonemes1:
-        for p2 in phonemes2:
-            rhyme1 = strip_stress(get_rhyme_part(p1))
-            rhyme2 = strip_stress(get_rhyme_part(p2))
-
-            if rhyme1 == rhyme2:
-                best_score = max(best_score, 1.0)
-            else:
-                # Partial credit based on matching phonemes from end
-                max_len = max(len(rhyme1), len(rhyme2))
-                if max_len > 0:
-                    matches = 0
-                    for i in range(1, min(len(rhyme1), len(rhyme2)) + 1):
-                        if rhyme1[-i] == rhyme2[-i]:
-                            matches += 1
-                        else:
-                            break
-                    partial = matches / max_len
-                    best_score = max(best_score, partial)
-
-    return best_score
+    # Get weight for detected type, multiply by confidence
+    base_weight = weights.get(rhyme_type, 0.0)
+    return base_weight * confidence
 
 
 # ============================================================================

@@ -48,7 +48,8 @@ class Villanelle(Constraint):
     constraint_type = ConstraintType.COMPOSITE
 
     # Standard villanelle rhyme scheme (A=1,3 position rhymes, B=2 position)
-    RHYME_SCHEME = "ABAABABAABABAABAA"
+    # 19 lines: ABA ABA ABA ABA ABA ABAA
+    RHYME_SCHEME = "ABAABAABAABAABAABAA"
 
     def __init__(
         self,
@@ -93,11 +94,12 @@ class Villanelle(Constraint):
             threshold=refrain_threshold,
         )
 
-        # Rhyme scheme
+        # Rhyme scheme - allow identical since refrains repeat
         self._rhyme_scheme = RhymeScheme(
             self.RHYME_SCHEME,
             weight=1.5,
             threshold=rhyme_threshold,
+            allow_identical=True,
         )
 
         # Compose constraints

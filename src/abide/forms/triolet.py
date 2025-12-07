@@ -90,10 +90,12 @@ class Triolet(Constraint):
         )
 
         # Rhyme scheme (A rhymes with A, B rhymes with B)
+        # allow_identical=True since refrains repeat exact lines
         self._rhyme_scheme = RhymeScheme(
             self.RHYME_SCHEME,
             weight=1.5,
             threshold=rhyme_threshold,
+            allow_identical=True,
         )
 
         # Compose constraints

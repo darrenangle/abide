@@ -11,6 +11,9 @@ This module provides foundational tools for analyzing text:
 """
 
 from abide.primitives.phonetics import (
+    DEFAULT_RHYME_WEIGHTS,
+    RhymeType,
+    classify_rhyme,
     count_line_syllables,
     count_syllables,
     get_line_stress_pattern,
@@ -49,10 +52,13 @@ from abide.primitives.similarity import (
 )
 
 __all__ = [
+    "DEFAULT_RHYME_WEIGHTS",
     "NormalizationConfig",
     "NormalizationMode",
     "NormalizationResult",
     "PoemStructure",
+    "RhymeType",
+    "classify_rhyme",
     "count_line_syllables",
     "count_syllables",
     "count_words",
