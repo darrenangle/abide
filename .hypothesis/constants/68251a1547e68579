@@ -1,0 +1,4 @@
+# file: /home/darren/abide/src/abide/forms/sonnet.py
+# hypothesis_version: 6.148.7
+
+[0.6, 1.0, 1.5, 2.0, 'ABABBCBCCDCDEE', 'ABABCDCDEFEFGG', 'ABBAABBA', 'ABBAABBACDECDE', 'CDECDE', 'Petrarchan Sonnet', 'Shakespearean Sonnet', 'Sonnet', 'Spenserian Sonnet']
