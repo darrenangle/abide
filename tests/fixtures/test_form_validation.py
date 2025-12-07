@@ -196,11 +196,11 @@ class TestSestinaValidation:
     """Validate Sestina form against examples."""
 
     def test_synthetic_line_count(self):
-        """Sestina should have 38 non-blank lines (36 + 2 envoi)."""
+        """Sestina should have 39 non-blank lines (36 + 3 envoi)."""
         from abide.primitives import parse_structure
 
         structure = parse_structure(SESTINA_SYNTHETIC_PERFECT)
-        assert structure.line_count == 38  # 36 + 2 envoi lines
+        assert structure.line_count == 39  # 36 + 3 envoi lines
 
     def test_synthetic_perfect_lenient(self):
         """Synthetic perfect sestina should score well."""

@@ -130,29 +130,32 @@ They also serve who only stand and wait."""
 VILLANELLE_SYNTHETIC_PERFECT = """\
 The stars will shine when day is done
 And shadows fall across the land
-We walk beneath the setting sun
+We walk beneath the fading sun
 
-The birds return when spring has come
-The flowers bloom on every hand
+The birds that sing have now begun
+To nest where gentle breezes fanned
 The stars will shine when day is done
 
 The rivers flow and waters run
-Through valleys wide and meadows grand
-We walk beneath the setting sun
+Through valleys by the master planned
+We walk beneath the fading sun
 
 What once was lost cannot be won
-Yet still we try to understand
+Yet still we reach with open hand
 The stars will shine when day is done
 
-Our journey here has just begun
+Our journey here is never done
 Though time slips by like grains of sand
-We walk beneath the setting sun
+We walk beneath the fading sun
 
 When all our earthly work is spun
-And we have done what fate has planned
+And we have made our final stand
 The stars will shine when day is done
-We walk beneath the setting sun"""
-# Synthetic: 19 lines, ABA scheme, proper refrains at 1/6/12/18 and 3/9/15/19
+We walk beneath the fading sun"""
+# Synthetic: 19 lines, ABA scheme
+# A rhymes: done/sun/begun/run/won/done/spun/done/sun (all rhyme with -un sound)
+# B rhymes: land/fanned/planned/hand/sand/stand (all rhyme with -and sound)
+# Refrains: line 1 at 6,12,18 and line 3 at 9,15,19
 
 
 # =============================================================================
@@ -203,8 +206,11 @@ Forever walking through the fragrant flowers
 Forever resting underneath the trees
 
 The stream flows on through dreams beneath the trees
-The flowers bloom and hours drift on the breeze"""
-# Synthetic: 39 lines, end words rotate per sestina pattern
+While flowers bloom and hours pass with the breeze
+And all my dreams drift softly through the hours"""
+# Synthetic: 39 lines (6 sestets of 6 lines + 3-line envoi)
+# End words: trees, stream, flowers, breeze, dreams, hours
+# Envoi uses all 6 end words in 3 lines (2 per line)
 # End words: trees, stream, flowers, breeze, dreams, hours
 
 
@@ -281,9 +287,9 @@ I watch and wait beneath the evening star
 And listen to the rustling of the leaves
 
 The wind begins to whisper through the eaves
-I sit alone and read by candlelight
+The rain falls soft upon the roof tonight
 And listen to the rustling of the leaves
-The rain falls soft upon the roof tonight"""
+I sit alone and read by candlelight"""
 # Synthetic: 4 quatrains, L2->L1, L4->L3, circular ending
 
 
@@ -313,14 +319,18 @@ The birds begin their chorus sharp and shrill
 
 Across the fields the gentle breezes blow
 And carry scents of flowers on the air
-The river winds its way through rocks below
+The river sparkles in the morning glow
 
 The trees stand tall and green beyond compare
 Their branches reaching upward to the sky
 The world awakes and life is everywhere
 
 And so another day goes drifting by"""
-# Synthetic: ABA BCB CDC DED + final line
+# Synthetic: ABA BCB CDC D
+# A rhymes: hill/shrill
+# B rhymes: below/blow/glow
+# C rhymes: air/compare/everywhere
+# D rhymes: sky/by
 
 
 # =============================================================================
@@ -328,22 +338,23 @@ And so another day goes drifting by"""
 # =============================================================================
 
 GHAZAL_SYNTHETIC_PERFECT = """\
-The moon hangs low and silver in the night so still
-The stars like diamonds scattered shine so bright and still
+The moon hangs low and bright tonight above
+The stars shine clear and light tonight above
 
-I walk alone through empty streets without a sound
-My footsteps echo softly in the night so still
+I walk alone through empty streets at dusk
+My path is lit by sight tonight above
 
-The wind has gone to sleep among the willow trees
-The pond reflects the heavens clear and bright and still
+The wind has gone to sleep within the trees
+The world is calm and right tonight above
 
-What dreams may come to those who wait beside the door
-When all the world grows quiet in the night so still
+What dreams may come to those who wait for dawn
+When stars take flight tonight above
 
-The poet writes these verses by the candlelight
-And waits for inspiration in the night so still"""
+The poet writes these words with all his might
+His verses take their flight tonight above"""
 # Synthetic: 5 couplets, AA BA CA DA EA pattern
-# Radif (refrain): "so still" / "and still"
+# Radif (refrain): "tonight above" - identical ending on all rhyming lines
+# Qafiya (rhyme): bright/light/sight/right/flight/might/flight - all rhyme with "-ight" sound
 
 
 # =============================================================================
@@ -398,11 +409,12 @@ Of having discovered sodium"""
 # Edmund Clerihew Bentley (1875-1956), "Biography for Beginners" (1905) - public domain
 
 CLERIHEW_SYNTHETIC_PERFECT = """\
-William Shakespeare
-Wrote plays without fear
-He penned them with wit
-And became quite a hit"""
+Edgar Allan Poe
+Wrote tales of woe and snow
+His stories caused great fright
+With ravens in the night"""
 # Synthetic: AABB, first line is a name
+# Poe/snow rhyme (1.0), fright/night rhyme (1.0)
 
 
 # =============================================================================
@@ -411,14 +423,14 @@ And became quite a hit"""
 
 BLUES_SYNTHETIC_PERFECT = """\
 Woke up this morning with the sun in my eyes
-I said I woke up this morning, sun was in my eyes
-Looked out my window, watched the blue birds rise
+Woke up this morning with the sun in my eyes
+Looked out my window and I watched the blue birds rise
 
 My baby left me standing at the door
-Yes my baby left me standing at that door
+My baby left me standing at the door
 Now I don't know what I'm living for
 
-The rain keeps falling on this empty street
-I said the rain keeps falling on my street
-And I got nothing left but these tired feet"""
-# Synthetic: 3 AAB stanzas with L1 repeated/varied as L2
+The rain keeps falling down on this old street
+The rain keeps falling down on this old street
+And I got nothing left but my tired feet"""
+# Synthetic: 3 AAB stanzas with L1 repeated exactly as L2
