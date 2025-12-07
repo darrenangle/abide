@@ -52,6 +52,10 @@ class LineCount(NumericConstraint):
     def _get_criterion_name(self) -> str:
         return "lines"
 
+    def instruction(self) -> str:
+        """Plain English instruction for LLM prompts."""
+        return f"Write exactly {self.bound.describe()} lines."
+
 
 class StanzaCount(NumericConstraint):
     """
@@ -80,6 +84,10 @@ class StanzaCount(NumericConstraint):
 
     def _get_criterion_name(self) -> str:
         return "stanzas"
+
+    def instruction(self) -> str:
+        """Plain English instruction for LLM prompts."""
+        return f"Organize the poem into {self.bound.describe()} stanzas (verse paragraphs separated by blank lines)."
 
 
 class StanzaSizes(Constraint):
@@ -180,6 +188,13 @@ class StanzaSizes(Constraint):
         sizes_str = ", ".join(str(s) for s in self.expected_sizes)
         return f"Has stanza sizes [{sizes_str}]"
 
+    def instruction(self) -> str:
+        """Plain English instruction for LLM prompts."""
+        parts = []
+        for i, size in enumerate(self.expected_sizes):
+            parts.append(f"stanza {i + 1} has {size} lines")
+        return "Structure the stanzas so that " + ", ".join(parts) + "."
+
 
 class SyllablesPerLine(Constraint):
     """
@@ -272,6 +287,15 @@ class SyllablesPerLine(Constraint):
             syllables_str += ", ..."
         return f"Has syllable pattern [{syllables_str}]"
 
+    def instruction(self) -> str:
+        """Plain English instruction for LLM prompts."""
+        if len(set(self.expected_syllables)) == 1:
+            count = self.expected_syllables[0]
+            tolerance_str = f" (plus or minus {self.tolerance})" if self.tolerance else ""
+            return f"Each line should have approximately {count} syllables{tolerance_str}."
+        syllables_str = "-".join(str(s) for s in self.expected_syllables)
+        return f"Follow the syllable pattern {syllables_str} (syllables per line in order)."
+
 
 class TotalSyllables(NumericConstraint):
     """
@@ -296,3 +320,7 @@ class TotalSyllables(NumericConstraint):
 
     def _get_criterion_name(self) -> str:
         return "total syllables"
+
+    def instruction(self) -> str:
+        """Plain English instruction for LLM prompts."""
+        return f"The entire poem should contain {self.bound.describe()} syllables total."
