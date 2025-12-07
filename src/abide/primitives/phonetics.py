@@ -8,14 +8,9 @@ integration for pronunciation-based analysis including rhyme detection.
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING
 
 import jellyfish
 import pronouncing
-
-if TYPE_CHECKING:
-    pass
-
 
 # ============================================================================
 # Phonetic Encoders (via jellyfish)
@@ -148,7 +143,7 @@ def phonetic_similarity(word1: str, word2: str) -> float:
         scores.append(1.0)
     else:
         # Partial credit for partial match
-        matching = sum(c1 == c2 for c1, c2 in zip(s1, s2))
+        matching = sum(c1 == c2 for c1, c2 in zip(s1, s2, strict=False))
         scores.append(matching / 4)
 
     # Metaphone comparison

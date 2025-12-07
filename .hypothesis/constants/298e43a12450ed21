@@ -1,4 +1,0 @@
-# file: /home/darren/abide/src/abide/primitives/__init__.py
-# hypothesis_version: 6.148.7
-
-['NormalizationConfig', 'NormalizationMode', 'NormalizationResult', 'PoemStructure', 'count_line_syllables', 'count_syllables', 'count_words', 'extract_end_word', 'extract_end_words', 'get_phonemes', 'get_rhyme_part', 'get_stress_pattern', 'hamming_distance', 'jaro_similarity', 'lcs_similarity', 'levenshtein_distance', 'match_rating_codex', 'metaphone', 'normalize_whitespace', 'nysiis', 'parse_structure', 'phonetic_similarity', 'rhyme_score', 'soundex', 'strip_stress', 'tokenize_line', 'words_rhyme']

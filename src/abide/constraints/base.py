@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from abide.constraints.types import (
     BoundType,
@@ -20,9 +20,6 @@ from abide.constraints.types import (
     VerificationResult,
 )
 from abide.primitives import PoemStructure, parse_structure
-
-if TYPE_CHECKING:
-    pass
 
 
 class Constraint(ABC):

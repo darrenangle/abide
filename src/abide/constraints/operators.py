@@ -6,7 +6,7 @@ Logical operators (AND, OR, NOT) and aggregation (WeightedSum, AtLeast).
 
 from __future__ import annotations
 
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from abide.constraints.base import Constraint
 from abide.constraints.types import (
@@ -14,7 +14,11 @@ from abide.constraints.types import (
     RubricItem,
     VerificationResult,
 )
-from abide.primitives import PoemStructure
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from abide.primitives import PoemStructure
 
 
 class And(Constraint):
@@ -279,10 +283,7 @@ class AtLeast(Constraint):
         overall_passed = passed_count >= self.n
 
         # Score based on how many passed relative to required
-        if self.n == 0:
-            overall_score = 1.0
-        else:
-            overall_score = min(1.0, passed_count / self.n)
+        overall_score = 1.0 if self.n == 0 else min(1.0, passed_count / self.n)
 
         # Combine rubrics
         rubric: list[RubricItem] = []

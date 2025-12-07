@@ -12,15 +12,15 @@ Example:
     >>> score = reward_fn("An old silent pond\\nA frog jumps in\\nSplash!")
 """
 
-from abide.verifiers.reward import PoeticFormReward, make_reward_function
 from abide.verifiers.evals import (
     AbideMajorPoeticForms,
     make_poetic_forms_eval,
 )
+from abide.verifiers.reward import PoeticFormReward, make_reward_function
 
 __all__ = [
-    "PoeticFormReward",
-    "make_reward_function",
     "AbideMajorPoeticForms",
+    "PoeticFormReward",
     "make_poetic_forms_eval",
+    "make_reward_function",
 ]

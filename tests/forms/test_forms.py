@@ -1,7 +1,5 @@
 """Tests for form templates using ground truth poems."""
 
-import pytest
-
 from abide import verify
 from abide.forms import (
     Haiku,
@@ -14,7 +12,6 @@ from abide.forms import (
     Tanka,
     Villanelle,
 )
-
 
 # Ground truth poems for testing
 BASHO_HAIKU = """An old silent pond

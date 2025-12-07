@@ -26,12 +26,12 @@ from abide.forms.villanelle import Villanelle
 
 __all__ = [
     "Haiku",
+    "Limerick",
+    "PetrarchanSonnet",
+    "Sestina",
+    "ShakespeareanSonnet",
+    "Sonnet",
+    "SpenserianSonnet",
     "Tanka",
     "Villanelle",
-    "Sestina",
-    "Sonnet",
-    "ShakespeareanSonnet",
-    "PetrarchanSonnet",
-    "SpenserianSonnet",
-    "Limerick",
 ]

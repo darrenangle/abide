@@ -8,9 +8,8 @@ from all primitive form constraints.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Iterator, Sequence
+from typing import TYPE_CHECKING, Any
 
-from abide.constraints import Constraint, VerificationResult, WeightedSum
 from abide.forms import (
     Haiku,
     Limerick,
@@ -21,7 +20,12 @@ from abide.forms import (
     Tanka,
     Villanelle,
 )
-from abide.verifiers.reward import PoeticFormReward, RewardOutput
+from abide.verifiers.reward import PoeticFormReward
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
+
+    from abide.constraints import Constraint, VerificationResult
 
 
 @dataclass
@@ -226,10 +230,7 @@ class AbideMajorPoeticForms:
 
         # Compute weighted aggregate
         total_weight = sum(item.weight for item in self._items)
-        weighted_sum = sum(
-            scores[item.name] * item.weight
-            for item in self._items
-        )
+        weighted_sum = sum(scores[item.name] * item.weight for item in self._items)
         aggregate_score = weighted_sum / total_weight if total_weight > 0 else 0.0
 
         return EvalResult(
@@ -265,8 +266,7 @@ class AbideMajorPoeticForms:
     def get_all_reward_functions(self) -> dict[str, PoeticFormReward]:
         """Get reward functions for all forms."""
         return {
-            item.name: PoeticFormReward(item.constraint, name=item.name)
-            for item in self._items
+            item.name: PoeticFormReward(item.constraint, name=item.name) for item in self._items
         }
 
     def describe(self) -> str:
@@ -296,9 +296,6 @@ def make_poetic_forms_eval(
 
     if forms is not None:
         # Filter to requested forms
-        eval_suite._items = [
-            item for item in eval_suite._items
-            if item.name in forms
-        ]
+        eval_suite._items = [item for item in eval_suite._items if item.name in forms]
 
     return eval_suite

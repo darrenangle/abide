@@ -6,6 +6,8 @@ A humorous five-line poem with AABBA rhyme scheme.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from abide.constraints import (
     And,
     Constraint,
@@ -16,7 +18,9 @@ from abide.constraints import (
     VerificationResult,
     WeightedSum,
 )
-from abide.primitives import PoemStructure
+
+if TYPE_CHECKING:
+    from abide.primitives import PoemStructure
 
 
 class Limerick(Constraint):
@@ -72,12 +76,15 @@ class Limerick(Constraint):
             threshold=rhyme_threshold,
         )
 
+        self._constraint: Constraint
         if strict:
-            self._constraint = And([
-                self._line_count,
-                self._stanza_count,
-                self._rhyme_scheme,
-            ])
+            self._constraint = And(
+                [
+                    self._line_count,
+                    self._stanza_count,
+                    self._rhyme_scheme,
+                ]
+            )
         else:
             self._constraint = WeightedSum(
                 [

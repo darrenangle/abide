@@ -354,9 +354,7 @@ def words(draw: st.DrawFn, min_length: int = 1, max_length: int = 12) -> str:
     import string
 
     length = draw(st.integers(min_value=min_length, max_value=max_length))
-    return draw(
-        st.text(alphabet=string.ascii_lowercase, min_size=length, max_size=length)
-    )
+    return draw(st.text(alphabet=string.ascii_lowercase, min_size=length, max_size=length))
 
 
 @st.composite
@@ -437,9 +435,5 @@ def pytest_configure(config: Any) -> None:
     config.addinivalue_line(
         "markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')"
     )
-    config.addinivalue_line(
-        "markers", "integration: marks tests requiring external resources"
-    )
-    config.addinivalue_line(
-        "markers", "e2e: end-to-end tests using real poem ground truth"
-    )
+    config.addinivalue_line("markers", "integration: marks tests requiring external resources")
+    config.addinivalue_line("markers", "e2e: end-to-end tests using real poem ground truth")

@@ -34,31 +34,26 @@ from abide.constraints.types import (
 )
 
 __all__ = [
-    # Types
-    "ConstraintType",
+    "Acrostic",
+    "And",
+    "AtLeast",
+    "AtMost",
     "BoundType",
-    "NumericBound",
-    "RubricItem",
-    "VerificationResult",
-    # Base
     "Constraint",
-    "NumericConstraint",
-    # Structural
+    "ConstraintType",
+    "EndWordPattern",
     "LineCount",
+    "Not",
+    "NumericBound",
+    "NumericConstraint",
+    "Or",
+    "Refrain",
+    "RhymeScheme",
+    "RubricItem",
     "StanzaCount",
     "StanzaSizes",
     "SyllablesPerLine",
     "TotalSyllables",
-    # Relational
-    "RhymeScheme",
-    "Refrain",
-    "EndWordPattern",
-    "Acrostic",
-    # Operators
-    "And",
-    "Or",
-    "Not",
+    "VerificationResult",
     "WeightedSum",
-    "AtLeast",
-    "AtMost",
 ]

@@ -1,4 +1,0 @@
-# file: /home/darren/abide/src/abide/constraints/types.py
-# hypothesis_version: 6.148.7
-
-['FAIL', 'PASS', 'actual', 'constraint_name', 'constraint_type', 'criterion', 'details', 'expected', 'explanation', 'passed', 'rubric', 'score', 'unknown bound']

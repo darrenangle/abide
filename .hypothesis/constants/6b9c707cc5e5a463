@@ -1,4 +1,0 @@
-# file: /home/darren/abide/src/abide/verifiers/evals.py
-# hypothesis_version: 6.148.7
-
-[0.0, 0.6, 1.0, 1.5, 2.0, '=', 'all_scores', 'form_count', 'haiku', 'limerick', 'petrarchan_sonnet', 'sestina', 'shakespearean_sonnet', 'spenserian_sonnet', 'tanka', 'villanelle']

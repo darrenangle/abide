@@ -1,4 +1,0 @@
-# file: /home/darren/abide/src/abide/verifiers/reward.py
-# hypothesis_version: 6.148.7
-
-[0.0, 1.0, 'constraint_name', 'constraint_type', 'details', 'metadata', 'passed', 'rubric', 'score']

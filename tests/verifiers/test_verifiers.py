@@ -2,7 +2,7 @@
 
 import pytest
 
-from abide.forms import Haiku, ShakespeareanSonnet, Villanelle
+from abide.forms import Haiku, Villanelle
 from abide.verifiers import (
     AbideMajorPoeticForms,
     PoeticFormReward,
@@ -10,7 +10,6 @@ from abide.verifiers import (
     make_reward_function,
 )
 from abide.verifiers.reward import RewardOutput
-
 
 # Ground truth poems
 BASHO_HAIKU = """An old silent pond

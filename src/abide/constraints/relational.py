@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
-from typing import Sequence
+from typing import TYPE_CHECKING, ClassVar
 
 from abide.constraints.base import Constraint
 from abide.constraints.types import (
@@ -17,12 +17,16 @@ from abide.constraints.types import (
     VerificationResult,
 )
 from abide.primitives import (
-    PoemStructure,
     extract_end_words,
     jaro_winkler_similarity,
     normalized_levenshtein,
     rhyme_score,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from abide.primitives import PoemStructure
 
 
 class RhymeScheme(Constraint):
@@ -91,10 +95,8 @@ class RhymeScheme(Constraint):
                     line_j, word_j = group[j]
 
                     if word_i.lower() == word_j.lower():
-                        if self.allow_identical:
-                            score = 1.0
-                        else:
-                            score = 0.5  # Identical words get partial credit
+                        # Identical words: full credit if allowed, partial otherwise
+                        score = 1.0 if self.allow_identical else 0.5
                     else:
                         score = rhyme_score(word_i, word_j)
 
@@ -281,7 +283,7 @@ class EndWordPattern(Constraint):
     constraint_type = ConstraintType.RELATIONAL
 
     # Sestina rotation: position i in new stanza gets word from position ROTATION[i]
-    SESTINA_ROTATION = [5, 0, 4, 1, 3, 2]
+    SESTINA_ROTATION: ClassVar[list[int]] = [5, 0, 4, 1, 3, 2]
 
     def __init__(
         self,
@@ -432,7 +434,9 @@ class EndWordPattern(Constraint):
         return jaro_winkler_similarity(word1.lower(), word2.lower())
 
     def describe(self) -> str:
-        return f"Has {self.num_words}-word end-word rotation pattern across {self.num_stanzas} stanzas"
+        return (
+            f"Has {self.num_words}-word end-word rotation pattern across {self.num_stanzas} stanzas"
+        )
 
 
 class Acrostic(Constraint):

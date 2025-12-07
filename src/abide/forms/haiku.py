@@ -6,6 +6,8 @@ Japanese short-form poetry with strict syllable requirements.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from abide.constraints import (
     And,
     Constraint,
@@ -16,7 +18,9 @@ from abide.constraints import (
     VerificationResult,
     WeightedSum,
 )
-from abide.primitives import PoemStructure
+
+if TYPE_CHECKING:
+    from abide.primitives import PoemStructure
 
 
 class Haiku(Constraint):
@@ -60,10 +64,9 @@ class Haiku(Constraint):
             tolerance=syllable_tolerance,
         )
 
+        self._constraint: Constraint
         if strict:
-            self._constraint = And(
-                [self._line_count, self._stanza_count, self._syllables]
-            )
+            self._constraint = And([self._line_count, self._stanza_count, self._syllables])
         else:
             self._constraint = WeightedSum(
                 [
@@ -121,10 +124,9 @@ class Tanka(Constraint):
             tolerance=syllable_tolerance,
         )
 
+        self._constraint: Constraint
         if strict:
-            self._constraint = And(
-                [self._line_count, self._stanza_count, self._syllables]
-            )
+            self._constraint = And([self._line_count, self._stanza_count, self._syllables])
         else:
             self._constraint = WeightedSum(
                 [

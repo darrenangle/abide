@@ -8,9 +8,12 @@ verifiers-compatible reward function.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
-from abide.constraints import Constraint, VerificationResult
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from abide.constraints import Constraint, VerificationResult
 
 
 @dataclass

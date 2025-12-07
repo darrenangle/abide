@@ -1,4 +1,0 @@
-# file: /home/darren/abide/src/abide/primitives/preprocessing.py
-# hypothesis_version: 6.148.7
-
-[0.0, 0.001, 0.005, 0.01, 0.02, 1.0, '\'"([{<', '.,;:!?\'")-]}>', '\\n\\s*\\n', '\\n{3,}', 'fuzzy', 'lenient', 'strict']

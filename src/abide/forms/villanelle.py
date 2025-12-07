@@ -6,6 +6,8 @@ A 19-line poem with two refrains and a specific rhyme scheme.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from abide.constraints import (
     And,
     Constraint,
@@ -18,7 +20,9 @@ from abide.constraints import (
     VerificationResult,
     WeightedSum,
 )
-from abide.primitives import PoemStructure
+
+if TYPE_CHECKING:
+    from abide.primitives import PoemStructure
 
 
 class Villanelle(Constraint):
@@ -97,15 +101,18 @@ class Villanelle(Constraint):
         )
 
         # Compose constraints
+        self._constraint: Constraint
         if strict:
-            self._constraint = And([
-                self._line_count,
-                self._stanza_count,
-                self._stanza_sizes,
-                self._refrain_a,
-                self._refrain_b,
-                self._rhyme_scheme,
-            ])
+            self._constraint = And(
+                [
+                    self._line_count,
+                    self._stanza_count,
+                    self._stanza_sizes,
+                    self._refrain_a,
+                    self._refrain_b,
+                    self._rhyme_scheme,
+                ]
+            )
         else:
             self._constraint = WeightedSum(
                 [
