@@ -51,6 +51,7 @@ class RhymeScheme(Constraint):
         weight: float = 1.0,
         threshold: float = 0.7,
         allow_identical: bool = False,
+        binary_scoring: bool = False,
     ) -> None:
         """
         Initialize rhyme scheme constraint.
@@ -60,12 +61,16 @@ class RhymeScheme(Constraint):
             weight: Relative weight for composition
             threshold: Minimum rhyme_score to count as rhyming
             allow_identical: Whether identical words count as rhyming
+            binary_scoring: If True, scores are 1.0 if >= threshold, else 0.0.
+                This is useful for form inference where we want 100% pass when
+                all rhymes meet the threshold.
         """
         super().__init__(weight)
         # Extract only letters, uppercase
         self.scheme = "".join(c.upper() for c in scheme if c.isalpha())
         self.threshold = threshold
         self.allow_identical = allow_identical
+        self.binary_scoring = binary_scoring
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
@@ -96,18 +101,20 @@ class RhymeScheme(Constraint):
 
                     if word_i.lower() == word_j.lower():
                         # Identical words: full credit if allowed, partial otherwise
-                        score = 1.0 if self.allow_identical else 0.5
+                        raw_score = 1.0 if self.allow_identical else 0.5
                     else:
-                        score = rhyme_score(word_i, word_j)
+                        raw_score = rhyme_score(word_i, word_j)
 
+                    passed = raw_score >= self.threshold
+                    # For binary scoring, use 1.0 or 0.0 based on threshold
+                    score = (1.0 if passed else 0.0) if self.binary_scoring else raw_score
                     pair_scores.append(score)
 
-                    passed = score >= self.threshold
                     rubric.append(
                         RubricItem(
                             criterion=f"Rhyme {letter}: line {line_i + 1} / {line_j + 1}",
                             expected=f"rhyme (threshold {self.threshold})",
-                            actual=f"'{word_i}' / '{word_j}' = {score:.2f}",
+                            actual=f"'{word_i}' / '{word_j}' = {raw_score:.2f}",
                             score=score,
                             passed=passed,
                         )
