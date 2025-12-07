@@ -1,0 +1,4 @@
+# file: /home/darren/abide/src/abide/constraints/relational.py
+# hypothesis_version: 6.148.7
+
+[0.0, 0.5, 0.7, 0.8, 0.9, 1.0, '(line missing)', ', ', '...', 'Acrostic', 'End Word Pattern', 'Refrain', 'Rhyme Scheme', 'Stanza count', "[^\\w\\s']", 'canonical_words', 'end_words', 'first', 'last', 'scheme']

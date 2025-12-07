@@ -1,0 +1,64 @@
+"""
+Constraint types and base classes.
+
+This module provides the constraint algebra:
+- Base Constraint class with verify/describe/to_rubric methods
+- Structural constraints (line count, stanza count, etc.)
+- Relational constraints (rhyme scheme, refrains, etc.)
+- Prosodic constraints (meter, syllables)
+- Sonic constraints (assonance, consonance)
+- Composition operators (AND, OR, NOT, WeightedSum)
+"""
+
+from abide.constraints.base import Constraint, NumericConstraint
+from abide.constraints.operators import And, AtLeast, AtMost, Not, Or, WeightedSum
+from abide.constraints.relational import (
+    Acrostic,
+    EndWordPattern,
+    Refrain,
+    RhymeScheme,
+)
+from abide.constraints.structural import (
+    LineCount,
+    StanzaCount,
+    StanzaSizes,
+    SyllablesPerLine,
+    TotalSyllables,
+)
+from abide.constraints.types import (
+    BoundType,
+    ConstraintType,
+    NumericBound,
+    RubricItem,
+    VerificationResult,
+)
+
+__all__ = [
+    # Types
+    "ConstraintType",
+    "BoundType",
+    "NumericBound",
+    "RubricItem",
+    "VerificationResult",
+    # Base
+    "Constraint",
+    "NumericConstraint",
+    # Structural
+    "LineCount",
+    "StanzaCount",
+    "StanzaSizes",
+    "SyllablesPerLine",
+    "TotalSyllables",
+    # Relational
+    "RhymeScheme",
+    "Refrain",
+    "EndWordPattern",
+    "Acrostic",
+    # Operators
+    "And",
+    "Or",
+    "Not",
+    "WeightedSum",
+    "AtLeast",
+    "AtMost",
+]

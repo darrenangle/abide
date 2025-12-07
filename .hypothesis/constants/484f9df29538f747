@@ -1,0 +1,4 @@
+# file: /home/darren/abide/src/abide/primitives/phonetics.py
+# hypothesis_version: 6.148.7
+
+[0.0, 0.5, 1.0, 10000, '0', '0000', '12', 'aeiouy', 'ded', 'e', 'ed', 'le', 'ted']

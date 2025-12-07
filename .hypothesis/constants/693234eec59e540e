@@ -1,0 +1,4 @@
+# file: /home/darren/abide/src/abide/constraints/structural.py
+# hypothesis_version: 6.148.7
+
+[-0.5, 0.0, 1.0, 2.0, 5.0, ', ', ', ...', '...', 'Line Count', 'Stanza Count', 'Stanza Sizes', 'Stanza count', 'Syllables Per Line', 'Total Syllables', 'actual_sizes', 'expected_sizes', 'lines', 'stanzas', 'total syllables']
