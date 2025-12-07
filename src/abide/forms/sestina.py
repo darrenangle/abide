@@ -6,6 +6,8 @@ A 39-line poem with complex end-word rotation pattern.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, ClassVar
+
 from abide.constraints import (
     And,
     Constraint,
@@ -17,7 +19,9 @@ from abide.constraints import (
     VerificationResult,
     WeightedSum,
 )
-from abide.primitives import PoemStructure
+
+if TYPE_CHECKING:
+    from abide.primitives import PoemStructure
 
 
 class Sestina(Constraint):
@@ -42,7 +46,7 @@ class Sestina(Constraint):
     constraint_type = ConstraintType.COMPOSITE
 
     # Sestina rotation pattern (0-indexed)
-    ROTATION = [5, 0, 4, 1, 3, 2]
+    ROTATION: ClassVar[list[int]] = [5, 0, 4, 1, 3, 2]
 
     def __init__(
         self,
@@ -80,13 +84,16 @@ class Sestina(Constraint):
         )
 
         # Compose constraints
+        self._constraint: Constraint
         if strict:
-            self._constraint = And([
-                self._line_count,
-                self._stanza_count,
-                self._stanza_sizes,
-                self._end_word_pattern,
-            ])
+            self._constraint = And(
+                [
+                    self._line_count,
+                    self._stanza_count,
+                    self._stanza_sizes,
+                    self._end_word_pattern,
+                ]
+            )
         else:
             self._constraint = WeightedSum(
                 [

@@ -43,9 +43,9 @@ def verify(poem: str, constraint: Constraint) -> VerificationResult:
 
 
 __all__ = [
-    "__version__",
-    "verify",
     "Constraint",
     "ConstraintType",
     "VerificationResult",
+    "__version__",
+    "verify",
 ]

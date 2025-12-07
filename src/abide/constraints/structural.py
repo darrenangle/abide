@@ -7,17 +7,21 @@ Line count, stanza count, stanza sizes, syllables per line, etc.
 from __future__ import annotations
 
 import math
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from abide.constraints.base import Constraint, NumericConstraint
 from abide.constraints.types import (
-    BoundType,
     ConstraintType,
     NumericBound,
     RubricItem,
     VerificationResult,
 )
-from abide.primitives import PoemStructure, count_line_syllables
+from abide.primitives import count_line_syllables
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from abide.primitives import PoemStructure
 
 
 class LineCount(NumericConstraint):
@@ -109,19 +113,15 @@ class StanzaSizes(Constraint):
 
         # First check stanza count
         if len(actual_sizes) != len(self.expected_sizes):
-            stanza_passed = False
             stanza_score = 0.0
             # Partial credit based on how many stanzas match
             min_len = min(len(actual_sizes), len(self.expected_sizes))
             if min_len > 0:
                 matching = sum(
-                    1
-                    for i in range(min_len)
-                    if actual_sizes[i] == self.expected_sizes[i]
+                    1 for i in range(min_len) if actual_sizes[i] == self.expected_sizes[i]
                 )
                 stanza_score = matching / len(self.expected_sizes)
         else:
-            stanza_passed = True
             stanza_score = 1.0
 
         rubric.append(
@@ -246,7 +246,9 @@ class SyllablesPerLine(Constraint):
                     actual=str(actual),
                     score=score,
                     passed=passed,
-                    explanation=structure.lines[i][:50] + "..." if i < len(structure.lines) and len(structure.lines[i]) > 50 else (structure.lines[i] if i < len(structure.lines) else ""),
+                    explanation=structure.lines[i][:50] + "..."
+                    if i < len(structure.lines) and len(structure.lines[i]) > 50
+                    else (structure.lines[i] if i < len(structure.lines) else ""),
                 )
             )
             scores.append(score)

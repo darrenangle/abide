@@ -71,8 +71,7 @@ class TestGroundTruthStructure:
         """Verify expected_line_count matches actual text."""
         lines = [line for line in poem.text.strip().split("\n") if line.strip()]
         assert len(lines) == poem.expected_line_count, (
-            f"{poem.name}: expected {poem.expected_line_count} lines, "
-            f"got {len(lines)}"
+            f"{poem.name}: expected {poem.expected_line_count} lines, got {len(lines)}"
         )
 
     @pytest.mark.parametrize("poem", ALL_POEMS, ids=lambda p: f"{p.author}:{p.name}")
@@ -81,8 +80,7 @@ class TestGroundTruthStructure:
         # Split on blank lines
         stanzas = [s.strip() for s in poem.text.strip().split("\n\n") if s.strip()]
         assert len(stanzas) == poem.expected_stanza_count, (
-            f"{poem.name}: expected {poem.expected_stanza_count} stanzas, "
-            f"got {len(stanzas)}"
+            f"{poem.name}: expected {poem.expected_stanza_count} stanzas, got {len(stanzas)}"
         )
 
     @pytest.mark.parametrize("poem", ALL_POEMS, ids=lambda p: f"{p.author}:{p.name}")
@@ -91,8 +89,7 @@ class TestGroundTruthStructure:
         stanzas = [s.strip() for s in poem.text.strip().split("\n\n") if s.strip()]
         actual_sizes = [len([ln for ln in s.split("\n") if ln.strip()]) for s in stanzas]
         assert actual_sizes == poem.expected_stanza_sizes, (
-            f"{poem.name}: expected sizes {poem.expected_stanza_sizes}, "
-            f"got {actual_sizes}"
+            f"{poem.name}: expected sizes {poem.expected_stanza_sizes}, got {actual_sizes}"
         )
 
 
