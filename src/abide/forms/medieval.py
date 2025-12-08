@@ -66,7 +66,7 @@ class ChantRoyal(Constraint):
         self.rhyme_threshold = rhyme_threshold
         self.strict_mode = strict
 
-        # 5 stanzas × 11 lines + 5-line envoi = 60 lines
+        # 5 stanzas x 11 lines + 5-line envoi = 60 lines
         total_lines = 60
 
         self._line_count = LineCount(total_lines, weight=2.0)
@@ -74,7 +74,7 @@ class ChantRoyal(Constraint):
         self._stanza_sizes = StanzaSizes([11, 11, 11, 11, 11, 5], weight=1.0)
 
         # Full rhyme scheme
-        # ABABCCDDEDE × 5 + DDEDE
+        # ABABCCDDEDE x 5 + DDEDE
         stanza_rhyme = "ABABCCDDEDE"
         envoi_rhyme = "DDEDE"
         full_rhyme = stanza_rhyme * 5 + envoi_rhyme
@@ -101,6 +101,7 @@ class ChantRoyal(Constraint):
             (self._syllables, 1.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -118,7 +119,7 @@ class ChantRoyal(Constraint):
         )
 
     def describe(self) -> str:
-        return "Chant Royal: 60 lines (5×11 stanzas + 5-line envoi)"
+        return "Chant Royal: 60 lines (5x11 stanzas + 5-line envoi)"
 
 
 class DoubleBallade(Constraint):
@@ -161,14 +162,14 @@ class DoubleBallade(Constraint):
         self.rhyme_threshold = rhyme_threshold
         self.strict_mode = strict
 
-        # 6 stanzas × 8 lines + 4-line envoi = 52 lines
+        # 6 stanzas x 8 lines + 4-line envoi = 52 lines
         total_lines = 52
 
         self._line_count = LineCount(total_lines, weight=2.0)
         self._stanza_count = StanzaCount(7, weight=1.0)  # 6 + envoi
         self._stanza_sizes = StanzaSizes([8, 8, 8, 8, 8, 8, 4], weight=1.0)
 
-        # ABABBCBC × 6 + BCBC
+        # ABABBCBC x 6 + BCBC
         stanza_rhyme = "ABABBCBC"
         envoi_rhyme = "BCBC"
         full_rhyme = stanza_rhyme * 6 + envoi_rhyme
@@ -195,6 +196,7 @@ class DoubleBallade(Constraint):
             (self._syllables, 1.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -212,7 +214,7 @@ class DoubleBallade(Constraint):
         )
 
     def describe(self) -> str:
-        return "Double Ballade: 52 lines (6×8 stanzas + 4-line envoi)"
+        return "Double Ballade: 52 lines (6x8 stanzas + 4-line envoi)"
 
 
 class Virelai(Constraint):
@@ -263,9 +265,7 @@ class Virelai(Constraint):
 
         self._line_count = LineCount(total_lines, weight=2.0)
         self._stanza_count = StanzaCount(stanza_count, weight=1.5)
-        self._stanza_sizes = StanzaSizes(
-            [lines_per_stanza] * stanza_count, weight=1.0
-        )
+        self._stanza_sizes = StanzaSizes([lines_per_stanza] * stanza_count, weight=1.0)
 
         # Simplified rhyme scheme: AABaabAAB for each stanza
         # (uppercase = long line, lowercase = short)
@@ -284,6 +284,7 @@ class Virelai(Constraint):
             (self._rhyme, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -380,6 +381,7 @@ class Canzone(Constraint):
             (self._rhyme, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -398,4 +400,4 @@ class Canzone(Constraint):
 
     def describe(self) -> str:
         total = self.stanza_count_val * self.lines_per_stanza + self.tornada_lines
-        return f"Canzone: {total} lines ({self.stanza_count_val}×{self.lines_per_stanza} + tornada)"
+        return f"Canzone: {total} lines ({self.stanza_count_val}x{self.lines_per_stanza} + tornada)"

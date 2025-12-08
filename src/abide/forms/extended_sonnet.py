@@ -13,8 +13,6 @@ from abide.constraints import (
     Constraint,
     ConstraintType,
     LineCount,
-    Meter,
-    NumericBound,
     RhymeScheme,
     StanzaCount,
     StanzaSizes,
@@ -22,7 +20,6 @@ from abide.constraints import (
     VerificationResult,
     WeightedSum,
 )
-from abide.primitives import FootLength, MeterType
 
 if TYPE_CHECKING:
     from abide.primitives import PoemStructure
@@ -93,6 +90,7 @@ class CurtalSonnet(Constraint):
             (self._syllables, 1.5),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -122,7 +120,7 @@ class CrownOfSonnets(Constraint):
     - Last line of each sonnet = first line of next
     - Last line of 7th sonnet = first line of 1st
     - Creates a circular "crown" structure
-    - 98 lines total (7 × 14)
+    - 98 lines total (7 x 14)
 
     Examples:
         >>> crown = CrownOfSonnets()
@@ -174,6 +172,7 @@ class CrownOfSonnets(Constraint):
             (self._rhyme, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -191,7 +190,9 @@ class CrownOfSonnets(Constraint):
         )
 
     def describe(self) -> str:
-        return f"Crown of Sonnets: {self.sonnet_count} linked sonnets ({self.sonnet_count * 14} lines)"
+        return (
+            f"Crown of Sonnets: {self.sonnet_count} linked sonnets ({self.sonnet_count * 14} lines)"
+        )
 
 
 class OneginStanza(Constraint):
@@ -264,6 +265,7 @@ class OneginStanza(Constraint):
             (self._rhyme, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -359,6 +361,7 @@ class CaudateSonnet(Constraint):
             (self._syllables, 1.5),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:

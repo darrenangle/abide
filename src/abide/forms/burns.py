@@ -7,7 +7,7 @@ by Robert Sempill for his poem "The Life and Death of Habbie Simson".
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from abide.constraints import (
     And,
@@ -48,7 +48,7 @@ class BurnsStanza(Constraint):
     constraint_type = ConstraintType.COMPOSITE
 
     # 8-8-8-4-8-4 syllable pattern
-    SYLLABLE_PATTERN = [8, 8, 8, 4, 8, 4]
+    SYLLABLE_PATTERN: ClassVar[list[int]] = [8, 8, 8, 4, 8, 4]
 
     def __init__(
         self,
@@ -103,6 +103,7 @@ class BurnsStanza(Constraint):
             (self._rhyme, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:

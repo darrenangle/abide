@@ -135,8 +135,36 @@ history/
 Run `bd <command> --help` to see all available flags for any command.
 For example: `bd create --help` shows `--parent`, `--deps`, `--assignee`, etc.
 
+## Code Quality Checks
+
+**IMPORTANT**: Before committing or pushing code, run linting and type checking:
+
+```bash
+# Run all checks (what pre-commit will run)
+uv run ruff check src/abide/
+uv run mypy src/abide/
+
+# Run tests
+uv run pytest
+```
+
+### Pre-commit Hooks
+
+Pre-commit hooks are configured to run automatically:
+- **ruff**: Linting and formatting
+- **mypy**: Type checking
+- **basic checks**: trailing whitespace, merge conflicts, etc.
+
+Install hooks with:
+```bash
+uv run pre-commit install
+```
+
+After installation, checks run automatically on `git commit`. If a check fails, the commit is blocked until the issue is fixed.
+
 ### Important Rules
 
+- **Run `uv run ruff check src/abide/` and `uv run mypy src/abide/` before committing**
 - Use bd for ALL task tracking
 - Always use `--json` flag for programmatic use
 - Link discovered work with `discovered-from` dependencies

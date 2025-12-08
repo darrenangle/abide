@@ -82,6 +82,7 @@ class Bop(Constraint):
             (self._refrain, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -150,9 +151,7 @@ class Aubade(Constraint):
 
         self._line_count = LineCount(total_lines, weight=2.0)
         self._stanza_count = StanzaCount(stanza_count, weight=1.5)
-        self._stanza_sizes = StanzaSizes(
-            [lines_per_stanza] * stanza_count, weight=1.0
-        )
+        self._stanza_sizes = StanzaSizes([lines_per_stanza] * stanza_count, weight=1.0)
 
         # Common aubade rhyme: ABABCC per stanza
         stanza_rhyme = "ABABCC"[:lines_per_stanza]
@@ -171,6 +170,7 @@ class Aubade(Constraint):
             (self._rhyme, 1.5),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -273,9 +273,7 @@ class Skeltonic(Constraint):
         rhyme_score = min(1.0, rhyme_runs / 3)  # Expect ~3 runs of 3+ rhymes
 
         # Combine scores
-        score = (
-            line_result.score * 0.3 + short_line_score * 0.4 + rhyme_score * 0.3
-        )
+        score = line_result.score * 0.3 + short_line_score * 0.4 + rhyme_score * 0.3
         passed = score >= 0.6
 
         return VerificationResult(

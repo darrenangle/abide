@@ -93,6 +93,7 @@ class FibonacciPoem(Constraint):
             (self._syllables, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -169,6 +170,7 @@ class ReverseFibonacci(Constraint):
             (self._syllables, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -247,6 +249,7 @@ class DoubleFibonacci(Constraint):
             (self._syllables, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:

@@ -176,7 +176,11 @@ select = [
 ignore = [
     "E501",   # line too long (handled by formatter)
     "B008",   # function call in default argument
+    "B905",   # zip() without strict= (intentional for unequal lengths)
     "ARG001", # unused function argument (common in abstract methods)
+    "SIM102", # nested if statements (often clearer than combined conditions)
+    "SIM108", # ternary operators (often less readable than if/else)
+    "C416",   # unnecessary list comprehension (explicit comprehensions preferred)
 ]
 
 [tool.ruff.lint.isort]

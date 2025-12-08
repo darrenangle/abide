@@ -24,12 +24,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache
-from typing import TYPE_CHECKING
 
-from abide.primitives.phonetics import get_line_stress_pattern, get_stress_pattern
-
-if TYPE_CHECKING:
-    pass
+from abide.primitives.phonetics import get_line_stress_pattern
 
 
 class MeterType(Enum):
@@ -211,26 +207,35 @@ def _detect_feet(binary_pattern: str) -> list[FootMatch]:
         if len(remaining) >= 3:
             for meter_type in [MeterType.ANAPEST, MeterType.DACTYL, MeterType.AMPHIBRACH]:
                 if _matches_foot(remaining[:3], meter_type):
-                    feet.append(FootMatch(
-                        meter_type=meter_type,
-                        position=pos,
-                        length=3,
-                        exact=True,
-                    ))
+                    feet.append(
+                        FootMatch(
+                            meter_type=meter_type,
+                            position=pos,
+                            length=3,
+                            exact=True,
+                        )
+                    )
                     pos += 3
                     matched = True
                     break
 
         # Try 2-syllable feet (iamb, trochee, spondee, pyrrhic)
         if not matched and len(remaining) >= 2:
-            for meter_type in [MeterType.IAMB, MeterType.TROCHEE, MeterType.SPONDEE, MeterType.PYRRHIC]:
+            for meter_type in [
+                MeterType.IAMB,
+                MeterType.TROCHEE,
+                MeterType.SPONDEE,
+                MeterType.PYRRHIC,
+            ]:
                 if _matches_foot(remaining[:2], meter_type):
-                    feet.append(FootMatch(
-                        meter_type=meter_type,
-                        position=pos,
-                        length=2,
-                        exact=True,
-                    ))
+                    feet.append(
+                        FootMatch(
+                            meter_type=meter_type,
+                            position=pos,
+                            length=2,
+                            exact=True,
+                        )
+                    )
                     pos += 2
                     matched = True
                     break
@@ -248,12 +253,14 @@ def _detect_feet(binary_pattern: str) -> list[FootMatch]:
             else:
                 meter_type = MeterType.PYRRHIC
 
-            feet.append(FootMatch(
-                meter_type=meter_type,
-                position=pos,
-                length=2,
-                exact=False,
-            ))
+            feet.append(
+                FootMatch(
+                    meter_type=meter_type,
+                    position=pos,
+                    length=2,
+                    exact=False,
+                )
+            )
             pos += 2
             matched = True
 
@@ -408,9 +415,7 @@ def _score_pattern_alignment(
     # Bonus for substitutions that are metrically acceptable
     if allow_substitutions:
         # Common substitutions don't reduce score as much
-        substitution_bonus = _count_valid_substitutions(
-            actual, expected, expected_meter
-        )
+        substitution_bonus = _count_valid_substitutions(actual, expected, expected_meter)
         base_score = min(1.0, base_score + substitution_bonus * 0.1)
 
     return base_score
@@ -430,9 +435,7 @@ def _get_canonical_pattern(meter_type: MeterType) -> str:
     return patterns.get(meter_type, "")
 
 
-def _count_valid_substitutions(
-    actual: str, expected: str, expected_meter: MeterType
-) -> int:
+def _count_valid_substitutions(actual: str, expected: str, expected_meter: MeterType) -> int:
     """
     Count metrical substitutions that are acceptable.
 
