@@ -151,9 +151,7 @@ class HoratianOde(Constraint):
 
         self._line_count = LineCount(total_lines, weight=2.0)
         self._stanza_count = StanzaCount(stanza_count, weight=1.5)
-        self._stanza_sizes = StanzaSizes(
-            [stanza_size] * stanza_count, weight=1.0
-        )
+        self._stanza_sizes = StanzaSizes([stanza_size] * stanza_count, weight=1.0)
         self._syllables = SyllablesPerLine(
             [syllables_per_line] * total_lines,
             weight=1.0,
@@ -175,6 +173,7 @@ class HoratianOde(Constraint):
             (self._rhyme_scheme, 1.5),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -260,6 +259,7 @@ class PindaricOde(Constraint):
             (self._stanza_sizes, 1.5),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:

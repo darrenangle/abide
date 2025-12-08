@@ -127,6 +127,7 @@ class BlankVerse(Constraint):
                 details={"error": f"Exceeds max lines ({self.max_lines})"},
             )
 
+        constraint: Constraint
         if self._strict:
             constraint = And([c for c, _ in constraints])
         else:

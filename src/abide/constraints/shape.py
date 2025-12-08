@@ -232,9 +232,7 @@ class LineShape(Constraint):
             },
         )
 
-    def _check_relative_shape(
-        self, actual: list[int], rubric: list[RubricItem]
-    ) -> float:
+    def _check_relative_shape(self, actual: list[int], rubric: list[RubricItem]) -> float:
         """Check that lines follow the relative shape pattern."""
         if not self.lengths or len(actual) < 2:
             return 1.0
@@ -301,7 +299,7 @@ class LineShape(Constraint):
                 return f"Follow this relative length pattern: {self.lengths} (measured by {mode_name})."
             else:
                 return f"Write lines with these exact lengths: {self.lengths} {mode_name} (±{self.tolerance})."
-        return f"Follow the specified line shape pattern."
+        return "Follow the specified line shape pattern."
 
 
 class LineLengthRange(Constraint):
@@ -360,10 +358,12 @@ class LineLengthRange(Constraint):
                 score = 1.0
             else:
                 # Partial credit based on how far out of bounds
-                if below_min:
+                if below_min and self.min_length is not None:
                     score = length / self.min_length
-                else:  # above_max
+                elif above_max and self.max_length is not None:
                     score = self.max_length / length
+                else:
+                    score = 0.5  # Fallback (shouldn't reach here)
 
             bounds = []
             if self.min_length is not None:

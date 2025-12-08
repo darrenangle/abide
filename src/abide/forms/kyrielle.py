@@ -95,6 +95,7 @@ class Kyrielle(Constraint):
             (self._rhyme_scheme, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -111,7 +112,9 @@ class Kyrielle(Constraint):
         for i in range(self.stanza_count_val):
             # aabB pattern per stanza
             stanza_letter = chr(letter + i * 2)
-            stanza_letter2 = chr(letter + i * 2 + 1) if self.rhyme_scheme_str == "ababB" else stanza_letter
+            stanza_letter2 = (
+                chr(letter + i * 2 + 1) if self.rhyme_scheme_str == "ababB" else stanza_letter
+            )
             scheme += stanza_letter + stanza_letter + stanza_letter2 + refrain
 
         return scheme
@@ -184,6 +187,7 @@ class KyrielleSonnet(Constraint):
             (self._rhyme_scheme, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:

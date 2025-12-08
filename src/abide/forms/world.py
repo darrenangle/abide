@@ -7,7 +7,7 @@ Lai/Lay (Medieval French), Rispetto (Italian).
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from abide.constraints import (
     And,
@@ -86,6 +86,7 @@ class Tanaga(Constraint):
             (self._rhyme, 1.5),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -213,7 +214,7 @@ class Seguidilla(Constraint):
     name = "Seguidilla"
     constraint_type = ConstraintType.COMPOSITE
 
-    SYLLABLE_PATTERN = [7, 5, 7, 5, 5, 7, 5]
+    SYLLABLE_PATTERN: ClassVar[list[int]] = [7, 5, 7, 5, 5, 7, 5]
 
     def __init__(
         self,
@@ -258,6 +259,7 @@ class Seguidilla(Constraint):
             (self._rhyme, 1.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -297,7 +299,7 @@ class Lai(Constraint):
     constraint_type = ConstraintType.COMPOSITE
 
     # A=5 syllables, B=2 syllables
-    SYLLABLE_PATTERN = [5, 5, 2, 5, 5, 2, 5, 5, 2]
+    SYLLABLE_PATTERN: ClassVar[list[int]] = [5, 5, 2, 5, 5, 2, 5, 5, 2]
 
     def __init__(
         self,
@@ -340,6 +342,7 @@ class Lai(Constraint):
             (self._rhyme, 1.5),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -377,7 +380,7 @@ class Rispetto(Constraint):
     name = "Rispetto"
     constraint_type = ConstraintType.COMPOSITE
 
-    RHYME_SCHEMES = {
+    RHYME_SCHEMES: ClassVar[dict[str, str]] = {
         "tuscan": "ABABABCC",
         "sicilian": "ABABCCDD",
     }
@@ -431,6 +434,7 @@ class Rispetto(Constraint):
             (self._rhyme, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:

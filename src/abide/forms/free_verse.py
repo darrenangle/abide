@@ -11,10 +11,6 @@ from typing import TYPE_CHECKING
 from abide.constraints import (
     Constraint,
     ConstraintType,
-    LineCount,
-    LineLengthRange,
-    MeasureMode,
-    StanzaCount,
     VerificationResult,
 )
 
@@ -96,7 +92,7 @@ class FreeVerse(Constraint):
 
         # Check word counts per line
         if self.min_words_per_line or self.max_words_per_line:
-            for i, line in enumerate(structure.lines):
+            for _i, line in enumerate(structure.lines):
                 word_count = len(line.split())
                 if word_count < self.min_words_per_line:
                     score *= 0.95  # Minor penalty
@@ -173,9 +169,7 @@ class ProsePoem(Constraint):
         para_count = len(paragraphs)
 
         # Count sentences (rough approximation)
-        sentence_count = sum(
-            text.count(c) for c in ".!?"
-        )
+        sentence_count = sum(text.count(c) for c in ".!?")
 
         score = 1.0
         issues = []

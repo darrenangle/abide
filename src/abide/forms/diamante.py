@@ -6,7 +6,7 @@ Diamante is a diamond-shaped poem with 7 lines.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from abide.constraints import (
     And,
@@ -51,7 +51,7 @@ class Diamante(Constraint):
     constraint_type = ConstraintType.COMPOSITE
 
     # Classic word counts per line
-    WORD_PATTERN = [1, 2, 3, 4, 3, 2, 1]
+    WORD_PATTERN: ClassVar[list[int]] = [1, 2, 3, 4, 3, 2, 1]
 
     def __init__(
         self,
@@ -96,6 +96,7 @@ class Diamante(Constraint):
                 weight=2.0,
             )
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([self._line_count, self._shape])
         else:
@@ -140,7 +141,7 @@ class Cinquain(Constraint):
     name = "Cinquain"
     constraint_type = ConstraintType.COMPOSITE
 
-    SYLLABLE_PATTERN = [2, 4, 6, 8, 2]
+    SYLLABLE_PATTERN: ClassVar[list[int]] = [2, 4, 6, 8, 2]
 
     def __init__(
         self,
@@ -169,6 +170,7 @@ class Cinquain(Constraint):
             weight=2.0,
         )
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([self._line_count, self._shape])
         else:
@@ -213,7 +215,7 @@ class WordCinquain(Constraint):
     name = "Word Cinquain"
     constraint_type = ConstraintType.COMPOSITE
 
-    WORD_PATTERN = [1, 2, 3, 4, 1]
+    WORD_PATTERN: ClassVar[list[int]] = [1, 2, 3, 4, 1]
 
     def __init__(
         self,
@@ -234,6 +236,7 @@ class WordCinquain(Constraint):
             weight=2.0,
         )
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([self._line_count, self._shape])
         else:
@@ -272,7 +275,7 @@ class Etheree(Constraint):
     name = "Etheree"
     constraint_type = ConstraintType.COMPOSITE
 
-    SYLLABLE_PATTERN = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    SYLLABLE_PATTERN: ClassVar[list[int]] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
     def __init__(
         self,
@@ -303,6 +306,7 @@ class Etheree(Constraint):
             weight=2.0,
         )
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([self._line_count, self._shape])
         else:
@@ -340,7 +344,7 @@ class ReverseEtheree(Constraint):
     name = "Reverse Etheree"
     constraint_type = ConstraintType.COMPOSITE
 
-    SYLLABLE_PATTERN = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+    SYLLABLE_PATTERN: ClassVar[list[int]] = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
 
     def __init__(
         self,
@@ -361,6 +365,7 @@ class ReverseEtheree(Constraint):
             weight=2.0,
         )
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([self._line_count, self._shape])
         else:

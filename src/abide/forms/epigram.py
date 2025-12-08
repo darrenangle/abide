@@ -293,6 +293,7 @@ class Tercet(Constraint):
             (self._rhyme_scheme, 1.5),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -342,4 +343,4 @@ class Triplet(Tercet):
         )
 
     def describe(self) -> str:
-        return f"Triplet: 3 lines with AAA monorhyme"
+        return "Triplet: 3 lines with AAA monorhyme"

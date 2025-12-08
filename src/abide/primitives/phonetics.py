@@ -31,6 +31,7 @@ class RhymeType(Enum):
     FAMILY = "family"  # Same consonant ending, different vowel
     NONE = "none"  # No detectable rhyme
 
+
 # ============================================================================
 # Phonetic Encoders (via jellyfish)
 # ============================================================================
@@ -61,7 +62,8 @@ def soundex(word: str) -> str:
     """
     if not word:
         return "0000"
-    return jellyfish.soundex(word)
+    result: str = jellyfish.soundex(word)
+    return result
 
 
 def metaphone(word: str) -> str:
@@ -84,7 +86,8 @@ def metaphone(word: str) -> str:
     """
     if not word:
         return ""
-    return jellyfish.metaphone(word)
+    result: str = jellyfish.metaphone(word)
+    return result
 
 
 def nysiis(word: str) -> str:
@@ -107,7 +110,8 @@ def nysiis(word: str) -> str:
     """
     if not word:
         return ""
-    return jellyfish.nysiis(word)
+    result: str = jellyfish.nysiis(word)
+    return result
 
 
 def match_rating_codex(word: str) -> str:
@@ -126,7 +130,8 @@ def match_rating_codex(word: str) -> str:
     """
     if not word:
         return ""
-    return jellyfish.match_rating_codex(word)
+    result: str = jellyfish.match_rating_codex(word)
+    return result
 
 
 def phonetic_similarity(word1: str, word2: str) -> float:
@@ -344,10 +349,25 @@ def _suffix_rhyme(word1: str, word2: str, min_suffix: int = 2) -> bool:
 
 
 # Standard CMU vowel phonemes (without stress markers)
-CMU_VOWELS = frozenset([
-    "AA", "AE", "AH", "AO", "AW", "AY", "EH", "ER", "EY", "IH",
-    "IY", "OW", "OY", "UH", "UW",
-])
+CMU_VOWELS = frozenset(
+    [
+        "AA",
+        "AE",
+        "AH",
+        "AO",
+        "AW",
+        "AY",
+        "EH",
+        "ER",
+        "EY",
+        "IH",
+        "IY",
+        "OW",
+        "OY",
+        "UH",
+        "UW",
+    ]
+)
 
 
 def _is_vowel_phoneme(phoneme: str) -> bool:
@@ -358,11 +378,7 @@ def _is_vowel_phoneme(phoneme: str) -> bool:
 
 def _extract_vowels(phonemes: tuple[str, ...]) -> tuple[str, ...]:
     """Extract just the vowel phonemes (without stress)."""
-    return tuple(
-        "".join(c for c in p if not c.isdigit())
-        for p in phonemes
-        if _is_vowel_phoneme(p)
-    )
+    return tuple("".join(c for c in p if not c.isdigit()) for p in phonemes if _is_vowel_phoneme(p))
 
 
 def _extract_consonants(phonemes: tuple[str, ...]) -> tuple[str, ...]:
@@ -372,7 +388,7 @@ def _extract_consonants(phonemes: tuple[str, ...]) -> tuple[str, ...]:
 
 def _get_final_consonants(phonemes: tuple[str, ...]) -> tuple[str, ...]:
     """Get consonants after the last vowel."""
-    result = []
+    result: list[str] = []
     found_last_vowel = False
     for p in reversed(phonemes):
         if _is_vowel_phoneme(p):
@@ -730,3 +746,38 @@ def get_line_stress_pattern(line: str) -> str:
             pattern += "0" * _heuristic_syllables(word)
 
     return pattern
+
+
+def get_end_sound(line: str) -> tuple[str, ...] | None:
+    """
+    Get the rhyming sound of the last word in a line.
+
+    Useful for checking rhyme patterns in consecutive lines.
+
+    Args:
+        line: Line of text
+
+    Returns:
+        Tuple of phonemes representing the rhyme sound, or None if not found
+
+    Examples:
+        >>> sound = get_end_sound("The cat sat on the mat")
+        >>> sound is not None
+        True
+    """
+    import re
+
+    words = re.findall(r"[a-zA-Z]+(?:'[a-zA-Z]+)?", line)
+
+    if not words:
+        return None
+
+    last_word = words[-1].lower()
+    all_phonemes = get_phonemes(last_word)
+
+    if not all_phonemes:
+        return None
+
+    # Use first pronunciation
+    phonemes = all_phonemes[0]
+    return get_rhyme_part(phonemes)

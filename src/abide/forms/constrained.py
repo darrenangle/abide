@@ -7,8 +7,7 @@ These forms focus on letter/word constraints rather than structure.
 
 from __future__ import annotations
 
-import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from abide.constraints import (
     Constraint,
@@ -70,9 +69,7 @@ class Abecedarian(Constraint):
         matches = 0
         details = []
 
-        for i, (expected_letter, line) in enumerate(
-            zip(self.letters, structure.lines)
-        ):
+        for i, (expected_letter, line) in enumerate(zip(self.letters, structure.lines)):
             line_stripped = line.strip()
             if line_stripped:
                 actual_first = line_stripped[0].upper()
@@ -201,7 +198,7 @@ class Univocalic(Constraint):
     name = "Univocalic"
     constraint_type = ConstraintType.SEMANTIC
 
-    VOWELS = set("AEIOU")
+    VOWELS: ClassVar[set[str]] = set("AEIOU")
 
     def __init__(
         self,
@@ -307,9 +304,7 @@ class Mesostic(Constraint):
         matches = 0
         details = []
 
-        for i, (target_letter, line) in enumerate(
-            zip(self.target_word, structure.lines)
-        ):
+        for i, (target_letter, line) in enumerate(zip(self.target_word, structure.lines)):
             # Get letters only
             letters = [c.upper() for c in line if c.isalpha()]
 
@@ -402,9 +397,7 @@ class Anaphora(Constraint):
 
         if self.target_phrase:
             # Count lines starting with target phrase
-            repeats = sum(
-                1 for line in lines_lower if line.startswith(self.target_phrase)
-            )
+            repeats = sum(1 for line in lines_lower if line.startswith(self.target_phrase))
             detected_phrase = self.target_phrase
         else:
             # Auto-detect: find most common opening word(s)
