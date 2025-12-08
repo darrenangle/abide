@@ -8,7 +8,7 @@ These constraints check structural requirements only.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from abide.constraints import (
     And,
@@ -47,7 +47,7 @@ class Tritina(Constraint):
 
     # Rotation pattern for 3 words (like sestina's pattern for 6)
     # ABC -> CAB -> BCA
-    ROTATION_PATTERN = [
+    ROTATION_PATTERN: ClassVar[list[list[int]]] = [
         [0, 1, 2],  # Stanza 1: ABC
         [2, 0, 1],  # Stanza 2: CAB
         [1, 2, 0],  # Stanza 3: BCA
@@ -89,6 +89,7 @@ class Tritina(Constraint):
             (self._stanza_sizes, 1.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -128,7 +129,7 @@ class Quatina(Constraint):
     constraint_type = ConstraintType.COMPOSITE
 
     # Rotation pattern for 4 words
-    ROTATION_PATTERN = [
+    ROTATION_PATTERN: ClassVar[list[list[int]]] = [
         [0, 1, 2, 3],  # Stanza 1: ABCD
         [3, 0, 1, 2],  # Stanza 2: DABC
         [2, 3, 0, 1],  # Stanza 3: CDAB
@@ -167,6 +168,7 @@ class Quatina(Constraint):
             (self._stanza_sizes, 1.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -207,7 +209,7 @@ class Quintina(Constraint):
 
     # Rotation pattern for 5 words (sestina-style reversed insertion)
     # ABCDE -> EABCD -> DEABC -> CDABC -> BCDEA
-    ROTATION_PATTERN = [
+    ROTATION_PATTERN: ClassVar[list[list[int]]] = [
         [0, 1, 2, 3, 4],  # Stanza 1: ABCDE
         [4, 0, 1, 2, 3],  # Stanza 2: EABCD
         [3, 4, 0, 1, 2],  # Stanza 3: DEABC
@@ -250,6 +252,7 @@ class Quintina(Constraint):
             (self._stanza_sizes, 1.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -317,7 +320,6 @@ class Terzanelle(Constraint):
         self._line_count = LineCount(total_lines, weight=2.0)
 
         # Terza rima pattern: ABA BCB CDC DED EFE FF (for villanelle-length)
-        from abide.constraints import RhymeScheme
 
         self._rhyme = RhymeScheme(
             "ABA BCB CDC DED EFE FF",
@@ -330,6 +332,7 @@ class Terzanelle(Constraint):
             (self._rhyme, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:

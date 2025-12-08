@@ -296,7 +296,7 @@ def _analyze_rhymes(
         accept_near_rhymes: If True, accept family/near rhymes (useful for
             historical poetry where pronunciation has changed)
     """
-    constraints = []
+    constraints: list[InferredConstraint] = []
 
     if structure.line_count < 2:
         return None, constraints
@@ -321,9 +321,7 @@ def _analyze_rhymes(
         for j, group in enumerate(groups):
             # Check if this word rhymes with any word in the group
             for member_idx in group:
-                rhyme_type, confidence = classify_rhyme(
-                    end_words[i], end_words[member_idx]
-                )
+                rhyme_type, confidence = classify_rhyme(end_words[i], end_words[member_idx])
                 if rhyme_type in accepted_types and confidence > best_score:
                     # Prefer perfect rhymes over near rhymes
                     found_group = j
@@ -387,6 +385,7 @@ def _analyze_rhymes(
                     if w1.lower() == w2.lower():
                         continue  # Skip identical words - they always "rhyme"
                     from abide.primitives import rhyme_score as rs
+
                     score = rs(w1, w2)
                     total_pairs += 1
                     if score > 0:  # Only consider actual rhymes
@@ -421,7 +420,8 @@ def _analyze_rhymes(
                 binary_scoring=True,  # Use binary for 100% pass on threshold
             ),
             confidence=max(0.5, rhyme_density),
-            description=f"Rhyme scheme: {scheme}" + (" (with near rhymes)" if has_imperfect_rhymes else ""),
+            description=f"Rhyme scheme: {scheme}"
+            + (" (with near rhymes)" if has_imperfect_rhymes else ""),
             category="relational",
             details={
                 "scheme": scheme,
@@ -440,7 +440,7 @@ def _analyze_refrains(
     structure: PoemStructure,
 ) -> tuple[list[tuple[int, list[int]]], list[InferredConstraint]]:
     """Analyze refrain patterns (repeated lines)."""
-    constraints = []
+    constraints: list[InferredConstraint] = []
     refrains: list[tuple[int, list[int]]] = []
 
     if structure.line_count < 4:
@@ -455,7 +455,7 @@ def _analyze_refrains(
         line_occurrences[normalized].append(i)
 
     # Create refrain constraints for repeated lines
-    for normalized, positions in line_occurrences.items():
+    for _normalized, positions in line_occurrences.items():
         if len(positions) > 1:
             reference = positions[0]
             repeats = positions[1:]

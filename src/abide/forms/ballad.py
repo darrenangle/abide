@@ -13,7 +13,6 @@ from abide.constraints import (
     Constraint,
     ConstraintType,
     LineCount,
-    MeterPattern,
     NumericBound,
     RhymeScheme,
     StanzaCount,
@@ -22,7 +21,6 @@ from abide.constraints import (
     VerificationResult,
     WeightedSum,
 )
-from abide.primitives import MeterType
 
 if TYPE_CHECKING:
     from abide.primitives import PoemStructure
@@ -109,6 +107,7 @@ class Ballad(Constraint):
             (self._rhyme_scheme, 1.5),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -127,9 +126,7 @@ class Ballad(Constraint):
 
     def describe(self) -> str:
         meter = "Common Meter (8-6-8-6)" if self.use_common_meter else "8 syllables"
-        return (
-            f"Ballad: {self.stanza_count_val} quatrains, {self.rhyme_scheme_str} rhyme, {meter}"
-        )
+        return f"Ballad: {self.stanza_count_val} quatrains, {self.rhyme_scheme_str} rhyme, {meter}"
 
 
 class LiteraryBallad(Constraint):
@@ -176,6 +173,7 @@ class LiteraryBallad(Constraint):
         self._line_count = LineCount(NumericBound.at_least(min_lines), weight=2.0)
         self._stanza_count = StanzaCount(NumericBound.at_least(min_stanzas), weight=1.5)
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([self._line_count, self._stanza_count])
         else:
@@ -256,6 +254,7 @@ class BroadBallad(Constraint):
             (self._rhyme_scheme, 1.5),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:

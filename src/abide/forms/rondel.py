@@ -81,10 +81,10 @@ class Rondel(Constraint):
         )
 
         # Refrains: line 1 repeats at 7 and 13 (0-indexed: 0, 6, 12)
-        # Line 2 repeats at 8 (0-indexed: 1, 7)
+        # Line 2 repeats at 8 (0-indexed: 1, 7), and at 14 in 14-line version
         self._refrain1 = Refrain(
             reference_line=0,
-            repeat_at=[6, 12] if lines == 13 else [6, 12],
+            repeat_at=[6, 12],
             weight=1.5,
         )
         self._refrain2 = Refrain(
@@ -100,6 +100,7 @@ class Rondel(Constraint):
             (self._refrain2, 1.5),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -175,6 +176,7 @@ class Rondelet(Constraint):
             (self._refrain, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -256,6 +258,7 @@ class Roundel(Constraint):
             (self._rhyme, 1.5),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -337,6 +340,7 @@ class Rondine(Constraint):
             (self._refrain2, 1.5),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -423,6 +427,7 @@ class RondeauRedouble(Constraint):
             (self._refrain4, 1.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:

@@ -97,6 +97,7 @@ class OttavaRima(Constraint):
             self._stanza_count = StanzaCount(stanza_count, weight=1.0)
             constraints.append((self._stanza_count, 1.0))
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -191,6 +192,7 @@ class RhymeRoyal(Constraint):
             self._stanza_count = StanzaCount(stanza_count, weight=1.0)
             constraints.append((self._stanza_count, 1.0))
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -280,6 +282,7 @@ class SpenserianStanza(Constraint):
             self._stanza_count = StanzaCount(stanza_count, weight=1.0)
             constraints.append((self._stanza_count, 1.0))
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:

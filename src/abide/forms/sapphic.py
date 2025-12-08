@@ -7,7 +7,7 @@ Classical quantitative meter adapted to syllabic/accentual verse.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from abide.constraints import (
     And,
@@ -47,7 +47,7 @@ class SapphicStanza(Constraint):
     constraint_type = ConstraintType.COMPOSITE
 
     # 11-11-11-5 syllable pattern
-    SYLLABLE_PATTERN = [11, 11, 11, 5]
+    SYLLABLE_PATTERN: ClassVar[list[int]] = [11, 11, 11, 5]
 
     def __init__(
         self,
@@ -90,6 +90,7 @@ class SapphicStanza(Constraint):
             (self._syllables, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -107,7 +108,9 @@ class SapphicStanza(Constraint):
         )
 
     def describe(self) -> str:
-        return f"Sapphic Stanza: {self.stanza_count_val} stanza(s) of 4 lines (11-11-11-5 syllables)"
+        return (
+            f"Sapphic Stanza: {self.stanza_count_val} stanza(s) of 4 lines (11-11-11-5 syllables)"
+        )
 
 
 class SapphicOde(Constraint):
@@ -124,7 +127,7 @@ class SapphicOde(Constraint):
     name = "Sapphic Ode"
     constraint_type = ConstraintType.COMPOSITE
 
-    SYLLABLE_PATTERN = [11, 11, 11, 5]
+    SYLLABLE_PATTERN: ClassVar[list[int]] = [11, 11, 11, 5]
 
     def __init__(
         self,

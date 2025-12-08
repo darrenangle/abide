@@ -84,6 +84,7 @@ class Rubai(Constraint):
             (self._rhyme_scheme, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
@@ -191,6 +192,7 @@ class Rubaiyat(Constraint):
             (self._rhyme_scheme, 2.0),
         ]
 
+        self._constraint: Constraint
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
