@@ -275,7 +275,7 @@ A frog jumps into the pond
 Splash! Silence again"""
 
 result = verify(poem, Haiku())
-print(f"Score: {result.score:.2%}")  # Score: 89%
+print(f"Score: {result.score:.0%}")  # Score: 100%
 
 # See what matched and what didn't
 for item in result.rubric:
