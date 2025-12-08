@@ -50,11 +50,11 @@ Every constraint produces smooth, differentiable scores—not binary pass/fail:
 ```python
 from abide.constraints import SyllablesPerLine
 
-constraint = SyllablesPerLine([5, 7, 5], tolerance=1)  # Haiku
+constraint = SyllablesPerLine([5, 7, 5])  # Haiku (strict)
 
-# Poem with 5-8-5 syllables (one line off by 1)
-result = constraint.verify("An old silent pond\nA frog jumps into the pond\nSplash! Silence again")
-print(result.score)  # 0.89 (partial credit, not 0)
+# Poem with 6-7-5 syllables (first line has 6 instead of 5)
+result = constraint.verify("An old and silent pond\nA frog jumps into the pond\nSplash! Silence again")
+print(result.score)  # 0.87 (partial credit for being close)
 ```
 
 ### 2. Metrical Analysis (Scansion)
