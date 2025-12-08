@@ -11,12 +11,19 @@ This module provides the constraint algebra:
 """
 
 from abide.constraints.base import Constraint, NumericConstraint
+from abide.constraints.meter import Meter, MeterPattern
 from abide.constraints.operators import And, AtLeast, AtMost, Not, Or, WeightedSum
 from abide.constraints.relational import (
     Acrostic,
     EndWordPattern,
     Refrain,
     RhymeScheme,
+)
+from abide.constraints.shape import (
+    LineLengthRange,
+    LineShape,
+    MeasureMode,
+    ShapeType,
 )
 from abide.constraints.structural import (
     LineCount,
@@ -42,7 +49,12 @@ __all__ = [
     "Constraint",
     "ConstraintType",
     "EndWordPattern",
+    "LineLengthRange",
     "LineCount",
+    "LineShape",
+    "MeasureMode",
+    "Meter",
+    "MeterPattern",
     "Not",
     "NumericBound",
     "NumericConstraint",
@@ -50,6 +62,7 @@ __all__ = [
     "Refrain",
     "RhymeScheme",
     "RubricItem",
+    "ShapeType",
     "StanzaCount",
     "StanzaSizes",
     "SyllablesPerLine",
