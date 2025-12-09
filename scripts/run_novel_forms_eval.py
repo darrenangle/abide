@@ -114,8 +114,8 @@ HARD_FORMS = [
 ]
 
 
-def get_novel_forms(include_hard: bool = False) -> dict[str, object]:
-    """Get all novel form classes from abide.forms.novel and optionally hard."""
+def get_all_forms() -> dict[str, object]:
+    """Get all form classes (novel + hard)."""
     from abide.forms import hard, novel
 
     forms = {}
@@ -134,25 +134,7 @@ def get_novel_forms(include_hard: bool = False) -> dict[str, object]:
             except Exception as e:
                 print(f"Warning: Could not instantiate {name}: {e}")
 
-    # Load hard forms if requested
-    if include_hard:
-        for name in HARD_FORMS:
-            if hasattr(hard, name):
-                form_class = getattr(hard, name)
-                try:
-                    instance = form_class()
-                    forms[name] = instance
-                except Exception as e:
-                    print(f"Warning: Could not instantiate {name}: {e}")
-
-    return forms
-
-
-def get_hard_forms_only() -> dict[str, object]:
-    """Get only hard form classes."""
-    from abide.forms import hard
-
-    forms = {}
+    # Load hard forms
     for name in HARD_FORMS:
         if hasattr(hard, name):
             form_class = getattr(hard, name)
@@ -161,6 +143,7 @@ def get_hard_forms_only() -> dict[str, object]:
                 forms[name] = instance
             except Exception as e:
                 print(f"Warning: Could not instantiate {name}: {e}")
+
     return forms
 
 
@@ -365,16 +348,6 @@ def main() -> int:
         default=2,
         help="Number of rollouts per form (default: 2)",
     )
-    parser.add_argument(
-        "--hard",
-        action="store_true",
-        help="Include hard forms (designed to exploit LLM weaknesses)",
-    )
-    parser.add_argument(
-        "--hard-only",
-        action="store_true",
-        help="Run only hard forms (skip novel forms)",
-    )
 
     args = parser.parse_args()
 
@@ -384,18 +357,9 @@ def main() -> int:
         print("Get your API key at https://openrouter.ai/keys")
         return 1
 
-    # Get forms based on flags
-    if args.hard_only:
-        all_forms = get_hard_forms_only()
-        print(f"Found {len(all_forms)} hard forms")
-        eval_title = "Hard Forms Evaluation (LLM Weakness Test)"
-    else:
-        all_forms = get_novel_forms(include_hard=args.hard)
-        if args.hard:
-            print(f"Found {len(all_forms)} forms (novel + hard)")
-        else:
-            print(f"Found {len(all_forms)} novel forms")
-        eval_title = "Novel Forms Evaluation (Instruction-Following Test)"
+    # Get all forms (novel + hard)
+    all_forms = get_all_forms()
+    print(f"Found {len(all_forms)} forms ({len(NOVEL_FORMS)} novel + {len(HARD_FORMS)} hard)")
 
     # Filter if specified
     if args.forms:
@@ -409,7 +373,7 @@ def main() -> int:
         forms = all_forms
 
     print("=" * 60)
-    print(eval_title)
+    print("Forms Evaluation (Instruction-Following Test)")
     print("=" * 60)
 
     try:
