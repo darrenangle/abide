@@ -46,6 +46,22 @@ evals = [
     "openai>=1.0.0",            # OpenAI client (for verifiers compat)
     "verifiers>=0.1.0",         # RL training framework
 ]
+# Local training with GRPO
+training = [
+    "torch>=2.0.0",
+    "transformers>=4.50.0",     # For Gemma 3n support
+    "datasets>=2.0.0",
+    "accelerate>=0.30.0",
+    "peft>=0.10.0",             # LoRA training
+    "trl>=0.12.0",              # GRPO trainer
+    "bitsandbytes>=0.43.0",     # Quantization
+    "wandb>=0.16.0",            # Experiment tracking
+]
+# vLLM inference server
+vllm = [
+    "vllm>=0.11.0",
+    "timm>=1.0.17",             # For Gemma 3n vision backbone
+]
 # Development dependencies
 dev = [
     "pytest>=8.0.0",
@@ -57,7 +73,7 @@ dev = [
 ]
 # All optional dependencies
 all = [
-    "abide[nn,nlp,evals,dev]",
+    "abide[nn,nlp,evals,dev,training,vllm]",
 ]
 
 [project.urls]
