@@ -7,14 +7,14 @@ This script demonstrates proper integration with the verifiers library
 poetry generation capabilities.
 
 Usage:
-    # Run with default settings
+    # Run with default settings (all forms)
     uv run python scripts/run_verifiers_demo.py
 
     # Use a specific model
     uv run python scripts/run_verifiers_demo.py --model anthropic/claude-3-haiku
 
     # Run specific forms only
-    uv run python scripts/run_verifiers_demo.py --forms haiku,limerick,sonnet
+    uv run python scripts/run_verifiers_demo.py --forms Haiku,Limerick,Sonnet
 
 Environment:
     OPENROUTER_API_KEY: Your OpenRouter API key (required)
@@ -23,6 +23,7 @@ Environment:
 from __future__ import annotations
 
 import argparse
+import inspect
 import os
 import sys
 from pathlib import Path
@@ -31,128 +32,36 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 
-# The "obvious" forms for poetry evaluation - well-known, clear constraints
-OBVIOUS_FORMS = [
-    "haiku",
-    "limerick",
-    "sonnet",
-    "quatrain",
-    "couplet",
-    "tanka",
-    "villanelle",
-    "ballad",
-]
+def get_all_forms() -> dict[str, object]:
+    """Get all form classes from abide.forms."""
+    from abide import forms
 
-DEFAULT_TOPICS = [
-    "nature",  # Single topic so rollouts = samples per form
-]
-
-
-def create_prompt(form_name: str, topic: str) -> str:
-    """Create a generation prompt for a poetic form."""
-    prompts = {
-        "haiku": (
-            f"Write a haiku about {topic}. "
-            "A haiku has exactly 3 lines with 5-7-5 syllables. "
-            "Output ONLY the haiku, nothing else."
-        ),
-        "limerick": (
-            f"Write a limerick about {topic}. "
-            "A limerick has 5 lines with AABBA rhyme scheme. "
-            "Lines 1,2,5 are longer, lines 3,4 are shorter. "
-            "It should be humorous. Output ONLY the limerick."
-        ),
-        "sonnet": (
-            f"Write a Shakespearean sonnet about {topic}. "
-            "A Shakespearean sonnet has 14 lines of iambic pentameter "
-            "with rhyme scheme ABAB CDCD EFEF GG. "
-            "Output ONLY the sonnet."
-        ),
-        "quatrain": (
-            f"Write a quatrain about {topic}. "
-            "A quatrain is a 4-line poem with ABAB rhyme scheme. "
-            "Each line should have about 8-10 syllables. "
-            "Output ONLY the quatrain."
-        ),
-        "couplet": (
-            f"Write a heroic couplet about {topic}. "
-            "A heroic couplet is 2 rhyming lines of iambic pentameter (10 syllables each). "
-            "Output ONLY the couplet."
-        ),
-        "tanka": (
-            f"Write a tanka about {topic}. "
-            "A tanka has exactly 5 lines with 5-7-5-7-7 syllables. "
-            "Output ONLY the tanka, nothing else."
-        ),
-        "villanelle": (
-            f"Write a villanelle about {topic}. "
-            "A villanelle has 19 lines: five tercets and a quatrain, "
-            "with two refrains and two repeating rhymes (A1 b A2 / a b A1 / a b A2 / a b A1 / a b A2 / a b A1 A2). "
-            "Output ONLY the villanelle."
-        ),
-        "ballad": (
-            f"Write a ballad stanza about {topic}. "
-            "A ballad stanza has 4 lines with ABCB rhyme scheme, "
-            "alternating 8 and 6 syllables per line (8-6-8-6). "
-            "Output ONLY the ballad stanza."
-        ),
-    }
-    return prompts.get(form_name, f"Write a {form_name} about {topic}.")
+    all_forms = {}
+    for name in dir(forms):
+        obj = getattr(forms, name)
+        if inspect.isclass(obj) and hasattr(obj, "describe") and hasattr(obj, "verify"):
+            try:
+                instance = obj()
+                all_forms[name] = instance
+            except Exception:
+                pass  # Skip forms that can't be instantiated with defaults
+    return all_forms
 
 
-def get_constraint(form_name: str):
-    """Get the abide constraint for a form."""
-    from abide.forms import (
-        BalladStanza,
-        Haiku,
-        HeroicCouplet,
-        Limerick,
-        Quatrain,
-        ShakespeareanSonnet,
-        Tanka,
-        Villanelle,
+def create_prompt(form_name: str, form_instance: object, topic: str) -> str:
+    """Create a generation prompt using the form's describe() method."""
+    description = form_instance.describe()
+    return (
+        f"Write a {form_name} about {topic}.\n"
+        f"Requirements: {description}\n"
+        f"Output ONLY the poem, nothing else."
     )
-
-    constraints = {
-        "haiku": Haiku(syllable_tolerance=1),
-        "limerick": Limerick(rhyme_threshold=0.5),
-        "sonnet": ShakespeareanSonnet(syllable_tolerance=2, rhyme_threshold=0.4, strict=False),
-        "quatrain": Quatrain(rhyme_scheme="ABAB", rhyme_threshold=0.5),
-        "couplet": HeroicCouplet(strict=False),
-        "tanka": Tanka(syllable_tolerance=1),
-        "villanelle": Villanelle(rhyme_threshold=0.4),
-        "ballad": BalladStanza(rhyme_scheme="ABCB", rhyme_threshold=0.5),
-    }
-    return constraints.get(form_name)
-
-
-def make_abide_reward(form_name: str):
-    """Create a verifiers-compatible reward function for a form."""
-    constraint = get_constraint(form_name)
-
-    def reward_func(prompt: list[dict], completion: list[dict], info: dict) -> float:
-        """Score poem against abide constraint."""
-        # Extract the generated text from completion
-        poem = ""
-        for msg in reversed(completion):
-            if msg.get("role") == "assistant":
-                poem = msg.get("content", "")
-                break
-
-        if not poem:
-            return 0.0
-
-        result = constraint.verify(poem)
-        return result.score
-
-    reward_func.__name__ = f"abide_{form_name}"
-    return reward_func
 
 
 def run_verifiers_eval(
     model: str,
-    forms: list[str],
-    topics: list[str],
+    forms: dict[str, object],
+    topic: str,
     rollouts: int = 2,
 ) -> None:
     """Run evaluation using the verifiers framework."""
@@ -174,46 +83,52 @@ def run_verifiers_eval(
 
     print("Running verifiers evaluation")
     print(f"Model: {model}")
-    print(f"Forms: {', '.join(forms)}")
-    print(f"Topics: {len(topics)}")
-    print(f"Rollouts per example: {rollouts}")
+    print(f"Forms: {len(forms)}")
+    print(f"Topic: {topic}")
+    print(f"Rollouts per form: {rollouts}")
     print()
 
-    # Create dataset - verifiers expects a HuggingFace Dataset with 'question' column
+    # Create dataset - one example per form
     data_rows = []
-    for form_name in forms:
-        for topic in topics:
-            prompt_text = create_prompt(form_name, topic)
-            data_rows.append(
-                {
-                    "question": prompt_text,
-                    "answer": form_name,  # The form name - used by reward func
-                }
-            )
+    for form_name, form_instance in forms.items():
+        prompt_text = create_prompt(form_name, form_instance, topic)
+        data_rows.append(
+            {
+                "question": prompt_text,
+                "answer": form_name,  # Used by reward func to get constraint
+            }
+        )
 
     dataset = Dataset.from_list(data_rows)
     print(f"Created dataset with {len(dataset)} examples")
     print()
 
-    # Create a reward function that scores based on the form (passed as 'answer')
+    # Create a reward function that scores based on the form
     def abide_reward(completion: list[dict], answer: str, **kwargs: object) -> float:
         """Score poem against the target form."""
-        # Extract the generated text from completion
-        poem = ""
-        for msg in reversed(completion):
-            if msg.get("role") == "assistant":
-                poem = msg.get("content", "")
-                break
+        try:
+            # Extract the generated text from completion
+            poem = ""
+            for msg in reversed(completion):
+                if msg.get("role") == "assistant":
+                    content = msg.get("content")
+                    if content:
+                        poem = content
+                    break
 
-        if not poem:
+            if not poem:
+                return 0.0
+
+            # Get constraint for this form
+            form_instance = forms.get(answer)
+            if form_instance is None:
+                return 0.0
+
+            result = form_instance.verify(poem)
+            return result.score
+        except Exception as e:
+            print(f"  [reward error for {answer}: {e}]")
             return 0.0
-
-        constraint = get_constraint(answer)
-        if constraint is None:
-            return 0.0
-
-        result = constraint.verify(poem)
-        return result.score
 
     # Create rubric with single reward function
     rubric = vf.Rubric(
@@ -231,15 +146,19 @@ def run_verifiers_eval(
     print("-" * 60)
 
     # Run evaluation
-    results = env.evaluate_sync(
-        client=client,
-        model=model,
-        num_examples=len(dataset),
-        rollouts_per_example=rollouts,
-    )
+    try:
+        results = env.evaluate_sync(
+            client=client,
+            model=model,
+            num_examples=len(dataset),
+            rollouts_per_example=rollouts,
+        )
+    except Exception as e:
+        print(f"\nEvaluation error: {e}")
+        print("Some models may not be compatible with this evaluation.")
+        return
 
     # Print results
-    # GenerateOutputs is a TypedDict with lists: answer, reward, completion, etc.
     print()
     print("=" * 60)
     print("Results")
@@ -257,16 +176,23 @@ def run_verifiers_eval(
         if form_name in form_scores:
             form_scores[form_name].append(score)
 
-    for form_name, scores in form_scores.items():
+    # Sort by score descending
+    sorted_forms = sorted(
+        form_scores.items(),
+        key=lambda x: sum(x[1]) / len(x[1]) if x[1] else 0,
+        reverse=True,
+    )
+
+    for form_name, scores in sorted_forms:
         if scores:
             mean_score = sum(scores) / len(scores)
-            print(f"{form_name}: mean={mean_score:.2%} (n={len(scores)})")
+            print(f"{form_name}: {mean_score:.1%} (n={len(scores)})")
 
     # Overall
     all_scores = [s for scores in form_scores.values() for s in scores]
     if all_scores:
         print()
-        print(f"Overall mean: {sum(all_scores) / len(all_scores):.2%}")
+        print(f"Overall mean: {sum(all_scores) / len(all_scores):.1%}")
         print(f"Total samples: {len(all_scores)}")
 
     # Show metadata
@@ -291,19 +217,19 @@ def main() -> int:
         "--forms",
         type=str,
         default=None,
-        help=f"Comma-separated list of forms (default: {','.join(OBVIOUS_FORMS[:6])})",
+        help="Comma-separated list of form names (default: all forms)",
     )
     parser.add_argument(
-        "--topics",
+        "--topic",
         type=str,
-        default=None,
-        help="Comma-separated list of topics (default: built-in topics)",
+        default="nature",
+        help="Topic for poems (default: nature)",
     )
     parser.add_argument(
         "--rollouts",
         type=int,
         default=2,
-        help="Number of rollouts per example (default: 2)",
+        help="Number of rollouts per form (default: 2)",
     )
 
     args = parser.parse_args()
@@ -314,9 +240,20 @@ def main() -> int:
         print("Get your API key at https://openrouter.ai/keys")
         return 1
 
-    # Parse forms and topics
-    forms = args.forms.split(",") if args.forms else OBVIOUS_FORMS[:6]
-    topics = args.topics.split(",") if args.topics else DEFAULT_TOPICS
+    # Get all forms
+    all_forms = get_all_forms()
+    print(f"Found {len(all_forms)} forms in abide.forms")
+
+    # Filter if specified
+    if args.forms:
+        form_names = [f.strip() for f in args.forms.split(",")]
+        forms = {k: v for k, v in all_forms.items() if k in form_names}
+        if not forms:
+            print(f"Error: No matching forms found for: {args.forms}")
+            print(f"Available: {', '.join(sorted(all_forms.keys()))}")
+            return 1
+    else:
+        forms = all_forms
 
     print("=" * 60)
     print("abide + verifiers Demo Evaluation")
@@ -326,7 +263,7 @@ def main() -> int:
         run_verifiers_eval(
             model=args.model,
             forms=forms,
-            topics=topics,
+            topic=args.topic,
             rollouts=args.rollouts,
         )
         return 0
