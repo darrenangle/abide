@@ -11,6 +11,20 @@ This module provides the constraint algebra:
 """
 
 from abide.constraints.base import Constraint, NumericConstraint
+from abide.constraints.lexical import (
+    Alliteration,
+    AllWordsUnique,
+    CharacterCount,
+    ForcedWords,
+    LetterFrequency,
+    LineEndsWith,
+    LineStartsWith,
+    MonosyllabicOnly,
+    NoConsecutiveRepeats,
+    VowelConsonantPattern,
+    WordCount,
+    WordLengthPattern,
+)
 from abide.constraints.meter import Meter, MeterPattern
 from abide.constraints.operators import And, AtLeast, AtMost, Not, Or, WeightedSum
 from abide.constraints.relational import (
@@ -42,19 +56,28 @@ from abide.constraints.types import (
 
 __all__ = [
     "Acrostic",
+    "AllWordsUnique",
+    "Alliteration",
     "And",
     "AtLeast",
     "AtMost",
     "BoundType",
+    "CharacterCount",
     "Constraint",
     "ConstraintType",
     "EndWordPattern",
+    "ForcedWords",
+    "LetterFrequency",
     "LineCount",
+    "LineEndsWith",
     "LineLengthRange",
     "LineShape",
+    "LineStartsWith",
     "MeasureMode",
     "Meter",
     "MeterPattern",
+    "MonosyllabicOnly",
+    "NoConsecutiveRepeats",
     "Not",
     "NumericBound",
     "NumericConstraint",
@@ -68,5 +91,8 @@ __all__ = [
     "SyllablesPerLine",
     "TotalSyllables",
     "VerificationResult",
+    "VowelConsonantPattern",
     "WeightedSum",
+    "WordCount",
+    "WordLengthPattern",
 ]
