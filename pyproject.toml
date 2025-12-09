@@ -41,6 +41,7 @@ nlp = [
 ]
 # Evaluation framework (LLM inference + verifiers)
 evals = [
+    "datasets>=2.0.0",          # HuggingFace datasets
     "httpx>=0.27.0",            # HTTP client for OpenRouter
     "openai>=1.0.0",            # OpenAI client (for verifiers compat)
     "verifiers>=0.1.0",         # RL training framework
@@ -153,6 +154,8 @@ module = [
     "jellyfish.*",
     "pyphen.*",
     "hypothesis.*",
+    "datasets.*",
+    "datasets",
     "httpx.*",
     "httpx",
     "openai.*",
