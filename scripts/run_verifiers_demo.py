@@ -125,7 +125,7 @@ def get_constraint(form_name: str):
         "couplet": HeroicCouplet(strict=False),
         "tanka": Tanka(syllable_tolerance=1),
         "villanelle": Villanelle(rhyme_threshold=0.4),
-        "ballad": BalladStanza(rhyme_threshold=0.5),  # Uses fixed ABCB rhyme scheme
+        "ballad": BalladStanza(rhyme_scheme="ABCB", rhyme_threshold=0.5),
     }
     return constraints.get(form_name)
 
