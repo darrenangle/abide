@@ -96,8 +96,8 @@ def create_prompt(form_name: str, topic: str) -> str:
         ),
         "ballad": (
             f"Write a ballad stanza about {topic}. "
-            "A ballad stanza has 4 lines with ABAB or ABCB rhyme, "
-            "alternating 8 and 6 syllables per line. "
+            "A ballad stanza has 4 lines with ABCB rhyme scheme, "
+            "alternating 8 and 6 syllables per line (8-6-8-6). "
             "Output ONLY the ballad stanza."
         ),
     }
@@ -125,7 +125,7 @@ def get_constraint(form_name: str):
         "couplet": HeroicCouplet(strict=False),
         "tanka": Tanka(syllable_tolerance=1),
         "villanelle": Villanelle(rhyme_threshold=0.4),
-        "ballad": BalladStanza(rhyme_scheme="ABAB", rhyme_threshold=0.5),
+        "ballad": BalladStanza(rhyme_threshold=0.5),  # Uses fixed ABCB rhyme scheme
     }
     return constraints.get(form_name)
 
