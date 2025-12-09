@@ -79,6 +79,7 @@ def run_verifiers_eval(
     client = OpenAI(
         api_key=os.environ["OPENROUTER_API_KEY"],
         base_url="https://openrouter.ai/api/v1",
+        timeout=60.0,  # 60 second timeout per request
     )
 
     print("Running verifiers evaluation")
