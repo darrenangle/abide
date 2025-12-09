@@ -71,6 +71,23 @@ from abide.forms.fibonacci import (
 from abide.forms.free_verse import FreeVerse, ProsePoem
 from abide.forms.ghazal import Ghazal
 from abide.forms.haiku import Haiku, Tanka
+from abide.forms.hard import (
+    AlternatingIsolation,
+    ArithmeticVerse,
+    CharacterBudgetPoem,
+    CharacterPalindromePoem,
+    CombinedChallenge,
+    DescendingStaircasePoem,
+    DoubleAcrosticPoem,
+    ExactWordPoem,
+    IsolatedCouplet,
+    PositionalPoem,
+    PrecisionHaiku,
+    PrecisionVerse,
+    StaircasePoem,
+    TotalCharacterPoem,
+    VowelBudgetPoem,
+)
 from abide.forms.japanese import Katauta, Sedoka, Senryu
 from abide.forms.kyrielle import Kyrielle, KyrielleSonnet
 from abide.forms.limerick import Limerick
@@ -139,7 +156,10 @@ __all__ = [
     "Abecedarian",
     # Novel/experimental forms
     "AlphabeticTerminus",
+    # Hard forms (exploit LLM weaknesses)
+    "AlternatingIsolation",
     "Anaphora",
+    "ArithmeticVerse",
     # Modern forms
     "Aubade",
     # English/Narrative forms
@@ -157,18 +177,23 @@ __all__ = [
     # Sonnets
     "CaudateSonnet",
     "ChantRoyal",
+    "CharacterBudgetPoem",
+    "CharacterPalindromePoem",
     # Shape poems
     "Cinquain",
     # Couplets and short forms
     "Clerihew",
     "ColorSpectrum",
+    "CombinedChallenge",
     "ConsonantCascade",
     "Couplet",
     "CrownOfSonnets",
     "CurtalSonnet",
     "DescendingStaircase",
+    "DescendingStaircasePoem",
     "Diamante",
     "Distich",
+    "DoubleAcrosticPoem",
     "DoubleBallade",
     # Fibonacci forms
     "DoubleFibonacci",
@@ -180,6 +205,7 @@ __all__ = [
     "EnvelopeQuatrain",
     "Epigram",
     "Etheree",
+    "ExactWordPoem",
     "ExclamationEcho",
     "FibonacciPoem",
     # Free and prose
@@ -195,6 +221,7 @@ __all__ = [
     "HoratianOde",
     "HourglassVerse",
     "IrregularOde",
+    "IsolatedCouplet",
     "Katauta",
     # Kyrielle
     "Kyrielle",
@@ -222,6 +249,9 @@ __all__ = [
     "Pantoum",
     "PetrarchanSonnet",
     "PindaricOde",
+    "PositionalPoem",
+    "PrecisionHaiku",
+    "PrecisionVerse",
     "PrimeVerse",
     "ProsePoem",
     # Sestina variants
@@ -254,6 +284,7 @@ __all__ = [
     "Sonnet",
     "SpenserianSonnet",
     "SpenserianStanza",
+    "StaircasePoem",
     "Tanaga",
     "Tanka",
     "TemporalVerse",
@@ -261,6 +292,7 @@ __all__ = [
     "TerzaRima",
     "Terzanelle",
     "ThunderVerse",
+    "TotalCharacterPoem",
     # Triolet and Villanelle
     "Triolet",
     "Triplet",
@@ -270,6 +302,7 @@ __all__ = [
     "Villanelle",
     "Virelai",
     "VoidVerse",
+    "VowelBudgetPoem",
     "VowelPilgrimage",
     "WhisperPoem",
     "WordCinquain",
