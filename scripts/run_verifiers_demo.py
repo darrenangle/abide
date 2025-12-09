@@ -44,11 +44,7 @@ OBVIOUS_FORMS = [
 ]
 
 DEFAULT_TOPICS = [
-    "the changing seasons",
-    "love and loss",
-    "nature's beauty",
-    "the passage of time",
-    "hope and perseverance",
+    "nature",  # Single topic so rollouts = samples per form
 ]
 
 
