@@ -161,12 +161,13 @@ def run_verifiers_eval(
 ) -> None:
     """Run evaluation using the verifiers framework."""
     try:
+        from datasets import Dataset
         from openai import OpenAI
 
         import verifiers as vf
     except ImportError as e:
         print(f"Error: Missing dependency - {e}")
-        print("Install with: uv sync --extra evals && uv add openai")
+        print("Install with: uv sync --extra evals")
         sys.exit(1)
 
     # Create OpenAI client pointed at OpenRouter
@@ -182,31 +183,46 @@ def run_verifiers_eval(
     print(f"Rollouts per example: {rollouts}")
     print()
 
-    # Create dataset - one example per form/topic combination
-    dataset = []
+    # Create dataset - verifiers expects a HuggingFace Dataset with 'question' column
+    data_rows = []
     for form_name in forms:
         for topic in topics:
             prompt_text = create_prompt(form_name, topic)
-            dataset.append(
+            data_rows.append(
                 {
-                    "prompt": [{"role": "user", "content": prompt_text}],
-                    "answer": form_name,  # The form name for reference
-                    "info": {"form": form_name, "topic": topic},
+                    "question": prompt_text,
+                    "answer": form_name,  # The form name - used by reward func
                 }
             )
 
+    dataset = Dataset.from_list(data_rows)
     print(f"Created dataset with {len(dataset)} examples")
     print()
 
-    # Create reward functions for each form
-    reward_funcs = []
-    for form_name in forms:
-        reward_funcs.append(make_abide_reward(form_name))
+    # Create a reward function that scores based on the form (passed as 'answer')
+    def abide_reward(completion: list[dict], answer: str, **kwargs: object) -> float:
+        """Score poem against the target form."""
+        # Extract the generated text from completion
+        poem = ""
+        for msg in reversed(completion):
+            if msg.get("role") == "assistant":
+                poem = msg.get("content", "")
+                break
 
-    # Create rubric - equal weights for all forms
+        if not poem:
+            return 0.0
+
+        constraint = get_constraint(answer)
+        if constraint is None:
+            return 0.0
+
+        result = constraint.verify(poem)
+        return result.score
+
+    # Create rubric with single reward function
     rubric = vf.Rubric(
-        funcs=reward_funcs,
-        weights=[1.0] * len(reward_funcs),
+        funcs=[abide_reward],
+        weights=[1.0],
     )
 
     # Create environment
@@ -236,7 +252,7 @@ def run_verifiers_eval(
     form_scores: dict[str, list[float]] = {f: [] for f in forms}
 
     for result in results:
-        form_name = result.get("info", {}).get("form", "unknown")
+        form_name = result.get("answer", "unknown")
         score = result.get("reward", 0.0)
         if form_name in form_scores:
             form_scores[form_name].append(score)
