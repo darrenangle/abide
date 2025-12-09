@@ -76,6 +76,32 @@ from abide.forms.kyrielle import Kyrielle, KyrielleSonnet
 from abide.forms.limerick import Limerick
 from abide.forms.medieval import Canzone, ChantRoyal, DoubleBallade, Virelai
 from abide.forms.modern import Aubade, Bop, Skeltonic
+from abide.forms.novel import (
+    AlphabeticTerminus,
+    BinaryBeat,
+    ColorSpectrum,
+    ConsonantCascade,
+    DescendingStaircase,
+    EchoEnd,
+    ElementalVerse,
+    ExclamationEcho,
+    GoldenRatio,
+    HourglassVerse,
+    MirrorFrame,
+    MonotoneMountain,
+    NumberWord,
+    NumericalEcho,
+    OddEvenDance,
+    PrimeVerse,
+    QuestionQuest,
+    SandwichSonnet,
+    TemporalVerse,
+    ThunderVerse,
+    UniqueUtterance,
+    VoidVerse,
+    VowelPilgrimage,
+    WhisperPoem,
+)
 from abide.forms.ode import HoratianOde, IrregularOde, Ode, PindaricOde
 from abide.forms.ottava_rima import OttavaRima, RhymeRoyal, SpenserianStanza
 from abide.forms.pantoum import Pantoum
@@ -111,6 +137,8 @@ from abide.forms.world import Lai, Naani, Rispetto, Seguidilla, Tanaga
 __all__ = [
     # Constrained writing forms
     "Abecedarian",
+    # Novel/experimental forms
+    "AlphabeticTerminus",
     "Anaphora",
     # Modern forms
     "Aubade",
@@ -119,6 +147,7 @@ __all__ = [
     "BalladStanza",
     # French forms
     "Ballade",
+    "BinaryBeat",
     "BlankVerse",
     "BluesPoem",
     "Bop",
@@ -132,31 +161,39 @@ __all__ = [
     "Cinquain",
     # Couplets and short forms
     "Clerihew",
+    "ColorSpectrum",
+    "ConsonantCascade",
     "Couplet",
     "CrownOfSonnets",
     "CurtalSonnet",
+    "DescendingStaircase",
     "Diamante",
     "Distich",
     "DoubleBallade",
     # Fibonacci forms
     "DoubleFibonacci",
     "DramaticVerse",
+    "EchoEnd",
     "Elegiac",
+    "ElementalVerse",
     # Quatrains
     "EnvelopeQuatrain",
     "Epigram",
     "Etheree",
+    "ExclamationEcho",
     "FibonacciPoem",
     # Free and prose
     "FreeVerse",
     # Persian/Arabic forms
     "Ghazal",
+    "GoldenRatio",
     # Japanese forms
     "Haiku",
     "HeroicCouplet",
     "HeroicQuatrain",
     # Odes
     "HoratianOde",
+    "HourglassVerse",
     "IrregularOde",
     "Katauta",
     # Kyrielle
@@ -169,8 +206,13 @@ __all__ = [
     "Lipogram",
     "LiteraryBallad",
     "Mesostic",
+    "MirrorFrame",
     "Monostich",
+    "MonotoneMountain",
     "Naani",
+    "NumberWord",
+    "NumericalEcho",
+    "OddEvenDance",
     "Ode",
     "OneginStanza",
     # Italian forms
@@ -180,10 +222,12 @@ __all__ = [
     "Pantoum",
     "PetrarchanSonnet",
     "PindaricOde",
+    "PrimeVerse",
     "ProsePoem",
     # Sestina variants
     "Quatina",
     "Quatrain",
+    "QuestionQuest",
     "Quintina",
     "ReverseEtheree",
     "ReverseFibonacci",
@@ -197,6 +241,7 @@ __all__ = [
     "Roundel",
     "Rubai",
     "Rubaiyat",
+    "SandwichSonnet",
     "SapphicOde",
     "SapphicStanza",
     "Sedoka",
@@ -211,15 +256,21 @@ __all__ = [
     "SpenserianStanza",
     "Tanaga",
     "Tanka",
+    "TemporalVerse",
     "Tercet",
     "TerzaRima",
     "Terzanelle",
+    "ThunderVerse",
     # Triolet and Villanelle
     "Triolet",
     "Triplet",
     "Tritina",
+    "UniqueUtterance",
     "Univocalic",
     "Villanelle",
     "Virelai",
+    "VoidVerse",
+    "VowelPilgrimage",
+    "WhisperPoem",
     "WordCinquain",
 ]
