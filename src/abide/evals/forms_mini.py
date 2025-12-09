@@ -204,6 +204,7 @@ def run_forms_mini_eval(
     forms: list[str] | None = None,
     async_mode: bool = False,
     concurrency: int = 5,
+    verbose: bool = True,
 ) -> EvalResult:
     """
     Run the forms mini evaluation.
@@ -222,6 +223,7 @@ def run_forms_mini_eval(
         forms: Form names to include (default: all)
         async_mode: Whether to run asynchronously
         concurrency: Max concurrent requests in async mode
+        verbose: Print progress during evaluation (default: True)
 
     Returns:
         EvalResult with all metrics and samples
@@ -245,8 +247,17 @@ def run_forms_mini_eval(
             model=model or client.DEFAULT_MODEL,
             num_samples=num_samples,
             temperature=0.8,
-            max_tokens=1024,
+            max_tokens=2048,
+            verbose=verbose,
         )
+
+        if verbose:
+            form_names = sorted({t.form_name for t in tasks})
+            total_samples = len(tasks) * num_samples
+            print(f"Starting evaluation: {total_samples} total samples")
+            print(f"Forms: {', '.join(form_names)}")
+            print(f"Topics: {len(topics or DEFAULT_TOPICS)}")
+            print()
 
         # Create runner
         runner = EvalRunner(client)

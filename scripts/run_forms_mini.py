@@ -118,9 +118,6 @@ def main() -> int:
     try:
         from abide.evals import run_forms_mini_eval
 
-        print("Running evaluation...")
-        print()
-
         results = run_forms_mini_eval(
             model=args.model,
             num_samples=args.samples,
@@ -128,6 +125,7 @@ def main() -> int:
             forms=forms,
             async_mode=args.async_mode,
             concurrency=args.concurrency,
+            verbose=True,  # Always show progress in CLI
         )
 
         # Print summary
