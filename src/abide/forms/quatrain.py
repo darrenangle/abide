@@ -88,9 +88,7 @@ class Quatrain(Constraint):
 
         self._constraint: Constraint
         if strict:
-            self._constraint = And(
-                [self._line_count, self._syllables, self._rhyme_scheme]
-            )
+            self._constraint = And([self._line_count, self._syllables, self._rhyme_scheme])
         else:
             self._constraint = WeightedSum(
                 [
@@ -126,20 +124,27 @@ class BalladStanza(Quatrain):
     Examples:
         >>> stanza = BalladStanza()
         >>> result = stanza.verify(poem)
+
+        # Override defaults for experimentation
+        >>> stanza = BalladStanza(rhyme_scheme="ABAB", syllables_per_line=[8, 8, 8, 8])
     """
 
     name = "Ballad Stanza"
 
     def __init__(
         self,
+        rhyme_scheme: str = "ABCB",
+        syllables_per_line: int | list[int] | None = None,
         weight: float = 1.0,
         syllable_tolerance: int = 1,
         rhyme_threshold: float = 0.6,
         strict: bool = False,
     ) -> None:
+        if syllables_per_line is None:
+            syllables_per_line = [8, 6, 8, 6]
         super().__init__(
-            rhyme_scheme="ABCB",
-            syllables_per_line=[8, 6, 8, 6],
+            rhyme_scheme=rhyme_scheme,
+            syllables_per_line=syllables_per_line,
             weight=weight,
             syllable_tolerance=syllable_tolerance,
             rhyme_threshold=rhyme_threshold,
@@ -147,7 +152,7 @@ class BalladStanza(Quatrain):
         )
 
     def describe(self) -> str:
-        return "Ballad Stanza: 4 lines, 8-6-8-6 syllables, ABCB rhyme"
+        return f"Ballad Stanza: 4 lines, {self.rhyme_scheme_str} rhyme"
 
 
 class HeroicQuatrain(Quatrain):
@@ -159,20 +164,25 @@ class HeroicQuatrain(Quatrain):
     Examples:
         >>> quatrain = HeroicQuatrain()
         >>> result = quatrain.verify(poem)
+
+        # Override defaults for experimentation
+        >>> quatrain = HeroicQuatrain(rhyme_scheme="ABBA", syllables_per_line=8)
     """
 
     name = "Heroic Quatrain"
 
     def __init__(
         self,
+        rhyme_scheme: str = "ABAB",
+        syllables_per_line: int | list[int] = 10,
         weight: float = 1.0,
         syllable_tolerance: int = 1,
         rhyme_threshold: float = 0.6,
         strict: bool = False,
     ) -> None:
         super().__init__(
-            rhyme_scheme="ABAB",
-            syllables_per_line=10,
+            rhyme_scheme=rhyme_scheme,
+            syllables_per_line=syllables_per_line,
             weight=weight,
             syllable_tolerance=syllable_tolerance,
             rhyme_threshold=rhyme_threshold,
@@ -180,7 +190,7 @@ class HeroicQuatrain(Quatrain):
         )
 
     def describe(self) -> str:
-        return "Heroic Quatrain: 4 lines of iambic pentameter, ABAB rhyme"
+        return f"Heroic Quatrain: 4 lines, {self.rhyme_scheme_str} rhyme"
 
 
 class EnvelopeQuatrain(Quatrain):
@@ -192,20 +202,24 @@ class EnvelopeQuatrain(Quatrain):
     Examples:
         >>> quatrain = EnvelopeQuatrain()
         >>> result = quatrain.verify(poem)
+
+        # Override defaults for experimentation
+        >>> quatrain = EnvelopeQuatrain(rhyme_scheme="ABAB")
     """
 
     name = "Envelope Quatrain"
 
     def __init__(
         self,
-        syllables_per_line: int = 10,
+        rhyme_scheme: str = "ABBA",
+        syllables_per_line: int | list[int] = 10,
         weight: float = 1.0,
         syllable_tolerance: int = 1,
         rhyme_threshold: float = 0.6,
         strict: bool = False,
     ) -> None:
         super().__init__(
-            rhyme_scheme="ABBA",
+            rhyme_scheme=rhyme_scheme,
             syllables_per_line=syllables_per_line,
             weight=weight,
             syllable_tolerance=syllable_tolerance,
@@ -214,4 +228,4 @@ class EnvelopeQuatrain(Quatrain):
         )
 
     def describe(self) -> str:
-        return "Envelope Quatrain: 4 lines with ABBA rhyme"
+        return f"Envelope Quatrain: 4 lines, {self.rhyme_scheme_str} rhyme"
