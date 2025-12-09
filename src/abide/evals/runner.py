@@ -36,6 +36,9 @@ class EvalConfig:
     # Prompt settings
     system_prompt: str | None = None
 
+    # Logging
+    verbose: bool = False  # Print progress during evaluation
+
 
 @dataclass
 class SampleResult:
@@ -161,14 +164,35 @@ class EvalRunner:
         all_samples: list[SampleResult] = []
         form_samples: dict[str, list[SampleResult]] = {}
 
+        total_tasks = len(tasks) * config.num_samples
+        current = 0
+
         for task in tasks:
             if task.form_name not in form_samples:
                 form_samples[task.form_name] = []
 
-            for _ in range(config.num_samples):
+            for sample_idx in range(config.num_samples):
+                current += 1
+                if config.verbose:
+                    print(
+                        f"[{current}/{total_tasks}] {task.form_name}: "
+                        f"Generating sample {sample_idx + 1}/{config.num_samples}...",
+                        flush=True,
+                    )
+
                 sample = self._run_single(task, config)
                 all_samples.append(sample)
                 form_samples[task.form_name].append(sample)
+
+                if config.verbose:
+                    status = "PASS" if sample.passed else "FAIL"
+                    if sample.error:
+                        status = f"ERROR: {sample.error[:50]}"
+                    print(
+                        f"         -> score={sample.score:.2%} [{status}] "
+                        f"({sample.generation_time:.1f}s)",
+                        flush=True,
+                    )
 
         total_time = time.time() - start_time
 
