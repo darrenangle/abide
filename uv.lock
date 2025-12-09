@@ -26,6 +26,7 @@ all = [
     { name = "hypothesis" },
     { name = "mypy" },
     { name = "nltk" },
+    { name = "openai" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -43,6 +44,7 @@ dev = [
 ]
 evals = [
     { name = "httpx" },
+    { name = "openai" },
     { name = "verifiers" },
 ]
 nlp = [
@@ -71,6 +73,7 @@ requires-dist = [
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8.0" },
     { name = "nltk", marker = "extra == 'nlp'", specifier = ">=3.8.0" },
     { name = "numpy", specifier = ">=1.24.0" },
+    { name = "openai", marker = "extra == 'evals'", specifier = ">=1.0.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.6.0" },
     { name = "pronouncing", specifier = ">=0.2.0" },
     { name = "pyphen", specifier = ">=0.14.0" },
