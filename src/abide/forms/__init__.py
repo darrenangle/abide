@@ -91,6 +91,17 @@ from abide.forms.hard import (
 from abide.forms.japanese import Katauta, Sedoka, Senryu
 from abide.forms.kyrielle import Kyrielle, KyrielleSonnet
 from abide.forms.limerick import Limerick
+from abide.forms.mathematical import (
+    CoprimeVerse,
+    FibonacciVerse,
+    GoldenRatioVerse,
+    ModularVerse,
+    PiKu,
+    PythagoreanTercet,
+    SelfReferential,
+    SquareStanzas,
+    TriangularVerse,
+)
 from abide.forms.medieval import Canzone, ChantRoyal, DoubleBallade, Virelai
 from abide.forms.modern import Aubade, Bop, Skeltonic
 from abide.forms.novel import (
@@ -186,6 +197,7 @@ __all__ = [
     "ColorSpectrum",
     "CombinedChallenge",
     "ConsonantCascade",
+    "CoprimeVerse",
     "Couplet",
     "CrownOfSonnets",
     "CurtalSonnet",
@@ -208,11 +220,13 @@ __all__ = [
     "ExactWordPoem",
     "ExclamationEcho",
     "FibonacciPoem",
+    "FibonacciVerse",
     # Free and prose
     "FreeVerse",
     # Persian/Arabic forms
     "Ghazal",
     "GoldenRatio",
+    "GoldenRatioVerse",
     # Japanese forms
     "Haiku",
     "HeroicCouplet",
@@ -234,6 +248,7 @@ __all__ = [
     "LiteraryBallad",
     "Mesostic",
     "MirrorFrame",
+    "ModularVerse",
     "Monostich",
     "MonotoneMountain",
     "Naani",
@@ -248,12 +263,14 @@ __all__ = [
     # Pantoum
     "Pantoum",
     "PetrarchanSonnet",
+    "PiKu",
     "PindaricOde",
     "PositionalPoem",
     "PrecisionHaiku",
     "PrecisionVerse",
     "PrimeVerse",
     "ProsePoem",
+    "PythagoreanTercet",
     # Sestina variants
     "Quatina",
     "Quatrain",
@@ -276,6 +293,7 @@ __all__ = [
     "SapphicStanza",
     "Sedoka",
     "Seguidilla",
+    "SelfReferential",
     "Senryu",
     "Sestina",
     "ShakespeareanSonnet",
@@ -284,6 +302,7 @@ __all__ = [
     "Sonnet",
     "SpenserianSonnet",
     "SpenserianStanza",
+    "SquareStanzas",
     "StaircasePoem",
     "Tanaga",
     "Tanka",
@@ -293,6 +312,7 @@ __all__ = [
     "Terzanelle",
     "ThunderVerse",
     "TotalCharacterPoem",
+    "TriangularVerse",
     # Triolet and Villanelle
     "Triolet",
     "Triplet",

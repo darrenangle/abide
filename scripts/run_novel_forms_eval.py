@@ -113,10 +113,23 @@ HARD_FORMS = [
     "VowelBudgetPoem",
 ]
 
+# Mathematical forms for poet-mathematicians
+MATH_FORMS = [
+    "CoprimeVerse",
+    "FibonacciVerse",
+    "GoldenRatioVerse",
+    "ModularVerse",
+    "PiKu",
+    "PythagoreanTercet",
+    "SelfReferential",
+    "SquareStanzas",
+    "TriangularVerse",
+]
+
 
 def get_all_forms() -> dict[str, object]:
-    """Get all form classes (novel + hard)."""
-    from abide.forms import hard, novel
+    """Get all form classes (novel + hard + math)."""
+    from abide.forms import hard, mathematical, novel
 
     forms = {}
 
@@ -138,6 +151,16 @@ def get_all_forms() -> dict[str, object]:
     for name in HARD_FORMS:
         if hasattr(hard, name):
             form_class = getattr(hard, name)
+            try:
+                instance = form_class()
+                forms[name] = instance
+            except Exception as e:
+                print(f"Warning: Could not instantiate {name}: {e}")
+
+    # Load mathematical forms
+    for name in MATH_FORMS:
+        if hasattr(mathematical, name):
+            form_class = getattr(mathematical, name)
             try:
                 instance = form_class()
                 forms[name] = instance
@@ -359,7 +382,10 @@ def main() -> int:
 
     # Get all forms (novel + hard)
     all_forms = get_all_forms()
-    print(f"Found {len(all_forms)} forms ({len(NOVEL_FORMS)} novel + {len(HARD_FORMS)} hard)")
+    print(
+        f"Found {len(all_forms)} forms "
+        f"({len(NOVEL_FORMS)} novel + {len(HARD_FORMS)} hard + {len(MATH_FORMS)} math)"
+    )
 
     # Filter if specified
     if args.forms:
