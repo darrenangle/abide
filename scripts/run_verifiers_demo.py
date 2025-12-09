@@ -26,6 +26,7 @@ import argparse
 import inspect
 import os
 import sys
+import time
 from pathlib import Path
 
 # Add src to path for development
@@ -63,13 +64,12 @@ def run_verifiers_eval(
     forms: dict[str, object],
     topic: str,
     rollouts: int = 2,
+    max_retries: int = 3,
+    retry_delay: float = 2.0,
 ) -> None:
-    """Run evaluation using the verifiers framework."""
+    """Run evaluation with robust error handling."""
     try:
-        from datasets import Dataset
         from openai import OpenAI
-
-        import verifiers as vf
     except ImportError as e:
         print(f"Error: Missing dependency - {e}")
         print("Install with: uv sync --extra evals")
@@ -79,103 +79,106 @@ def run_verifiers_eval(
     client = OpenAI(
         api_key=os.environ["OPENROUTER_API_KEY"],
         base_url="https://openrouter.ai/api/v1",
-        timeout=60.0,  # 60 second timeout per request
+        timeout=90.0,
     )
 
-    print("Running verifiers evaluation")
+    print("Running verifiers evaluation (with retry/skip)")
     print(f"Model: {model}")
     print(f"Forms: {len(forms)}")
     print(f"Topic: {topic}")
     print(f"Rollouts per form: {rollouts}")
+    print(f"Max retries per request: {max_retries}")
     print()
 
-    # Create dataset - one example per form
-    data_rows = []
-    for form_name, form_instance in forms.items():
-        prompt_text = create_prompt(form_name, form_instance, topic)
-        data_rows.append(
-            {
-                "question": prompt_text,
-                "answer": form_name,  # Used by reward func to get constraint
-            }
-        )
-
-    dataset = Dataset.from_list(data_rows)
-    print(f"Created dataset with {len(dataset)} examples")
-    print()
-
-    # Create a reward function that scores based on the form
-    def abide_reward(completion: list[dict], answer: str, **kwargs: object) -> float:
-        """Score poem against the target form."""
-        try:
-            # Extract the generated text from completion
-            poem = ""
-            for msg in reversed(completion):
-                if msg.get("role") == "assistant":
-                    content = msg.get("content")
-                    if content:
-                        poem = content
-                    break
-
-            if not poem:
-                return 0.0
-
-            # Get constraint for this form
-            form_instance = forms.get(answer)
-            if form_instance is None:
-                return 0.0
-
-            result = form_instance.verify(poem)
-            return result.score
-        except Exception as e:
-            print(f"  [reward error for {answer}: {e}]")
-            return 0.0
-
-    # Create rubric with single reward function
-    rubric = vf.Rubric(
-        funcs=[abide_reward],
-        weights=[1.0],
-    )
-
-    # Create environment
-    env = vf.SingleTurnEnv(
-        dataset=dataset,
-        rubric=rubric,
-    )
+    # Track results
+    form_scores: dict[str, list[float]] = {f: [] for f in forms}
+    errors: list[str] = []
+    skipped = 0
+    total_requests = len(forms) * rollouts
+    completed = 0
+    start_time = time.time()
 
     print("Starting evaluation...")
     print("-" * 60)
 
-    # Run evaluation
-    try:
-        results = env.evaluate_sync(
-            client=client,
-            model=model,
-            num_examples=len(dataset),
-            rollouts_per_example=rollouts,
-        )
-    except Exception as e:
-        print(f"\nEvaluation error: {e}")
-        print("Some models may not be compatible with this evaluation.")
-        return
+    for form_name, form_instance in forms.items():
+        prompt = create_prompt(form_name, form_instance, topic)
 
-    # Print results
+        for rollout_idx in range(rollouts):
+            completed += 1
+            progress = f"[{completed}/{total_requests}]"
+
+            # Retry loop
+            success = False
+            last_error = None
+
+            for attempt in range(max_retries):
+                try:
+                    # Make API request
+                    response = client.chat.completions.create(
+                        model=model,
+                        messages=[{"role": "user", "content": prompt}],
+                        max_tokens=2048,
+                        temperature=0.7,
+                    )
+
+                    # Extract poem from response
+                    poem = ""
+                    if response.choices and response.choices[0].message:
+                        poem = response.choices[0].message.content or ""
+
+                    if not poem.strip():
+                        raise ValueError("Empty response from model")
+
+                    # Score the poem
+                    result = form_instance.verify(poem)
+                    score = result.score
+                    form_scores[form_name].append(score)
+
+                    # Show progress
+                    status = "✓" if result.passed else "~"
+                    print(f"{progress} {form_name} r{rollout_idx + 1}: {status} {score:.0%}")
+
+                    success = True
+                    break
+
+                except KeyboardInterrupt:
+                    print("\n\nInterrupted by user. Showing partial results...\n")
+                    _print_results(form_scores, forms, errors, skipped, start_time)
+                    return
+
+                except Exception as e:
+                    last_error = str(e)
+                    if attempt < max_retries - 1:
+                        # Retry after delay
+                        time.sleep(retry_delay * (attempt + 1))  # Exponential backoff
+                    continue
+
+            if not success:
+                # All retries failed - skip this one
+                skipped += 1
+                error_msg = f"{form_name} r{rollout_idx + 1}: {last_error}"
+                errors.append(error_msg)
+                print(
+                    f"{progress} {form_name} r{rollout_idx + 1}: ✗ SKIPPED ({last_error[:50]}...)"
+                )
+
+    # Print final results
     print()
+    _print_results(form_scores, forms, errors, skipped, start_time)
+
+
+def _print_results(
+    form_scores: dict[str, list[float]],
+    forms: dict[str, object],
+    errors: list[str],
+    skipped: int,
+    start_time: float,
+) -> None:
+    """Print evaluation results."""
     print("=" * 60)
     print("Results")
     print("=" * 60)
-
-    # Aggregate by form
-    form_scores: dict[str, list[float]] = {f: [] for f in forms}
-
-    answers = results["answer"]
-    rewards = results["reward"]
-
-    for i in range(len(answers)):
-        form_name = answers[i]
-        score = rewards[i]
-        if form_name in form_scores:
-            form_scores[form_name].append(score)
 
     # Sort by score descending
     sorted_forms = sorted(
@@ -189,16 +192,25 @@ def run_verifiers_eval(
             mean_score = sum(scores) / len(scores)
             print(f"{form_name}: {mean_score:.1%} (n={len(scores)})")
 
-    # Overall
+    # Overall stats
     all_scores = [s for scores in form_scores.values() for s in scores]
+    elapsed = time.time() - start_time
+
+    print()
+    print("-" * 60)
     if all_scores:
-        print()
         print(f"Overall mean: {sum(all_scores) / len(all_scores):.1%}")
         print(f"Total samples: {len(all_scores)}")
+    print(f"Skipped: {skipped}")
+    print(f"Time: {elapsed:.1f}s")
 
-    # Show metadata
-    metadata = results["metadata"]
-    print(f"Time: {metadata['time_ms'] / 1000:.1f}s")
+    if errors:
+        print()
+        print("Errors encountered:")
+        for err in errors[:10]:  # Show first 10
+            print(f"  - {err[:80]}")
+        if len(errors) > 10:
+            print(f"  ... and {len(errors) - 10} more")
 
 
 def main() -> int:
@@ -231,6 +243,12 @@ def main() -> int:
         type=int,
         default=2,
         help="Number of rollouts per form (default: 2)",
+    )
+    parser.add_argument(
+        "--retries",
+        type=int,
+        default=3,
+        help="Max retries per failed request (default: 3)",
     )
 
     args = parser.parse_args()
@@ -266,6 +284,7 @@ def main() -> int:
             forms=forms,
             topic=args.topic,
             rollouts=args.rollouts,
+            max_retries=args.retries,
         )
         return 0
 
