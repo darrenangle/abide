@@ -243,6 +243,7 @@ def run_verifiers_eval(
     )
 
     # Print results
+    # GenerateOutputs is a TypedDict with lists: answer, reward, completion, etc.
     print()
     print("=" * 60)
     print("Results")
@@ -251,9 +252,12 @@ def run_verifiers_eval(
     # Aggregate by form
     form_scores: dict[str, list[float]] = {f: [] for f in forms}
 
-    for result in results:
-        form_name = result.get("answer", "unknown")
-        score = result.get("reward", 0.0)
+    answers = results["answer"]
+    rewards = results["reward"]
+
+    for i in range(len(answers)):
+        form_name = answers[i]
+        score = rewards[i]
         if form_name in form_scores:
             form_scores[form_name].append(score)
 
@@ -268,6 +272,10 @@ def run_verifiers_eval(
         print()
         print(f"Overall mean: {sum(all_scores) / len(all_scores):.2%}")
         print(f"Total samples: {len(all_scores)}")
+
+    # Show metadata
+    metadata = results["metadata"]
+    print(f"Time: {metadata['time_ms'] / 1000:.1f}s")
 
 
 def main() -> int:
