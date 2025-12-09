@@ -94,12 +94,33 @@ NOVEL_FORMS = [
     "WhisperPoem",
 ]
 
+# Hard forms designed to exploit LLM weaknesses
+HARD_FORMS = [
+    "AlternatingIsolation",
+    "ArithmeticVerse",
+    "CharacterBudgetPoem",
+    "CharacterPalindromePoem",
+    "CombinedChallenge",
+    "DescendingStaircasePoem",
+    "DoubleAcrosticPoem",
+    "ExactWordPoem",
+    "IsolatedCouplet",
+    "PositionalPoem",
+    "PrecisionHaiku",
+    "PrecisionVerse",
+    "StaircasePoem",
+    "TotalCharacterPoem",
+    "VowelBudgetPoem",
+]
 
-def get_novel_forms() -> dict[str, object]:
-    """Get all novel form classes from abide.forms.novel."""
-    from abide.forms import novel
+
+def get_novel_forms(include_hard: bool = False) -> dict[str, object]:
+    """Get all novel form classes from abide.forms.novel and optionally hard."""
+    from abide.forms import hard, novel
 
     forms = {}
+
+    # Load novel forms
     for name in NOVEL_FORMS:
         if hasattr(novel, name):
             form_class = getattr(novel, name)
@@ -109,6 +130,34 @@ def get_novel_forms() -> dict[str, object]:
                     instance = form_class(letters="ABCDEFGH")
                 else:
                     instance = form_class()
+                forms[name] = instance
+            except Exception as e:
+                print(f"Warning: Could not instantiate {name}: {e}")
+
+    # Load hard forms if requested
+    if include_hard:
+        for name in HARD_FORMS:
+            if hasattr(hard, name):
+                form_class = getattr(hard, name)
+                try:
+                    instance = form_class()
+                    forms[name] = instance
+                except Exception as e:
+                    print(f"Warning: Could not instantiate {name}: {e}")
+
+    return forms
+
+
+def get_hard_forms_only() -> dict[str, object]:
+    """Get only hard form classes."""
+    from abide.forms import hard
+
+    forms = {}
+    for name in HARD_FORMS:
+        if hasattr(hard, name):
+            form_class = getattr(hard, name)
+            try:
+                instance = form_class()
                 forms[name] = instance
             except Exception as e:
                 print(f"Warning: Could not instantiate {name}: {e}")
@@ -316,6 +365,16 @@ def main() -> int:
         default=2,
         help="Number of rollouts per form (default: 2)",
     )
+    parser.add_argument(
+        "--hard",
+        action="store_true",
+        help="Include hard forms (designed to exploit LLM weaknesses)",
+    )
+    parser.add_argument(
+        "--hard-only",
+        action="store_true",
+        help="Run only hard forms (skip novel forms)",
+    )
 
     args = parser.parse_args()
 
@@ -325,9 +384,18 @@ def main() -> int:
         print("Get your API key at https://openrouter.ai/keys")
         return 1
 
-    # Get all novel forms
-    all_forms = get_novel_forms()
-    print(f"Found {len(all_forms)} novel forms")
+    # Get forms based on flags
+    if args.hard_only:
+        all_forms = get_hard_forms_only()
+        print(f"Found {len(all_forms)} hard forms")
+        eval_title = "Hard Forms Evaluation (LLM Weakness Test)"
+    else:
+        all_forms = get_novel_forms(include_hard=args.hard)
+        if args.hard:
+            print(f"Found {len(all_forms)} forms (novel + hard)")
+        else:
+            print(f"Found {len(all_forms)} novel forms")
+        eval_title = "Novel Forms Evaluation (Instruction-Following Test)"
 
     # Filter if specified
     if args.forms:
@@ -341,7 +409,7 @@ def main() -> int:
         forms = all_forms
 
     print("=" * 60)
-    print("Novel Forms Evaluation (Instruction-Following Test)")
+    print(eval_title)
     print("=" * 60)
 
     try:
