@@ -303,10 +303,16 @@ def train_with_retry(config: TrainingConfig) -> int:
                 use_lora=True,
             )
 
+            # Load model without Liger Kernel (Gemma 3n not supported by Liger yet)
+            import verifiers as vf
+
+            model_path = config.resume_from or config.model_name
+            print(f"Loading model: {model_path} (without Liger Kernel)")
+            model, _tokenizer = vf.get_model_and_tokenizer(model_path, use_liger=False)
+
             # Create trainer
-            model_or_path = config.resume_from or config.model_name
             trainer = RLTrainer(
-                model=model_or_path,
+                model=model,
                 env=env,
                 args=rl_config,
             )
