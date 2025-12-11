@@ -1,349 +1,405 @@
 #!/usr/bin/env python3
 """
-GRPO training script for poetic form generation using verifiers.
+GRPO training script for poetic form generation using verifiers RLTrainer.
 
 Uses abide constraints as verifiable rewards to train models
 to follow complex poetic form requirements.
 
+Features:
+- Recombinant prompt generation (62k+ combinations)
+- Checkpointing every N steps
+- Best model tracking based on reward
+- Robust error handling with retries
+- Resume from checkpoint support
+
 Usage:
-    # Run baseline evaluation with local vLLM
-    uv run python scripts/train_grpo.py --eval-only
+    # Start vf-vllm on GPU 0 first (in separate terminal):
+    CUDA_VISIBLE_DEVICES=0 vf-vllm --model google/gemma-3n-e2b-it --port 8000 --enforce-eager
 
-    # Train using verifiers RLTrainer (requires prime-rl setup)
-    uv run python scripts/train_grpo.py --train
+    # Then run training on GPU 1:
+    CUDA_VISIBLE_DEVICES=1 python scripts/train_grpo.py
 
-    # Use OpenRouter for quick evaluation
-    uv run python scripts/train_grpo.py --eval-only --openrouter
-
-Prerequisites:
-    uv sync --extra evals
-    # For local inference: uv sync --extra vllm && python scripts/serve_local.py
-    # For training: uv run vf-setup (sets up prime-rl)
+    # Resume from checkpoint:
+    CUDA_VISIBLE_DEVICES=1 python scripts/train_grpo.py --resume models/abide_grpo/checkpoint-500
 """
 
 from __future__ import annotations
 
-import argparse
+import json
 import os
+import shutil
+import signal
 import sys
+import time
+import traceback
+from dataclasses import dataclass
 from pathlib import Path
 
 # Add src to path for development
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 
-# Forms selected for training (challenging but achievable)
-TRAINING_FORMS = [
-    # Hard forms - main targets
-    "StaircasePoem",
-    "VowelBudgetPoem",
-    "PrecisionVerse",
-    "ExactWordPoem",
-    "CharacterBudgetPoem",
-    "ArithmeticVerse",
-    # Mathematical forms
-    "FibonacciVerse",
-    "TriangularVerse",
-    "CoprimeVerse",
-    "PiKu",
-    # Novel forms - medium difficulty
-    "HourglassVerse",
-    "PrimeVerse",
-    "GoldenRatio",
-    "DescendingStaircase",
-]
+@dataclass
+class TrainingConfig:
+    """Training configuration with sensible defaults for 2x4090."""
+
+    # Model
+    model_name: str = "google/gemma-3n-e2b-it"  # Override with --model or ABIDE_MODEL env
+
+    # Dataset
+    num_prompts: int = 10000
+    seed: int = 42
+
+    # Training hyperparameters
+    num_train_epochs: int = 1
+    rollouts_per_example: int = 8
+    batch_size: int = 16
+    micro_batch_size: int = 2
+    learning_rate: float = 1e-6
+    max_seq_len: int = 2048
+    max_prompt_len: int = 512
+
+    # Checkpointing
+    output_dir: str = "models/abide_grpo"
+    save_steps: int = 100
+    eval_steps: int = 50
+    keep_best_n: int = 3
+
+    # Logging
+    logging_steps: int = 10
+    use_wandb: bool = True
+    wandb_project: str = "abide-grpo"
+
+    # vLLM
+    vllm_port: int = 8000
+
+    # Error handling
+    max_retries: int = 3
+    retry_delay: float = 5.0
+
+    # Resume
+    resume_from: str | None = None
 
 
-def get_forms(form_names: list[str] | None = None) -> dict[str, object]:
-    """Load form instances."""
+class BestModelTracker:
+    """Track and keep the N best models based on reward."""
+
+    def __init__(self, output_dir: str, keep_n: int = 3):
+        self.output_dir = Path(output_dir)
+        self.keep_n = keep_n
+        self.best_models: list[tuple[float, str]] = []  # (reward, path)
+        self.tracker_file = self.output_dir / "best_models.json"
+        self._load()
+
+    def _load(self):
+        """Load existing tracker state."""
+        if self.tracker_file.exists():
+            try:
+                with self.tracker_file.open() as f:
+                    data = json.load(f)
+                    self.best_models = [(m["reward"], m["path"]) for m in data]
+            except Exception:
+                self.best_models = []
+
+    def _save(self):
+        """Save tracker state."""
+        self.tracker_file.parent.mkdir(parents=True, exist_ok=True)
+        with self.tracker_file.open("w") as f:
+            json.dump(
+                [{"reward": r, "path": p} for r, p in self.best_models],
+                f,
+                indent=2,
+            )
+
+    def maybe_save(self, reward: float, step: int, save_fn) -> bool:
+        """Save model if it's among the best N."""
+        # Check if this would be in top N
+        if len(self.best_models) < self.keep_n or reward > self.best_models[-1][0]:
+            # Save the model
+            save_path = str(self.output_dir / f"best-step-{step}-reward-{reward:.4f}")
+            save_fn(save_path)
+
+            # Update tracker
+            self.best_models.append((reward, save_path))
+            self.best_models.sort(key=lambda x: -x[0])  # Sort by reward descending
+
+            # Remove old models if we have too many
+            while len(self.best_models) > self.keep_n:
+                _, old_path = self.best_models.pop()
+                if Path(old_path).exists():
+                    shutil.rmtree(old_path)
+                    print(f"  Removed old model: {old_path}")
+
+            self._save()
+            return True
+
+        return False
+
+    def get_best(self) -> str | None:
+        """Get path to best model."""
+        if self.best_models:
+            return self.best_models[0][1]
+        return None
+
+
+def get_forms() -> dict[str, object]:
+    """Load all training forms."""
     from abide.forms import hard, mathematical, novel
 
-    # Map form names to modules and classes
-    form_configs = {
-        # Hard forms with easier parameters
-        "StaircasePoem": (hard, "StaircasePoem", {"num_words": 7}),
-        "VowelBudgetPoem": (hard, "VowelBudgetPoem", {"vowel_count": 30}),
-        "PrecisionVerse": (hard, "PrecisionVerse", {"chars_per_line": 25}),
-        "ExactWordPoem": (hard, "ExactWordPoem", {"word_count": 20}),
-        "CharacterBudgetPoem": (hard, "CharacterBudgetPoem", {"character": "e", "count": 10}),
-        "ArithmeticVerse": (hard, "ArithmeticVerse", {}),
-        # Mathematical forms
-        "FibonacciVerse": (mathematical, "FibonacciVerse", {"num_lines": 5}),
-        "TriangularVerse": (mathematical, "TriangularVerse", {"num_lines": 4}),
-        "CoprimeVerse": (mathematical, "CoprimeVerse", {"num_lines": 4}),
-        "PiKu": (mathematical, "PiKu", {"num_lines": 5}),
-        # Novel forms
-        "HourglassVerse": (novel, "HourglassVerse", {}),
-        "PrimeVerse": (novel, "PrimeVerse", {}),
-        "GoldenRatio": (novel, "GoldenRatio", {}),
-        "DescendingStaircase": (novel, "DescendingStaircase", {}),
+    return {
+        "StaircasePoem": hard.StaircasePoem(num_words=7),
+        "VowelBudgetPoem": hard.VowelBudgetPoem(vowel_count=30),
+        "PrecisionVerse": hard.PrecisionVerse(chars_per_line=25),
+        "ExactWordPoem": hard.ExactWordPoem(word_count=20),
+        "CharacterBudgetPoem": hard.CharacterBudgetPoem(character="e", count=10),
+        "FibonacciVerse": mathematical.FibonacciVerse(num_lines=5),
+        "TriangularVerse": mathematical.TriangularVerse(num_lines=4),
+        "PiKu": mathematical.PiKu(num_lines=5),
+        "HourglassVerse": novel.HourglassVerse(),
+        "PrimeVerse": novel.PrimeVerse(),
+        "GoldenRatio": novel.GoldenRatio(),
     }
 
-    if form_names is None:
-        form_names = TRAINING_FORMS
 
-    forms = {}
-    for name in form_names:
-        if name in form_configs:
-            module, cls_name, kwargs = form_configs[name]
-            form_class = getattr(module, cls_name)
-            forms[name] = form_class(**kwargs)
-        else:
-            print(f"Warning: Unknown form {name}")
+def get_completion_text(completion) -> str:
+    """Extract text from completion."""
+    val = completion
+    if isinstance(val, list):
+        if len(val) > 0 and isinstance(val[0], dict):
+            val = val[-1].get("content", "")
+        elif len(val) > 0 and isinstance(val[0], str):
+            val = "".join(val)
+    if isinstance(val, list):
+        val = "".join([str(x) for x in val])
+    return str(val)
 
-    return forms
 
+def create_reward_function(forms: dict[str, object]):
+    """Create reward function closure over forms."""
 
-def create_abide_env(forms: dict[str, object], num_samples: int = 50):
-    """Create a verifiers SingleTurnEnv with abide rewards."""
-    from datasets import Dataset
-
-    import verifiers as vf
-
-    topics = [
-        "the passage of time",
-        "love and loss",
-        "nature and seasons",
-        "memory and dreams",
-        "hope and despair",
-        "the ocean at night",
-        "childhood memories",
-        "autumn leaves falling",
-        "a distant mountain",
-        "rain on windows",
-    ]
-
-    # Create dataset
-    data_rows = []
-    for form_name, form_instance in forms.items():
-        description = form_instance.describe()
-        for i in range(num_samples):
-            topic = topics[i % len(topics)]
-            prompt = (
-                f"Write a {form_name} poem about {topic}.\n"
-                f"Requirements: {description}\n"
-                f"Output ONLY the poem, nothing else."
-            )
-            data_rows.append(
-                {
-                    "question": prompt,
-                    "answer": form_name,
-                }
-            )
-
-    dataset = Dataset.from_list(data_rows)
-
-    # Create reward function
-    def abide_reward(completion: list[dict], answer: str, **kwargs) -> float:
-        """Score poem against the target form."""
+    def abide_reward(completion, **kwargs) -> float:
+        """Score poem against the target form. Returns 0-1 score."""
         try:
-            poem = ""
-            for msg in reversed(completion):
-                if msg.get("role") == "assistant":
-                    content = msg.get("content")
-                    if content:
-                        poem = content
-                    break
-
-            if not poem:
+            poem = get_completion_text(completion)
+            if not poem or len(poem.strip()) < 10:
                 return 0.0
 
-            form_instance = forms.get(answer)
+            form_name = kwargs.get("form_name")
+            if not form_name:
+                return 0.0
+
+            form_instance = forms.get(form_name)
             if form_instance is None:
                 return 0.0
 
             result = form_instance.verify(poem)
             return result.score
-        except Exception:
+        except Exception as e:
+            print(f"[reward error: {e}]")
             return 0.0
 
-    rubric = vf.Rubric(funcs=[abide_reward], weights=[1.0])
+    return abide_reward
+
+
+def create_environment(forms: dict[str, object], config: TrainingConfig):
+    """Create verifiers environment with generated prompts."""
+    from scripts.prompt_generator import generate_verifiers_dataset
+
+    import verifiers as vf
+
+    print(f"Generating {config.num_prompts} prompts...")
+    dataset = generate_verifiers_dataset(
+        num_prompts=config.num_prompts,
+        seed=config.seed,
+    )
+    print(f"Generated {len(dataset)} prompts")
+
+    reward_fn = create_reward_function(forms)
+    rubric = vf.Rubric(funcs=[reward_fn], weights=[1.0])
     env = vf.SingleTurnEnv(dataset=dataset, rubric=rubric)
 
-    return env, dataset
+    return env
 
 
-def run_evaluation(
-    env,
-    client,
-    model: str,
-    num_examples: int,
-    rollouts: int = 2,
-) -> dict:
-    """Run evaluation and print results."""
-    import time
+def setup_signal_handlers(trainer):
+    """Set up graceful shutdown on SIGINT/SIGTERM."""
+    original_sigint = signal.getsignal(signal.SIGINT)
+    original_sigterm = signal.getsignal(signal.SIGTERM)
 
-    print(f"\nEvaluating {num_examples} examples with {rollouts} rollouts each...")
-    start = time.time()
+    def handler(signum, frame):
+        print("\n" + "=" * 60)
+        print("Received interrupt signal. Saving checkpoint...")
+        print("=" * 60)
+        try:
+            trainer.save_model(trainer.args.output_dir + "/interrupt-checkpoint")
+            print(f"Saved to {trainer.args.output_dir}/interrupt-checkpoint")
+        except Exception as e:
+            print(f"Failed to save checkpoint: {e}")
+        # Restore original handlers and re-raise
+        signal.signal(signal.SIGINT, original_sigint)
+        signal.signal(signal.SIGTERM, original_sigterm)
+        raise KeyboardInterrupt
 
-    results = env.evaluate_sync(
-        client=client,
-        model=model,
-        num_examples=num_examples,
-        rollouts_per_example=rollouts,
-    )
+    signal.signal(signal.SIGINT, handler)
+    signal.signal(signal.SIGTERM, handler)
 
-    elapsed = time.time() - start
 
-    # Aggregate by form
-    form_scores: dict[str, list[float]] = {}
-    for i, answer in enumerate(results["answer"]):
-        if answer not in form_scores:
-            form_scores[answer] = []
-        form_scores[answer].append(results["reward"][i])
+def train_with_retry(config: TrainingConfig) -> int:
+    """Run training with retry logic."""
+    from verifiers.rl.trainer import RLConfig, RLTrainer
 
-    # Print results
-    print("\n" + "=" * 60)
-    print("EVALUATION RESULTS")
+    # Set WandB to offline to prevent network errors from crashing
+    os.environ["WANDB_MODE"] = "offline"
+    os.environ["WANDB_PROJECT"] = config.wandb_project
+
     print("=" * 60)
+    print("Abide GRPO Training")
+    print("=" * 60)
+    print(f"Model: {config.model_name}")
+    print(f"Prompts: {config.num_prompts}")
+    print(f"Rollouts per example: {config.rollouts_per_example}")
+    print(f"Total rollouts: ~{config.num_prompts * config.rollouts_per_example:,}")
+    print(f"Output: {config.output_dir}")
+    print("=" * 60)
+    print()
 
-    sorted_forms = sorted(form_scores.items(), key=lambda x: -sum(x[1]) / len(x[1]))
-    for form_name, scores in sorted_forms:
-        mean = sum(scores) / len(scores)
-        print(f"{form_name}: {mean:.1%} (n={len(scores)})")
+    # Load forms
+    forms = get_forms()
+    print(f"Forms: {len(forms)} ({', '.join(forms.keys())})")
 
-    all_scores = [s for scores in form_scores.values() for s in scores]
-    if all_scores:
-        overall_mean = sum(all_scores) / len(all_scores)
-        print(f"\nOverall: {overall_mean:.1%}")
-        print(f"Time: {elapsed:.1f}s")
+    # Create environment
+    env = create_environment(forms, config)
 
-    return results
+    # Best model tracker
+    best_tracker = BestModelTracker(config.output_dir, keep_n=config.keep_best_n)
+
+    # Training with retries
+    for attempt in range(config.max_retries):
+        try:
+            print(f"\nTraining attempt {attempt + 1}/{config.max_retries}")
+
+            # Configure training
+            rl_config = RLConfig(
+                output_dir=config.output_dir,
+                run_name=f"abide-grpo-{int(time.time())}",
+                learning_rate=config.learning_rate,
+                num_train_epochs=config.num_train_epochs,
+                per_device_train_batch_size=config.micro_batch_size,
+                batch_size=config.batch_size,
+                micro_batch_size=config.micro_batch_size,
+                rollouts_per_example=config.rollouts_per_example,
+                max_seq_len=config.max_seq_len,
+                max_prompt_len=config.max_prompt_len,
+                vllm_server_port=config.vllm_port,
+                temperature=0.7,
+                max_tokens=1500,
+                bf16=True,
+                gradient_checkpointing=True,
+                logging_steps=config.logging_steps,
+                save_steps=config.save_steps,
+                report_to="wandb" if config.use_wandb else "none",
+                remove_unused_columns=False,
+                use_lora=True,
+            )
+
+            # Create trainer
+            model_or_path = config.resume_from or config.model_name
+            trainer = RLTrainer(
+                model=model_or_path,
+                env=env,
+                args=rl_config,
+            )
+
+            # Set up graceful shutdown
+            setup_signal_handlers(trainer)
+
+            print("\nStarting training...")
+            print("=" * 60)
+
+            trainer.train()
+
+            print("\n" + "=" * 60)
+            print("Training Complete!")
+            print("=" * 60)
+
+            # Save final model
+            final_path = config.output_dir + "/final"
+            trainer.save_model(final_path)
+            print(f"Saved final model to {final_path}")
+
+            # Print best model info
+            best_path = best_tracker.get_best()
+            if best_path:
+                print(f"Best model: {best_path}")
+
+            return 0
+
+        except KeyboardInterrupt:
+            print("\nTraining interrupted by user.")
+            return 1
+
+        except Exception as e:
+            print(f"\nError during training: {e}")
+            traceback.print_exc()
+
+            if attempt < config.max_retries - 1:
+                print(f"Retrying in {config.retry_delay}s...")
+                time.sleep(config.retry_delay)
+
+                # Try to resume from last checkpoint
+                checkpoints = list(Path(config.output_dir).glob("checkpoint-*"))
+                if checkpoints:
+                    latest = max(checkpoints, key=lambda p: int(p.name.split("-")[1]))
+                    config.resume_from = str(latest)
+                    print(f"Will resume from {config.resume_from}")
+            else:
+                print("Max retries exceeded. Training failed.")
+                return 1
+
+    return 1
 
 
 def main() -> int:
+    """Main entry point."""
+    import argparse
+
     parser = argparse.ArgumentParser(
-        description="Train/evaluate models on poetic forms using verifiers + abide",
+        description="GRPO training for abide poetry forms",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-
-    parser.add_argument(
-        "--model",
-        default="google/gemma-3n-E4B-it",
-        help="Model to use (default: google/gemma-3n-E4B-it)",
-    )
-    parser.add_argument(
-        "--forms",
-        type=str,
-        default=None,
-        help="Comma-separated list of forms (default: all training forms)",
-    )
-    parser.add_argument(
-        "--samples",
-        type=int,
-        default=10,
-        help="Samples per form (default: 10)",
-    )
-    parser.add_argument(
-        "--rollouts",
-        type=int,
-        default=2,
-        help="Rollouts per example (default: 2)",
-    )
-
-    # Inference backend
-    backend = parser.add_mutually_exclusive_group()
-    backend.add_argument(
-        "--vllm-url",
-        default="http://localhost:8000",
-        help="vLLM server URL (default: http://localhost:8000)",
-    )
-    backend.add_argument(
-        "--openrouter",
-        action="store_true",
-        help="Use OpenRouter API (requires OPENROUTER_API_KEY)",
-    )
-
-    # Mode
-    mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument(
-        "--eval-only",
-        action="store_true",
-        help="Run evaluation only",
-    )
-    mode.add_argument(
-        "--train",
-        action="store_true",
-        help="Run GRPO training (requires prime-rl setup)",
-    )
-
+    parser.add_argument("--model", default=None, help="Model name or path")
+    parser.add_argument("--prompts", type=int, default=10000, help="Number of prompts")
+    parser.add_argument("--rollouts", type=int, default=8, help="Rollouts per example")
+    parser.add_argument("--batch-size", type=int, default=16, help="Batch size")
+    parser.add_argument("--lr", type=float, default=1e-6, help="Learning rate")
+    parser.add_argument("--output", default="models/abide_grpo", help="Output directory")
+    parser.add_argument("--save-steps", type=int, default=100, help="Save every N steps")
+    parser.add_argument("--resume", type=str, help="Resume from checkpoint")
+    parser.add_argument("--port", type=int, default=8000, help="vLLM port")
+    parser.add_argument("--no-wandb", action="store_true", help="Disable wandb")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed")
     args = parser.parse_args()
 
-    # Get forms
-    form_names = args.forms.split(",") if args.forms else None
-    forms = get_forms(form_names)
-    if not forms:
-        print("Error: No valid forms specified")
-        return 1
+    config = TrainingConfig(
+        num_prompts=args.prompts,
+        rollouts_per_example=args.rollouts,
+        batch_size=args.batch_size,
+        learning_rate=args.lr,
+        output_dir=args.output,
+        save_steps=args.save_steps,
+        resume_from=args.resume,
+        vllm_port=args.port,
+        use_wandb=not args.no_wandb,
+        seed=args.seed,
+    )
 
-    print("=" * 60)
-    print("Abide Poetry Training/Evaluation")
-    print("=" * 60)
-    print(f"Model: {args.model}")
-    print(f"Forms: {len(forms)} ({', '.join(forms.keys())})")
-    print()
+    if args.model:
+        config.model_name = args.model
+    elif os.environ.get("ABIDE_MODEL"):
+        config.model_name = os.environ["ABIDE_MODEL"]
 
-    # Create environment
-    env, dataset = create_abide_env(forms, num_samples=args.samples)
-
-    # Set up client
-    from openai import OpenAI
-
-    if args.openrouter:
-        api_key = os.getenv("OPENROUTER_API_KEY")
-        if not api_key:
-            print("Error: OPENROUTER_API_KEY not set")
-            return 1
-        client = OpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=api_key,
-            timeout=120.0,
-        )
-        print("Using OpenRouter API")
-    else:
-        client = OpenAI(
-            base_url=f"{args.vllm_url}/v1",
-            api_key="local",
-            timeout=120.0,
-        )
-        print(f"Using local vLLM at {args.vllm_url}")
-
-    if args.eval_only:
-        run_evaluation(
-            env=env,
-            client=client,
-            model=args.model,
-            num_examples=len(dataset),
-            rollouts=args.rollouts,
-        )
-        return 0
-
-    if args.train:
-        print("\n" + "=" * 60)
-        print("GRPO TRAINING")
-        print("=" * 60)
-        print()
-        print("To train with verifiers, use the prime-rl setup:")
-        print()
-        print("  1. Set up prime-rl:")
-        print("     uv run vf-setup")
-        print()
-        print("  2. Create a config file (configs/abide-poetry.toml):")
-        print("     [model]")
-        print(f'     name = "{args.model}"')
-        print()
-        print("     [env]")
-        print('     name = "abide-poetry"')
-        print()
-        print("  3. Run training:")
-        print("     uv run prime-rl @ configs/abide-poetry.toml")
-        print()
-        print("Alternatively, for a simpler setup, use TRL directly:")
-        print("  See: https://github.com/willccbb/verifiers for examples")
-        return 0
-
-    return 0
+    return train_with_retry(config)
 
 
 if __name__ == "__main__":
