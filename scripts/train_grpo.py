@@ -311,7 +311,7 @@ def train_with_retry(config: TrainingConfig) -> int:
             print(f"Loading model: {model_path}")
             model = AutoModelForCausalLM.from_pretrained(
                 model_path,
-                torch_dtype=torch.bfloat16,
+                dtype=torch.bfloat16,
                 attn_implementation="flash_attention_2",
             )
 
