@@ -303,12 +303,17 @@ def train_with_retry(config: TrainingConfig) -> int:
                 use_lora=True,
             )
 
-            # Load model without Liger Kernel (Gemma 3n not supported by Liger yet)
-            import verifiers as vf
+            # Load model manually (Gemma 3n needs special handling - no Liger, no use_cache)
+            import torch
+            from transformers import AutoModelForCausalLM
 
             model_path = config.resume_from or config.model_name
-            print(f"Loading model: {model_path} (without Liger Kernel)")
-            model, _tokenizer = vf.get_model_and_tokenizer(model_path, use_liger=False)
+            print(f"Loading model: {model_path}")
+            model = AutoModelForCausalLM.from_pretrained(
+                model_path,
+                torch_dtype=torch.bfloat16,
+                attn_implementation="flash_attention_2",
+            )
 
             # Create trainer
             trainer = RLTrainer(
