@@ -246,7 +246,9 @@ class Skeltonic(Constraint):
 
         line_syllables = [count_line_syllables(line) for line in structure.lines]
         short_line_count = sum(1 for s in line_syllables if s <= self.max_syllables)
-        short_line_score = short_line_count / max(1, len(structure.lines))
+        # Quadratic penalty for stricter GRPO training
+        linear_short_line = short_line_count / max(1, len(structure.lines))
+        short_line_score = linear_short_line**2
 
         # Check for heavy rhyming (consecutive rhymes)
         # Skeltonic verse often has 3+ lines rhyming together
@@ -272,8 +274,8 @@ class Skeltonic(Constraint):
         # Score based on number of rhyme runs (more = more Skeltonic)
         rhyme_score = min(1.0, rhyme_runs / 3)  # Expect ~3 runs of 3+ rhymes
 
-        # Combine scores
-        score = line_result.score * 0.3 + short_line_score * 0.4 + rhyme_score * 0.3
+        # Combine scores - defining characteristics get more weight
+        score = line_result.score * 0.1 + short_line_score * 0.45 + rhyme_score * 0.45
         passed = score >= 0.6
 
         return VerificationResult(
