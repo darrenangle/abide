@@ -305,7 +305,7 @@ def train_with_retry(config: TrainingConfig) -> int:
 
             # Load model manually (Gemma 3n needs special handling - no Liger, no use_cache)
             import torch
-            from transformers import AutoModelForCausalLM
+            from transformers import AutoModelForCausalLM, AutoTokenizer
 
             model_path = config.resume_from or config.model_name
             print(f"Loading model: {model_path}")
@@ -314,12 +314,14 @@ def train_with_retry(config: TrainingConfig) -> int:
                 dtype=torch.bfloat16,
                 attn_implementation="flash_attention_2",
             )
+            tokenizer = AutoTokenizer.from_pretrained(model_path)
 
             # Create trainer
             trainer = RLTrainer(
                 model=model,
                 env=env,
                 args=rl_config,
+                processing_class=tokenizer,
             )
 
             # Set up graceful shutdown
