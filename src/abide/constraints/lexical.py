@@ -60,8 +60,11 @@ class WordCount(Constraint):
             else:
                 details.append(f"Line {i + 1}: ✗ {actual} words (expected {expected})")
 
-        score = matches / max(1, len(structure.lines))
-        passed = score >= 0.8
+        # Quadratic penalty: 3/9 correct = 0.11 instead of 0.33
+        # This makes partial compliance less rewarding in GRPO training
+        linear_score = matches / max(1, len(structure.lines))
+        score = linear_score**2
+        passed = linear_score >= 0.9  # Stricter pass threshold
 
         return VerificationResult(
             score=score,
@@ -69,7 +72,7 @@ class WordCount(Constraint):
             rubric=[],
             constraint_name=self.name,
             constraint_type=self.constraint_type,
-            details={"matches": matches, "line_details": details},
+            details={"matches": matches, "linear_score": linear_score, "line_details": details},
         )
 
     def describe(self) -> str:
@@ -265,8 +268,10 @@ class WordLengthPattern(Constraint):
 
                 details.append(f"Line {i + 1}: {line_matches}/{len(line_pattern)} match")
 
-        score = matches / max(1, total)
-        passed = score >= 0.8
+        # Quadratic penalty for stricter GRPO training
+        linear_score = matches / max(1, total)
+        score = linear_score**2
+        passed = linear_score >= 0.8
 
         return VerificationResult(
             score=score,
@@ -413,8 +418,10 @@ class CharacterCount(Constraint):
             else:
                 details.append(f"Line {i + 1}: ✗ {actual} chars (expected {expected})")
 
-        score = matches / max(1, len(structure.lines))
-        passed = score >= 0.8
+        # Quadratic penalty for stricter GRPO training
+        linear_score = matches / max(1, len(structure.lines))
+        score = linear_score**2
+        passed = linear_score >= 0.9
 
         return VerificationResult(
             score=score,
@@ -422,7 +429,7 @@ class CharacterCount(Constraint):
             rubric=[],
             constraint_name=self.name,
             constraint_type=self.constraint_type,
-            details={"matches": matches, "line_details": details},
+            details={"matches": matches, "linear_score": linear_score, "line_details": details},
         )
 
     def describe(self) -> str:
@@ -472,8 +479,10 @@ class LineStartsWith(Constraint):
             else:
                 details.append(f"Line {i + 1}: ✗ expected '{expected}'")
 
-        score = matches / max(1, len(structure.lines))
-        passed = score >= 0.8
+        # Quadratic penalty for stricter GRPO training
+        linear_score = matches / max(1, len(structure.lines))
+        score = linear_score**2
+        passed = linear_score >= 0.8
 
         return VerificationResult(
             score=score,
@@ -531,8 +540,10 @@ class LineEndsWith(Constraint):
             else:
                 details.append(f"Line {i + 1}: ✗ expected '{expected}'")
 
-        score = matches / max(1, len(structure.lines))
-        passed = score >= 0.8
+        # Quadratic penalty for stricter GRPO training
+        linear_score = matches / max(1, len(structure.lines))
+        score = linear_score**2
+        passed = linear_score >= 0.8
 
         return VerificationResult(
             score=score,
@@ -719,7 +730,9 @@ class VowelConsonantPattern(Constraint):
                 if line_match:
                     matches += 1
 
-            score = matches / max(1, len(structure.lines))
+            # Quadratic penalty for stricter GRPO training
+            linear_score = matches / max(1, len(structure.lines))
+            score = linear_score**2
         else:
             # Pattern applies to all words in sequence
             all_words = []
@@ -736,9 +749,11 @@ class VowelConsonantPattern(Constraint):
                 if is_vowel == expects_vowel:
                     matches += 1
 
-            score = matches / max(1, len(all_words))
+            # Quadratic penalty for stricter GRPO training
+            linear_score = matches / max(1, len(all_words))
+            score = linear_score**2
 
-        passed = score >= 0.8
+        passed = linear_score >= 0.8
 
         return VerificationResult(
             score=score,
@@ -980,7 +995,9 @@ class WordLengthStaircase(Constraint):
                 )
 
         total = len(words_to_check)
-        score = matches / max(1, total)
+        # Quadratic penalty for stricter GRPO training
+        linear_score = matches / max(1, total)
+        score = linear_score**2
         passed = matches == total and total >= self.max_words
 
         return VerificationResult(
@@ -1068,7 +1085,9 @@ class CrossLineVowelWordCount(Constraint):
 
             details[-1] += f" [this line has {vowels_in_line} vowels]"
 
-        score = matches / max(1, len(structure.lines))
+        # Quadratic penalty for stricter GRPO training
+        linear_score = matches / max(1, len(structure.lines))
+        score = linear_score**2
         passed = matches == len(structure.lines)
 
         return VerificationResult(
@@ -1145,7 +1164,9 @@ class NoSharedLetters(Constraint):
                 )
 
         total = len(pairs_to_check)
-        score = matches / max(1, total)
+        # Quadratic penalty for stricter GRPO training
+        linear_score = matches / max(1, total)
+        score = linear_score**2
         passed = matches == total and total > 0
 
         return VerificationResult(
@@ -1283,7 +1304,9 @@ class CharacterPalindrome(Constraint):
                 )
 
         total = len(lines_to_check)
-        score = matches / max(1, total)
+        # Quadratic penalty for stricter GRPO training
+        linear_score = matches / max(1, total)
+        score = linear_score**2
         passed = matches == total and total > 0
 
         return VerificationResult(
@@ -1534,7 +1557,9 @@ class PositionalCharacter(Constraint):
                 else:
                     details.append(f"Position {pos}: ✗ poem too short")
 
-        score = matches / max(1, total)
+        # Quadratic penalty for stricter GRPO training
+        linear_score = matches / max(1, total)
+        score = linear_score**2
         passed = matches == total and total > 0
 
         return VerificationResult(
