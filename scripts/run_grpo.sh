@@ -2,7 +2,8 @@
 set -e
 
 # GRPO Training for Abide Poetry Forms
-# Uses 2x4090 GPUs: vLLM on GPU 0, Training on GPU 1
+# Uses 2x4090 GPUs: vLLM on GPU 1, Training on GPU 0
+# (GPU order matters for NCCL - training must be on GPU 0)
 
 # Configuration
 MODEL="${ABIDE_MODEL:-google/gemma-3n-e2b-it}"
@@ -23,8 +24,8 @@ echo "============================================================"
 echo "Abide GRPO Training"
 echo "============================================================"
 echo "Model: $MODEL"
-echo "vLLM: GPU 0, port $PORT"
-echo "Training: GPU 1"
+echo "vLLM: GPU 1, port $PORT"
+echo "Training: GPU 0"
 echo "============================================================"
 
 # Cleanup old processes
@@ -36,9 +37,9 @@ sleep 2
 # Create log directory
 mkdir -p logs
 
-# Start vf-vllm on GPU 0
-echo "Starting vf-vllm on GPU 0..."
-CUDA_VISIBLE_DEVICES=0 nohup vf-vllm \
+# Start vf-vllm on GPU 1
+echo "Starting vf-vllm on GPU 1..."
+CUDA_VISIBLE_DEVICES=1 nohup /home/darren/miniconda3/bin/vf-vllm \
     --model "$MODEL" \
     --port $PORT \
     --gpu-memory-utilization 0.85 \
@@ -46,6 +47,7 @@ CUDA_VISIBLE_DEVICES=0 nohup vf-vllm \
     --max-model-len 2048 \
     --trust-remote-code \
     --disable-log-stats \
+    --enforce-eager \
     > logs/vllm.log 2>&1 &
 
 VLLM_PID=$!
@@ -60,10 +62,11 @@ timeout 300 bash -c "until curl -s localhost:$PORT/health > /dev/null 2>&1; do s
 }
 echo "vLLM is ready!"
 
-# Run training on GPU 1
+# Run training on GPU 0
 echo ""
-echo "Starting training on GPU 1..."
-CUDA_VISIBLE_DEVICES=1 python scripts/train_grpo.py
+echo "Starting training on GPU 0..."
+export OMP_NUM_THREADS=4
+CUDA_VISIBLE_DEVICES=0 /home/darren/miniconda3/bin/torchrun --nproc_per_node=1 scripts/train_grpo.py
 
 # Cleanup
 echo ""
