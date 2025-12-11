@@ -199,12 +199,16 @@ def generate_dataset(
     form_names = list(forms.keys())
 
     dataset = []
-    prompts_per_form = num_prompts // len(form_names)
+    # Ensure at least 1 prompt per form, distribute remainder
+    base_per_form = max(1, num_prompts // len(form_names))
+    remainder = num_prompts - (base_per_form * len(form_names))
 
-    for form_name in form_names:
+    for i, form_name in enumerate(form_names):
         form_instance = forms[form_name]
+        # First forms get extra prompts from remainder
+        count = base_per_form + (1 if i < remainder else 0)
 
-        for _ in range(prompts_per_form):
+        for _ in range(count):
             topic = random.choice(ALL_TOPICS)
             style = random.choice(STYLE_MODIFIERS)
             emphasis = random.choice(CONSTRAINT_EMPHASIS) if random.random() < 0.3 else ""
