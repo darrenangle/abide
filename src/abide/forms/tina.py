@@ -14,6 +14,7 @@ from abide.constraints import (
     And,
     Constraint,
     ConstraintType,
+    EndWordPattern,
     LineCount,
     RhymeScheme,
     StanzaCount,
@@ -79,14 +80,21 @@ class Tritina(Constraint):
         self._stanza_count = StanzaCount(stanza_count, weight=1.0)
         self._stanza_sizes = StanzaSizes(stanza_sizes, weight=1.0)
 
-        # Note: End-word rotation is a semantic constraint that requires
-        # checking actual word content, not just structure.
-        # For now, we verify structural requirements only.
+        # End-word rotation: ABC -> CAB -> BCA
+        # Rotation [2,0,1] means: position 0 gets from position 2, position 1 from 0, position 2 from 1
+        self._end_words = EndWordPattern(
+            num_words=3,
+            num_stanzas=3,  # Only check main stanzas, not envoi
+            rotation=[2, 0, 1],
+            weight=3.0,  # High weight - this is THE defining characteristic
+            threshold=0.8,
+        )
 
         constraints = [
             (self._line_count, 2.0),
             (self._stanza_count, 1.0),
             (self._stanza_sizes, 1.0),
+            (self._end_words, 3.0),  # End-word rotation is critical
         ]
 
         self._constraint: Constraint
@@ -108,7 +116,7 @@ class Tritina(Constraint):
 
     def describe(self) -> str:
         lines = "10 (9 + envoi)" if self.include_envoi else "9"
-        return f"Tritina: {lines} lines with 3 rotating end-words"
+        return f"Tritina: {lines} lines with 3 rotating end-words (ABC->CAB->BCA)"
 
 
 class Quatina(Constraint):
@@ -162,10 +170,21 @@ class Quatina(Constraint):
         self._stanza_count = StanzaCount(stanza_count, weight=1.0)
         self._stanza_sizes = StanzaSizes(stanza_sizes, weight=1.0)
 
+        # End-word rotation: ABCD -> DABC -> CDAB -> BCDA
+        # Rotation [3,0,1,2] means: last word becomes first, others shift right
+        self._end_words = EndWordPattern(
+            num_words=4,
+            num_stanzas=4,  # Only check main stanzas, not envoi
+            rotation=[3, 0, 1, 2],
+            weight=3.0,  # High weight - this is THE defining characteristic
+            threshold=0.8,
+        )
+
         constraints = [
             (self._line_count, 2.0),
             (self._stanza_count, 1.0),
             (self._stanza_sizes, 1.0),
+            (self._end_words, 3.0),  # End-word rotation is critical
         ]
 
         self._constraint: Constraint
@@ -187,7 +206,7 @@ class Quatina(Constraint):
 
     def describe(self) -> str:
         lines = "18 (16 + envoi)" if self.include_envoi else "16"
-        return f"Quatina: {lines} lines with 4 rotating end-words"
+        return f"Quatina: {lines} lines with 4 rotating end-words (ABCD->DABC->CDAB->BCDA)"
 
 
 class Quintina(Constraint):
@@ -246,10 +265,21 @@ class Quintina(Constraint):
         self._stanza_count = StanzaCount(stanza_count, weight=1.0)
         self._stanza_sizes = StanzaSizes(stanza_sizes, weight=1.0)
 
+        # End-word rotation: ABCDE -> EABCD -> DEABC -> CDEAB -> BCDEA
+        # Rotation [4,0,1,2,3] means: last word becomes first, others shift right
+        self._end_words = EndWordPattern(
+            num_words=5,
+            num_stanzas=5,  # Only check main stanzas, not coda
+            rotation=[4, 0, 1, 2, 3],
+            weight=3.0,  # High weight - this is THE defining characteristic
+            threshold=0.8,
+        )
+
         constraints = [
             (self._line_count, 2.0),
             (self._stanza_count, 1.0),
             (self._stanza_sizes, 1.0),
+            (self._end_words, 3.0),  # End-word rotation is critical
         ]
 
         self._constraint: Constraint
@@ -271,7 +301,9 @@ class Quintina(Constraint):
 
     def describe(self) -> str:
         lines = f"{25 + self.coda_lines} (25 + coda)" if self.include_coda else "25"
-        return f"Quintina: {lines} lines with 5 rotating end-words"
+        return (
+            f"Quintina: {lines} lines with 5 rotating end-words (ABCDE->EABCD->DEABC->CDEAB->BCDEA)"
+        )
 
 
 class Terzanelle(Constraint):

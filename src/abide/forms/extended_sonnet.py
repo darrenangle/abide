@@ -13,6 +13,7 @@ from abide.constraints import (
     Constraint,
     ConstraintType,
     LineCount,
+    Refrain,
     RhymeScheme,
     StanzaCount,
     StanzaSizes,
@@ -166,11 +167,36 @@ class CrownOfSonnets(Constraint):
             threshold=rhyme_threshold,
         )
 
-        constraints = [
+        # Crown linking: last line of each sonnet = first line of next
+        # For 7 sonnets: line 14->15, 28->29, 42->43, 56->57, 70->71, 84->85
+        # Plus circular: line 98 = line 1 (0-indexed: 97 = 0)
+        self._links: list[Refrain] = []
+        for i in range(sonnet_count - 1):
+            # Last line of sonnet i (0-indexed: 14*(i+1)-1 = 13, 27, 41, etc.)
+            # Should equal first line of sonnet i+1 (0-indexed: 14*(i+1))
+            ref_line = 14 * (i + 1) - 1  # 13, 27, 41, 55, 69, 83 for 7 sonnets
+            repeat_line = 14 * (i + 1)  # 14, 28, 42, 56, 70, 84
+            self._links.append(
+                Refrain(reference_line=ref_line, repeat_at=[repeat_line], weight=1.5)
+            )
+
+        # Circular closure: first line = last line
+        # Line 0 should equal line 97 (for 7 sonnets)
+        self._circular = Refrain(
+            reference_line=0,
+            repeat_at=[total_lines - 1],  # 97 for 7 sonnets
+            weight=1.5,
+        )
+
+        constraints: list[tuple[Constraint, float]] = [
             (self._line_count, 2.0),
             (self._stanza_count, 1.5),
             (self._rhyme, 2.0),
         ]
+        # Add all linking constraints
+        for link in self._links:
+            constraints.append((link, 1.5))
+        constraints.append((self._circular, 1.5))
 
         self._constraint: Constraint
         if strict:
@@ -191,7 +217,8 @@ class CrownOfSonnets(Constraint):
 
     def describe(self) -> str:
         return (
-            f"Crown of Sonnets: {self.sonnet_count} linked sonnets ({self.sonnet_count * 14} lines)"
+            f"Crown of Sonnets: {self.sonnet_count} linked sonnets ({self.sonnet_count * 14} lines), "
+            f"last line of each = first of next, circular"
         )
 
 

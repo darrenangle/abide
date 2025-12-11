@@ -15,6 +15,7 @@ from abide.constraints import (
     LineCount,
     RhymeScheme,
     StanzaCount,
+    SyllablesPerLine,
     VerificationResult,
     WeightedSum,
 )
@@ -53,6 +54,7 @@ class Limerick(Constraint):
     def __init__(
         self,
         weight: float = 1.0,
+        syllable_tolerance: int = 2,
         rhyme_threshold: float = 0.6,
         strict: bool = False,
     ) -> None:
@@ -61,10 +63,12 @@ class Limerick(Constraint):
 
         Args:
             weight: Relative weight for composition
+            syllable_tolerance: Allow +/- this many syllables per line
             rhyme_threshold: Minimum score for rhymes to count
             strict: If True, all constraints must pass
         """
         super().__init__(weight)
+        self.syllable_tolerance = syllable_tolerance
         self.rhyme_threshold = rhyme_threshold
         self.strict = strict
 
@@ -76,6 +80,14 @@ class Limerick(Constraint):
             threshold=rhyme_threshold,
         )
 
+        # Syllable pattern: lines 1,2,5 are longer (8 syllables)
+        # Lines 3,4 are shorter (5 syllables)
+        self._syllables = SyllablesPerLine(
+            [8, 8, 5, 5, 8],
+            weight=1.5,
+            tolerance=syllable_tolerance,
+        )
+
         self._constraint: Constraint
         if strict:
             self._constraint = And(
@@ -83,6 +95,7 @@ class Limerick(Constraint):
                     self._line_count,
                     self._stanza_count,
                     self._rhyme_scheme,
+                    self._syllables,
                 ]
             )
         else:
@@ -91,6 +104,7 @@ class Limerick(Constraint):
                     (self._line_count, 2.0),
                     (self._stanza_count, 0.5),
                     (self._rhyme_scheme, 2.0),
+                    (self._syllables, 1.5),
                 ],
                 threshold=0.6,
             )
@@ -107,4 +121,4 @@ class Limerick(Constraint):
         )
 
     def describe(self) -> str:
-        return "Limerick: 5 lines with AABBA rhyme scheme"
+        return "Limerick: 5 lines with AABBA rhyme scheme (8-8-5-5-8 syllables)"

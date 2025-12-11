@@ -255,7 +255,9 @@ class Roundel(Constraint):
 
         constraints = [
             (self._line_count, 2.0),
+            (self._stanza_count, 1.0),
             (self._rhyme, 1.5),
+            (self._refrain, 1.5),  # Rentrement verification
         ]
 
         self._constraint: Constraint
@@ -276,7 +278,7 @@ class Roundel(Constraint):
         )
 
     def describe(self) -> str:
-        return "Roundel: 11 lines in 3 stanzas with partial refrain"
+        return "Roundel: 11 lines in 3 stanzas with partial refrain (rentrement)"
 
 
 class Rondine(Constraint):
