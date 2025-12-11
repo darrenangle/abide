@@ -13,6 +13,7 @@ from abide.constraints import (
     Constraint,
     ConstraintType,
     LineCount,
+    Refrain,
     RhymeScheme,
     StanzaCount,
     SyllablesPerLine,
@@ -88,11 +89,21 @@ class Kyrielle(Constraint):
             threshold=rhyme_threshold,
         )
 
+        # Refrain: last line of each stanza should be identical
+        # For stanza_count stanzas: lines 4, 8, 12, ... (0-indexed: 3, 7, 11, ...)
+        refrain_positions = [4 * (i + 1) - 1 for i in range(1, self.stanza_count_val)]
+        self._refrain = Refrain(
+            reference_line=3,  # First refrain at line 4 (0-indexed: 3)
+            repeat_at=refrain_positions,
+            weight=2.0,
+        )
+
         constraints = [
             (self._line_count, 2.0),
             (self._stanza_count, 1.5),
             (self._syllables, 1.0),
             (self._rhyme_scheme, 2.0),
+            (self._refrain, 2.0),  # Refrain lines must be identical
         ]
 
         self._constraint: Constraint

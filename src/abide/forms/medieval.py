@@ -13,6 +13,7 @@ from abide.constraints import (
     Constraint,
     ConstraintType,
     LineCount,
+    Refrain,
     RhymeScheme,
     StanzaCount,
     StanzaSizes,
@@ -93,12 +94,21 @@ class ChantRoyal(Constraint):
             tolerance=syllable_tolerance,
         )
 
+        # Refrain: last line of each stanza should be identical
+        # 5 stanzas of 11 lines each: lines 11, 22, 33, 44, 55 (0-indexed: 10, 21, 32, 43, 54)
+        self._refrain = Refrain(
+            reference_line=10,
+            repeat_at=[21, 32, 43, 54],
+            weight=2.0,
+        )
+
         constraints = [
             (self._line_count, 2.0),
             (self._stanza_count, 1.0),
             (self._stanza_sizes, 1.0),
             (self._rhyme, 2.0),
             (self._syllables, 1.0),
+            (self._refrain, 2.0),
         ]
 
         self._constraint: Constraint
@@ -188,12 +198,21 @@ class DoubleBallade(Constraint):
             tolerance=syllable_tolerance,
         )
 
+        # Refrain: last line of each stanza should be identical
+        # 6 stanzas of 8 lines each: lines 8, 16, 24, 32, 40, 48 (0-indexed: 7, 15, 23, 31, 39, 47)
+        self._refrain = Refrain(
+            reference_line=7,
+            repeat_at=[15, 23, 31, 39, 47],
+            weight=2.0,
+        )
+
         constraints = [
             (self._line_count, 2.0),
             (self._stanza_count, 1.0),
             (self._stanza_sizes, 1.0),
             (self._rhyme, 2.0),
             (self._syllables, 1.0),
+            (self._refrain, 2.0),
         ]
 
         self._constraint: Constraint
