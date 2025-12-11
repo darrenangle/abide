@@ -71,7 +71,9 @@ class HourglassVerse(Constraint):
         line_result = self._line_count.verify(poem)
         word_result = self._word_count.verify(poem)
 
-        score = line_result.score * 0.3 + word_result.score * 0.7
+        # Word pattern is THE defining characteristic - it gets 90% weight
+        # Line count is just a prerequisite, not worth much on its own
+        score = line_result.score * 0.1 + word_result.score * 0.9
         passed = line_result.passed and word_result.passed
 
         return VerificationResult(
@@ -126,7 +128,7 @@ class PrimeVerse(Constraint):
         line_result = self._line_count.verify(poem)
         word_result = self._word_count.verify(poem)
 
-        score = line_result.score * 0.3 + word_result.score * 0.7
+        score = line_result.score * 0.1 + word_result.score * 0.9
         passed = line_result.passed and word_result.passed
 
         return VerificationResult(
@@ -198,9 +200,11 @@ class VowelPilgrimage(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ empty line")
 
-        vowel_score = matches / 5
+        # Quadratic penalty for stricter GRPO training
+        linear_vowel = matches / 5
+        vowel_score = linear_vowel**2
 
-        score = line_result.score * 0.3 + vowel_score * 0.7
+        score = line_result.score * 0.1 + vowel_score * 0.9
         passed = matches == 5 and line_result.passed
 
         return VerificationResult(
@@ -257,7 +261,7 @@ class MirrorFrame(Constraint):
             frame_match = False
             frame_score = 0.0
 
-        score = line_result.score * 0.3 + frame_score * 0.7
+        score = line_result.score * 0.1 + frame_score * 0.9
         passed = frame_match and line_result.passed
 
         return VerificationResult(
@@ -314,7 +318,7 @@ class DescendingStaircase(Constraint):
         line_result = self._line_count.verify(poem)
         word_result = self._word_count.verify(poem)
 
-        score = line_result.score * 0.3 + word_result.score * 0.7
+        score = line_result.score * 0.1 + word_result.score * 0.9
         passed = line_result.passed and word_result.passed
 
         return VerificationResult(
@@ -376,9 +380,11 @@ class QuestionQuest(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ not a question")
 
-        question_score = questions / max(1, len(structure.lines))
+        # Quadratic penalty for stricter GRPO training
+        linear_question = questions / max(1, len(structure.lines))
+        question_score = linear_question**2
 
-        score = line_result.score * 0.3 + question_score * 0.7
+        score = line_result.score * 0.1 + question_score * 0.9
         passed = question_score == 1.0 and line_result.passed
 
         return VerificationResult(
@@ -437,10 +443,12 @@ class WhisperPoem(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ {length} chars (max {self.max_chars})")
 
-        char_score = short_lines / max(1, len(structure.lines))
+        # Quadratic penalty for stricter GRPO training
+        linear_char = short_lines / max(1, len(structure.lines))
+        char_score = linear_char**2
 
-        score = line_result.score * 0.3 + char_score * 0.7
-        passed = char_score == 1.0 and line_result.passed
+        score = line_result.score * 0.1 + char_score * 0.9
+        passed = linear_char == 1.0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -497,10 +505,12 @@ class ThunderVerse(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ {length} chars (min {self.min_chars})")
 
-        char_score = long_lines / max(1, len(structure.lines))
+        # Quadratic penalty for stricter GRPO training
+        linear_char = long_lines / max(1, len(structure.lines))
+        char_score = linear_char**2
 
-        score = line_result.score * 0.3 + char_score * 0.7
-        passed = char_score == 1.0 and line_result.passed
+        score = line_result.score * 0.1 + char_score * 0.9
+        passed = linear_char == 1.0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -565,9 +575,11 @@ class AlphabeticTerminus(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ no words found")
 
-        alpha_score = matches / max(1, len(self.letters))
+        # Quadratic penalty for stricter GRPO training
+        linear_alpha = matches / max(1, len(self.letters))
+        alpha_score = linear_alpha**2
 
-        score = line_result.score * 0.3 + alpha_score * 0.7
+        score = line_result.score * 0.1 + alpha_score * 0.9
         passed = matches == len(self.letters) and line_result.passed
 
         return VerificationResult(
@@ -635,9 +647,11 @@ class OddEvenDance(Constraint):
                     f"Line {i+1} ({'odd' if (i+1)%2==1 else 'even'}): ✗ {actual} (expected {expected})"
                 )
 
-        dance_score = matches / max(1, len(structure.lines))
+        # Quadratic penalty for stricter GRPO training
+        linear_dance = matches / max(1, len(structure.lines))
+        dance_score = linear_dance**2
 
-        score = line_result.score * 0.3 + dance_score * 0.7
+        score = line_result.score * 0.1 + dance_score * 0.9
         passed = dance_score == 1.0 and line_result.passed
 
         return VerificationResult(
@@ -688,7 +702,7 @@ class NumericalEcho(Constraint):
         line_result = self._line_count.verify(poem)
         word_result = self._word_count.verify(poem)
 
-        score = line_result.score * 0.3 + word_result.score * 0.7
+        score = line_result.score * 0.1 + word_result.score * 0.9
         passed = line_result.passed and word_result.passed
 
         return VerificationResult(
@@ -754,9 +768,11 @@ class ColorSpectrum(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ missing '{color}'")
 
-        color_score = matches / 7
+        # Quadratic penalty for stricter GRPO training
+        linear_color = matches / 7
+        color_score = linear_color**2
 
-        score = line_result.score * 0.3 + color_score * 0.7
+        score = line_result.score * 0.1 + color_score * 0.9
         passed = matches == 7 and line_result.passed
 
         return VerificationResult(
@@ -854,9 +870,11 @@ class ElementalVerse(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ no unique element found")
 
-        element_score = matches / max(1, len(structure.lines))
+        # Quadratic penalty for stricter GRPO training
+        linear_element = matches / max(1, len(structure.lines))
+        element_score = linear_element**2
 
-        score = line_result.score * 0.3 + element_score * 0.7
+        score = line_result.score * 0.1 + element_score * 0.9
         passed = element_score >= 0.8 and line_result.passed
 
         return VerificationResult(
@@ -929,9 +947,11 @@ class NumberWord(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ missing '{number}'")
 
-        number_score = matches / self.num_lines
+        # Quadratic penalty for stricter GRPO training
+        linear_number = matches / self.num_lines
+        number_score = linear_number**2
 
-        score = line_result.score * 0.3 + number_score * 0.7
+        score = line_result.score * 0.1 + number_score * 0.9
         passed = matches == self.num_lines and line_result.passed
 
         return VerificationResult(
@@ -1032,9 +1052,11 @@ class TemporalVerse(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ no time word found")
 
-        time_score = matches / max(1, len(structure.lines))
+        # Quadratic penalty for stricter GRPO training
+        linear_time = matches / max(1, len(structure.lines))
+        time_score = linear_time**2
 
-        score = line_result.score * 0.3 + time_score * 0.7
+        score = line_result.score * 0.1 + time_score * 0.9
         passed = time_score == 1.0 and line_result.passed
 
         return VerificationResult(
@@ -1089,9 +1111,11 @@ class ExclamationEcho(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ missing '!'")
 
-        exclaim_score = exclamations / max(1, len(structure.lines))
+        # Quadratic penalty for stricter GRPO training
+        linear_exclaim = exclamations / max(1, len(structure.lines))
+        exclaim_score = linear_exclaim**2
 
-        score = line_result.score * 0.3 + exclaim_score * 0.7
+        score = line_result.score * 0.1 + exclaim_score * 0.9
         passed = exclaim_score == 1.0 and line_result.passed
 
         return VerificationResult(
@@ -1141,7 +1165,9 @@ class MonotoneMountain(Constraint):
         word_result = self._word_count.verify(poem)
         mono_result = self._monosyllabic.verify(poem)
 
-        score = line_result.score * 0.2 + word_result.score * 0.4 + mono_result.score * 0.4
+        # Word pattern AND monosyllabic requirement are BOTH defining characteristics
+        # Line count is just a prerequisite
+        score = line_result.score * 0.1 + word_result.score * 0.45 + mono_result.score * 0.45
         passed = line_result.passed and word_result.passed and mono_result.passed
 
         return VerificationResult(
@@ -1193,7 +1219,7 @@ class UniqueUtterance(Constraint):
         line_result = self._line_count.verify(poem)
         unique_result = self._unique.verify(poem)
 
-        score = line_result.score * 0.3 + unique_result.score * 0.7
+        score = line_result.score * 0.1 + unique_result.score * 0.9
         passed = line_result.passed and unique_result.passed
 
         return VerificationResult(
@@ -1249,7 +1275,7 @@ class BinaryBeat(Constraint):
         line_result = self._line_count.verify(poem)
         word_result = self._word_count.verify(poem)
 
-        score = line_result.score * 0.3 + word_result.score * 0.7
+        score = line_result.score * 0.1 + word_result.score * 0.9
         passed = line_result.passed and word_result.passed
 
         return VerificationResult(
@@ -1334,7 +1360,7 @@ class ConsonantCascade(Constraint):
         else:
             cascade_score = 1.0 - (violations / (len(first_consonants) - 1))
 
-        score = line_result.score * 0.3 + cascade_score * 0.7
+        score = line_result.score * 0.1 + cascade_score * 0.9
         passed = violations == 0 and line_result.passed
 
         return VerificationResult(
@@ -1390,9 +1416,11 @@ class SandwichSonnet(Constraint):
             last_couplet = [line.strip().lower() for line in structure.lines[-2:]]
 
             matches = sum(1 for a, b in zip(first_couplet, last_couplet) if a == b)
-            sandwich_score = matches / 2
+            # Quadratic penalty for stricter GRPO training
+            linear_sandwich = matches / 2
+            sandwich_score = linear_sandwich**2
 
-        score = line_result.score * 0.3 + sandwich_score * 0.7
+        score = line_result.score * 0.1 + sandwich_score * 0.9
         passed = matches == 2 and line_result.passed
 
         return VerificationResult(
@@ -1487,9 +1515,11 @@ class VoidVerse(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ no void word found")
 
-        void_score = matches / max(1, len(structure.lines))
+        # Quadratic penalty for stricter GRPO training
+        linear_void = matches / max(1, len(structure.lines))
+        void_score = linear_void**2
 
-        score = line_result.score * 0.3 + void_score * 0.7
+        score = line_result.score * 0.1 + void_score * 0.9
         passed = void_score == 1.0 and line_result.passed
 
         return VerificationResult(
@@ -1537,7 +1567,7 @@ class GoldenRatio(Constraint):
         line_result = self._line_count.verify(poem)
         word_result = self._word_count.verify(poem)
 
-        score = line_result.score * 0.3 + word_result.score * 0.7
+        score = line_result.score * 0.1 + word_result.score * 0.9
         passed = line_result.passed and word_result.passed
 
         return VerificationResult(
@@ -1614,9 +1644,11 @@ class EchoEnd(Constraint):
             target = Counter(last_word_firsts).most_common(1)[0][0]
 
         matches = sum(1 for ltr in last_word_firsts if ltr == target)
-        echo_score = matches / len(last_word_firsts)
+        # Quadratic penalty for stricter GRPO training
+        linear_echo = matches / len(last_word_firsts)
+        echo_score = linear_echo**2
 
-        score = line_result.score * 0.3 + echo_score * 0.7
+        score = line_result.score * 0.1 + echo_score * 0.9
         passed = echo_score == 1.0 and line_result.passed
 
         return VerificationResult(

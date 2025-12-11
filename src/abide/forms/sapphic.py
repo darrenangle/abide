@@ -168,7 +168,9 @@ class SapphicOde(Constraint):
 
         # Check stanza sizes (should all be 4)
         sizes_correct = sum(1 for s in structure.stanzas if len(s) == 4)
-        size_score = sizes_correct / max(1, stanza_count)
+        # Quadratic penalty for stricter GRPO training
+        linear_size = sizes_correct / max(1, stanza_count)
+        size_score = linear_size**2
 
         # Check syllable pattern
         from abide.primitives.phonetics import count_line_syllables
@@ -189,10 +191,13 @@ class SapphicOde(Constraint):
         for actual, expected in zip(actual_counts, expected_pattern):
             if abs(actual - expected) <= self.syllable_tolerance:
                 syllable_matches += 1
-        syllable_score = syllable_matches / max(1, len(actual_counts))
+        # Quadratic penalty for stricter GRPO training
+        linear_syllable = syllable_matches / max(1, len(actual_counts))
+        syllable_score = linear_syllable**2
 
-        # Combine scores
-        score = stanza_score * 0.3 + size_score * 0.3 + syllable_score * 0.4
+        # Combine scores - syllable pattern (11-11-11-5) is THE defining characteristic
+        # It gets 80% weight. Stanza count/size are secondary
+        score = stanza_score * 0.1 + size_score * 0.1 + syllable_score * 0.8
         passed = score >= 0.6 and stanza_count >= self.min_stanzas
 
         return VerificationResult(

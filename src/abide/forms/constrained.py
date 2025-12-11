@@ -83,10 +83,12 @@ class Abecedarian(Constraint):
             else:
                 details.append(f"Line {i + 1}: ✗ empty line")
 
-        letter_score = matches / max(1, min(len(self.letters), len(structure.lines)))
+        # Quadratic penalty for stricter GRPO training
+        linear_letter = matches / max(1, min(len(self.letters), len(structure.lines)))
+        letter_score = linear_letter**2
 
         # Combine scores
-        score = line_result.score * 0.3 + letter_score * 0.7
+        score = line_result.score * 0.1 + letter_score * 0.9
         passed = score >= 0.8
 
         return VerificationResult(
@@ -163,7 +165,7 @@ class Lipogram(Constraint):
             lipogram_score = 1.0 - (forbidden_count / total_letters)
 
         # Combine scores
-        score = line_result.score * 0.2 + lipogram_score * 0.8
+        score = line_result.score * 0.1 + lipogram_score * 0.9
         passed = lipogram_score == 1.0 and line_result.passed
 
         return VerificationResult(
@@ -239,7 +241,7 @@ class Univocalic(Constraint):
             univocalic_score = correct_vowels / total_vowels
 
         # Combine scores
-        score = line_result.score * 0.2 + univocalic_score * 0.8
+        score = line_result.score * 0.1 + univocalic_score * 0.9
         passed = wrong_vowels == 0 and line_result.passed and total_vowels > 0
 
         return VerificationResult(
@@ -322,10 +324,12 @@ class Mesostic(Constraint):
             else:
                 details.append(f"Line {i + 1}: ✗ missing '{target_letter}' in middle")
 
-        mesostic_score = matches / max(1, min(len(self.target_word), len(structure.lines)))
+        # Quadratic penalty for stricter GRPO training
+        linear_mesostic = matches / max(1, min(len(self.target_word), len(structure.lines)))
+        mesostic_score = linear_mesostic**2
 
         # Combine scores
-        score = line_result.score * 0.3 + mesostic_score * 0.7
+        score = line_result.score * 0.1 + mesostic_score * 0.9
         passed = score >= 0.8
 
         return VerificationResult(
@@ -432,7 +436,7 @@ class Anaphora(Constraint):
             anaphora_score = repeats / self.min_repeats
 
         # Combine scores
-        score = line_result.score * 0.3 + anaphora_score * 0.7
+        score = line_result.score * 0.1 + anaphora_score * 0.9
         passed = repeats >= self.min_repeats and line_result.passed
 
         return VerificationResult(
@@ -506,7 +510,9 @@ class PalindromePoem(Constraint):
             palindrome_lines = sum(
                 1 for line in structure.lines if self._is_letter_palindrome(line)
             )
-            palindrome_score = palindrome_lines / max(1, len(structure.lines))
+            # Quadratic penalty for stricter GRPO training
+            linear_palindrome = palindrome_lines / max(1, len(structure.lines))
+            palindrome_score = linear_palindrome**2
         else:
             # Word level: first half of lines mirror second half
             lines = [line.strip().lower() for line in structure.lines]
@@ -523,10 +529,12 @@ class PalindromePoem(Constraint):
                     if lines[i] == lines[n - 1 - i]:
                         matches += 1
 
-                palindrome_score = matches / max(1, comparisons)
+                # Quadratic penalty for stricter GRPO training
+                linear_palindrome = matches / max(1, comparisons)
+                palindrome_score = linear_palindrome**2
 
         # Combine scores
-        score = line_result.score * 0.3 + palindrome_score * 0.7
+        score = line_result.score * 0.1 + palindrome_score * 0.9
         passed = palindrome_score >= 0.8 and line_result.passed
 
         return VerificationResult(
