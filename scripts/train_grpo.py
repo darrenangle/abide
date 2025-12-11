@@ -35,8 +35,9 @@ import traceback
 from dataclasses import dataclass
 from pathlib import Path
 
-# Add src to path for development
+# Add src and scripts to path for development
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent))
 
 
 @dataclass
@@ -203,7 +204,7 @@ def create_reward_function(forms: dict[str, object]):
 
 def create_environment(forms: dict[str, object], config: TrainingConfig):
     """Create verifiers environment with generated prompts."""
-    from scripts.prompt_generator import generate_verifiers_dataset
+    from prompt_generator import generate_verifiers_dataset
 
     import verifiers as vf
 
