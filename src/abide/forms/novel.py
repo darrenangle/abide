@@ -1358,7 +1358,9 @@ class ConsonantCascade(Constraint):
         if len(first_consonants) <= 1:
             cascade_score = 0.0
         else:
-            cascade_score = 1.0 - (violations / (len(first_consonants) - 1))
+            # Quadratic penalty for stricter GRPO training
+            linear_cascade = 1.0 - (violations / (len(first_consonants) - 1))
+            cascade_score = linear_cascade**2
 
         score = line_result.score * 0.1 + cascade_score * 0.9
         passed = violations == 0 and line_result.passed

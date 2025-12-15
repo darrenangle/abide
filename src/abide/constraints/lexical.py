@@ -673,8 +673,9 @@ class NoConsecutiveRepeats(Constraint):
         if len(words) <= 1:
             score = 1.0
         else:
-            # Penalize based on how many repeats
-            score = max(0, 1.0 - (consecutive_repeats / (len(words) - 1)))
+            # Quadratic penalty for stricter GRPO training
+            linear_score = max(0, 1.0 - (consecutive_repeats / (len(words) - 1)))
+            score = linear_score**2
 
         passed = consecutive_repeats == 0 and len(structure.lines) >= self.min_lines
 
@@ -874,11 +875,12 @@ class ExactTotalCharacters(Constraint):
         diff = abs(actual - self.total)
 
         # Exact match required - partial credit for being close
+        # Quadratic penalty for stricter GRPO training
         if diff == 0:
             score = 1.0
         else:
-            # Score drops rapidly - being off by 5 chars is ~50%
-            score = max(0.0, 1.0 - (diff / 10))
+            linear_score = max(0.0, 1.0 - (diff / 10))
+            score = linear_score**2
 
         passed = actual == self.total
 
@@ -929,10 +931,12 @@ class ExactTotalVowels(Constraint):
         actual = sum(1 for c in text if c in self.VOWELS)
         diff = abs(actual - self.total)
 
+        # Quadratic penalty for stricter GRPO training
         if diff == 0:
             score = 1.0
         else:
-            score = max(0.0, 1.0 - (diff / 10))
+            linear_score = max(0.0, 1.0 - (diff / 10))
+            score = linear_score**2
 
         passed = actual == self.total
 
@@ -1226,10 +1230,12 @@ class ExactWordCount(Constraint):
         actual = len(all_words)
         diff = abs(actual - self.total)
 
+        # Quadratic penalty for stricter GRPO training
         if diff == 0:
             score = 1.0
         else:
-            score = max(0.0, 1.0 - (diff / 5))
+            linear_score = max(0.0, 1.0 - (diff / 5))
+            score = linear_score**2
 
         passed = actual == self.total
 
@@ -1483,10 +1489,12 @@ class ExactCharacterBudget(Constraint):
 
         diff = abs(actual - self.count)
 
+        # Quadratic penalty for stricter GRPO training
         if diff == 0:
             score = 1.0
         else:
-            score = max(0.0, 1.0 - (diff / 5))
+            linear_score = max(0.0, 1.0 - (diff / 5))
+            score = linear_score**2
 
         passed = actual == self.count
 

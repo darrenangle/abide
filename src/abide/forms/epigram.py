@@ -70,10 +70,11 @@ class Epigram(Constraint):
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
 
-        # Check line count
+        # Check line count - quadratic penalty for stricter GRPO training
         if structure.line_count < self.min_lines:
+            linear_score = structure.line_count / self.min_lines
             return VerificationResult(
-                score=structure.line_count / self.min_lines,
+                score=linear_score**2,
                 passed=False,
                 rubric=[],
                 constraint_name=self.name,
@@ -81,8 +82,9 @@ class Epigram(Constraint):
                 details={"error": f"Too few lines (minimum {self.min_lines})"},
             )
         if structure.line_count > self.max_lines:
+            linear_score = self.max_lines / structure.line_count
             return VerificationResult(
-                score=self.max_lines / structure.line_count,
+                score=linear_score**2,
                 passed=False,
                 rubric=[],
                 constraint_name=self.name,
