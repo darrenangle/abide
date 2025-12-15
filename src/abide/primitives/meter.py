@@ -339,13 +339,14 @@ def meter_score(
     foot_size = FOOT_SIZES.get(expected_meter, 2)
     expected_syllables = foot_size * expected_feet if expected_feet else None
 
-    # 1. Score syllable count
+    # 1. Score syllable count - quadratic penalty for stricter GRPO training
     if expected_syllables is not None:
         syl_diff = abs(result.syllable_count - expected_syllables)
         if syl_diff <= tolerance:
             syllable_score = 1.0
         else:
-            syllable_score = max(0.0, 1.0 - (syl_diff - tolerance) / expected_syllables)
+            linear_syl = max(0.0, 1.0 - (syl_diff - tolerance) / expected_syllables)
+            syllable_score = linear_syl**2
     else:
         syllable_score = 1.0
 
@@ -358,13 +359,14 @@ def meter_score(
         allow_substitutions,
     )
 
-    # 3. Score foot count (more lenient than pattern)
+    # 3. Score foot count (more lenient than pattern) - quadratic penalty for stricter GRPO training
     if expected_feet is not None:
         foot_diff = abs(result.foot_count - expected_feet)
         if foot_diff <= tolerance + 1:  # +1 for natural variation
             foot_score = 1.0
         else:
-            foot_score = max(0.0, 1.0 - (foot_diff - tolerance - 1) / expected_feet)
+            linear_foot = max(0.0, 1.0 - (foot_diff - tolerance - 1) / expected_feet)
+            foot_score = linear_foot**2
     else:
         foot_score = 1.0
 

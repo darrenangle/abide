@@ -161,8 +161,9 @@ class Lipogram(Constraint):
         if total_letters == 0:
             lipogram_score = 0.0
         else:
-            # Perfect score if no forbidden letters
-            lipogram_score = 1.0 - (forbidden_count / total_letters)
+            # Quadratic penalty for stricter GRPO training
+            linear_lipogram = 1.0 - (forbidden_count / total_letters)
+            lipogram_score = linear_lipogram**2
 
         # Combine scores
         score = line_result.score * 0.1 + lipogram_score * 0.9
