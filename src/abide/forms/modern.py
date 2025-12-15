@@ -272,7 +272,9 @@ class Skeltonic(Constraint):
             rhyme_runs += 1
 
         # Score based on number of rhyme runs (more = more Skeltonic)
-        rhyme_score = min(1.0, rhyme_runs / 3)  # Expect ~3 runs of 3+ rhymes
+        # Quadratic penalty for stricter GRPO training
+        linear_rhyme = min(1.0, rhyme_runs / 3)  # Expect ~3 runs of 3+ rhymes
+        rhyme_score = linear_rhyme**2
 
         # Combine scores - defining characteristics get more weight
         score = line_result.score * 0.1 + short_line_score * 0.45 + rhyme_score * 0.45

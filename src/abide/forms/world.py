@@ -161,13 +161,15 @@ class Naani(Constraint):
 
         total_syllables = sum(count_line_syllables(line) for line in structure.lines)
 
-        # Score syllable count
+        # Score syllable count - quadratic penalty for stricter GRPO training
         if self.min_syllables <= total_syllables <= self.max_syllables:
             syllable_score = 1.0
         elif total_syllables < self.min_syllables:
-            syllable_score = total_syllables / self.min_syllables
+            linear_syl = total_syllables / self.min_syllables
+            syllable_score = linear_syl**2
         else:
-            syllable_score = self.max_syllables / total_syllables
+            linear_syl = self.max_syllables / total_syllables
+            syllable_score = linear_syl**2
 
         # Combine scores
         scores = [

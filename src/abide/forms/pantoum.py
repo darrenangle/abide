@@ -74,16 +74,18 @@ class Pantoum(Constraint):
 
         # Check minimum stanza count
         if structure.stanza_count < self.min_stanzas:
+            # Quadratic penalty for stricter GRPO training
+            linear_score = structure.stanza_count / self.min_stanzas
             rubric.append(
                 RubricItem(
                     criterion="Minimum stanzas",
                     expected=f"at least {self.min_stanzas}",
                     actual=str(structure.stanza_count),
-                    score=structure.stanza_count / self.min_stanzas,
+                    score=linear_score**2,
                     passed=False,
                 )
             )
-            scores.append(structure.stanza_count / self.min_stanzas)
+            scores.append(linear_score**2)
         else:
             rubric.append(
                 RubricItem(

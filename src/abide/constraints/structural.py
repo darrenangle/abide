@@ -128,7 +128,9 @@ class StanzaSizes(Constraint):
                 matching = sum(
                     1 for i in range(min_len) if actual_sizes[i] == self.expected_sizes[i]
                 )
-                stanza_score = matching / len(self.expected_sizes)
+                # Quadratic penalty for stricter GRPO training
+                linear_stanza = matching / len(self.expected_sizes)
+                stanza_score = linear_stanza**2
         else:
             stanza_score = 1.0
 

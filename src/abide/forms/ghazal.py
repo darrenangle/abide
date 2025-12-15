@@ -81,11 +81,11 @@ class Ghazal(Constraint):
                     criterion="Minimum couplets",
                     expected=f"at least {self.min_couplets}",
                     actual=str(num_couplets),
-                    score=num_couplets / self.min_couplets,
+                    score=(num_couplets / self.min_couplets) ** 2,  # Quadratic
                     passed=False,
                 )
             )
-            scores.append(num_couplets / self.min_couplets)
+            scores.append((num_couplets / self.min_couplets) ** 2)
         elif num_couplets > self.max_couplets:
             rubric.append(
                 RubricItem(
