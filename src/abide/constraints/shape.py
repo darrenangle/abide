@@ -202,7 +202,9 @@ class LineShape(Constraint):
                 elif diff <= self.tolerance:
                     line_score = 1.0 - (diff / (self.tolerance + 1)) * 0.2
                 else:
-                    line_score = max(0.0, 1.0 - diff / max(expected, 1))
+                    # Quadratic penalty for stricter GRPO training
+                    linear_score = max(0.0, 1.0 - diff / max(expected, 1))
+                    line_score = linear_score**2
 
                 rubric.append(
                     RubricItem(
@@ -358,12 +360,14 @@ class LineLengthRange(Constraint):
                 score = 1.0
             else:
                 # Partial credit based on how far out of bounds
+                # Quadratic penalty for stricter GRPO training
                 if below_min and self.min_length is not None:
-                    score = length / self.min_length
+                    linear_score = length / self.min_length
                 elif above_max and self.max_length is not None:
-                    score = self.max_length / length
+                    linear_score = self.max_length / length
                 else:
-                    score = 0.5  # Fallback (shouldn't reach here)
+                    linear_score = 0.5  # Fallback (shouldn't reach here)
+                score = linear_score**2
 
             bounds = []
             if self.min_length is not None:

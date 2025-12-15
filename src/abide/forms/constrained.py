@@ -238,7 +238,9 @@ class Univocalic(Constraint):
         if total_vowels == 0:
             univocalic_score = 0.0
         else:
-            univocalic_score = correct_vowels / total_vowels
+            # Quadratic penalty for stricter GRPO training
+            linear_univocalic = correct_vowels / total_vowels
+            univocalic_score = linear_univocalic**2
 
         # Combine scores
         score = line_result.score * 0.1 + univocalic_score * 0.9
@@ -429,11 +431,12 @@ class Anaphora(Constraint):
             opening_counts = Counter(openings)
             detected_phrase, repeats = opening_counts.most_common(1)[0]
 
-        # Score based on repeats
+        # Score based on repeats - quadratic penalty for stricter GRPO training
         if repeats >= self.min_repeats:
             anaphora_score = 1.0
         else:
-            anaphora_score = repeats / self.min_repeats
+            linear_anaphora = repeats / self.min_repeats
+            anaphora_score = linear_anaphora**2
 
         # Combine scores
         score = line_result.score * 0.1 + anaphora_score * 0.9

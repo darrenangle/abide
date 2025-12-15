@@ -98,16 +98,18 @@ class BluesPoem(Constraint):
             )
             scores.append(1.0)
         else:
+            # Quadratic penalty for stricter GRPO training
+            linear_score = num_tercets / self.min_stanzas if self.min_stanzas > 0 else 0
             rubric.append(
                 RubricItem(
                     criterion="Minimum tercets",
                     expected=f"at least {self.min_stanzas}",
                     actual=str(num_tercets),
-                    score=num_tercets / self.min_stanzas if self.min_stanzas > 0 else 0,
+                    score=linear_score**2,
                     passed=False,
                 )
             )
-            scores.append(num_tercets / self.min_stanzas if self.min_stanzas > 0 else 0)
+            scores.append(linear_score**2)
 
         # Check AAB pattern in each tercet
         # If stanzas are defined, use them; otherwise chunk by 3 lines

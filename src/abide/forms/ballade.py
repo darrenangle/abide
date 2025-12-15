@@ -103,16 +103,18 @@ class Ballade(Constraint):
             )
             scores.append(0.8)
         else:
+            # Quadratic penalty for stricter GRPO training
+            linear_score = structure.line_count / self.LINE_COUNT
             rubric.append(
                 RubricItem(
                     criterion="Line count",
                     expected=str(self.LINE_COUNT),
                     actual=str(structure.line_count),
-                    score=structure.line_count / self.LINE_COUNT,
+                    score=linear_score**2,
                     passed=False,
                 )
             )
-            scores.append(structure.line_count / self.LINE_COUNT)
+            scores.append(linear_score**2)
 
         if structure.line_count < 8:
             return VerificationResult(

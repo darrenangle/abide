@@ -78,11 +78,11 @@ class TerzaRima(Constraint):
                     criterion="Minimum lines",
                     expected=f"at least {min_lines}",
                     actual=str(structure.line_count),
-                    score=structure.line_count / min_lines,
+                    score=(structure.line_count / min_lines) ** 2,  # Quadratic
                     passed=False,
                 )
             )
-            scores.append(structure.line_count / min_lines)
+            scores.append((structure.line_count / min_lines) ** 2)
         else:
             rubric.append(
                 RubricItem(

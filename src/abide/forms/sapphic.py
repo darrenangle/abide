@@ -156,13 +156,15 @@ class SapphicOde(Constraint):
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
 
-        # Check stanza count
+        # Check stanza count - quadratic penalty for stricter GRPO training
         stanza_count = structure.stanza_count
 
         if stanza_count < self.min_stanzas:
-            stanza_score = stanza_count / self.min_stanzas
+            linear_stanza = stanza_count / self.min_stanzas
+            stanza_score = linear_stanza**2
         elif self.max_stanzas and stanza_count > self.max_stanzas:
-            stanza_score = self.max_stanzas / stanza_count
+            linear_stanza = self.max_stanzas / stanza_count
+            stanza_score = linear_stanza**2
         else:
             stanza_score = 1.0
 

@@ -408,9 +408,10 @@ def _score_pattern_alignment(
         expected = expected.ljust(max_len, expected[-1] if expected else "0")
         actual = actual.ljust(max_len, "0")
 
-    # Count matching positions
+    # Count matching positions - quadratic penalty for stricter GRPO training
     matches = sum(1 for a, e in zip(actual, expected) if a == e)
-    base_score = matches / len(actual) if actual else 0.0
+    linear_score = matches / len(actual) if actual else 0.0
+    base_score = linear_score**2
 
     # Bonus for substitutions that are metrically acceptable
     if allow_substitutions:

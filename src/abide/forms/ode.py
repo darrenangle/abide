@@ -70,12 +70,14 @@ class Ode(Constraint):
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
 
-        # Check line count range
+        # Check line count range - quadratic penalty for stricter GRPO training
         if structure.line_count < self.min_lines:
-            score = structure.line_count / self.min_lines
+            linear_score = structure.line_count / self.min_lines
+            score = linear_score**2
             passed = False
         elif structure.line_count > self.max_lines:
-            score = self.max_lines / structure.line_count
+            linear_score = self.max_lines / structure.line_count
+            score = linear_score**2
             passed = False
         else:
             score = 1.0

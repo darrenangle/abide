@@ -121,7 +121,9 @@ class ForcedWords(Constraint):
 
         # Score: how many required words met the minimum
         satisfied = sum(1 for count in found.values() if count >= self.min_occurrences)
-        score = satisfied / max(1, len(self.required_words))
+        # Quadratic penalty for stricter GRPO training
+        linear_score = satisfied / max(1, len(self.required_words))
+        score = linear_score**2
         passed = satisfied == len(self.required_words)
 
         return VerificationResult(
@@ -175,10 +177,12 @@ class AllWordsUnique(Constraint):
 
         if total_words == 0:
             score = 0.0
+            passed = False
         else:
-            score = unique_count / total_words
-
-        passed = score == 1.0 and total_words >= self.min_words
+            # Quadratic penalty for stricter GRPO training
+            linear_score = unique_count / total_words
+            score = linear_score**2
+            passed = linear_score == 1.0 and total_words >= self.min_words
 
         return VerificationResult(
             score=score,
@@ -324,7 +328,9 @@ class Alliteration(Constraint):
                 all_words.extend(re.findall(r"\b[a-zA-Z]+\b", line))
 
             matching = sum(1 for w in all_words if w[0].upper() == self.letter)
-            score = min(1.0, matching / max(1, self.min_words)) if self.min_words else 1.0
+            # Quadratic penalty for stricter GRPO training
+            linear_score = min(1.0, matching / max(1, self.min_words)) if self.min_words else 1.0
+            score = linear_score**2
             passed = matching >= self.min_words
 
             return VerificationResult(
@@ -352,8 +358,10 @@ class Alliteration(Constraint):
                         lines_with_allit += 1
                         break
 
-            score = lines_with_allit / max(1, len(structure.lines))
-            passed = score >= 0.5
+            # Quadratic penalty for stricter GRPO training
+            linear_score = lines_with_allit / max(1, len(structure.lines))
+            score = linear_score**2
+            passed = linear_score >= 0.5
 
             return VerificationResult(
                 score=score,
@@ -601,11 +609,12 @@ class LetterFrequency(Constraint):
         if in_range:
             score = 1.0
         else:
-            # How far outside the range?
+            # How far outside the range? Quadratic penalty for stricter GRPO training
             if percent < self.min_percent:
-                score = percent / self.min_percent if self.min_percent > 0 else 0
+                linear_score = percent / self.min_percent if self.min_percent > 0 else 0
             else:
-                score = self.max_percent / percent if percent > 0 else 0
+                linear_score = self.max_percent / percent if percent > 0 else 0
+            score = linear_score**2
 
         return VerificationResult(
             score=score,
@@ -802,8 +811,10 @@ class MonosyllabicOnly(Constraint):
                 monosyllabic += 1
 
         total = len(all_words)
-        score = monosyllabic / max(1, total)
-        passed = score == 1.0 and total >= self.min_words
+        # Quadratic penalty for stricter GRPO training
+        linear_score = monosyllabic / max(1, total)
+        score = linear_score**2
+        passed = linear_score == 1.0 and total >= self.min_words
 
         return VerificationResult(
             score=score,
@@ -1407,7 +1418,9 @@ class DoubleAcrostic(Constraint):
 
         total_checks = expected_lines * 2
         total_matches = first_matches + last_matches
-        score = total_matches / total_checks
+        # Quadratic penalty for stricter GRPO training
+        linear_score = total_matches / total_checks
+        score = linear_score**2
         passed = total_matches == total_checks
 
         return VerificationResult(

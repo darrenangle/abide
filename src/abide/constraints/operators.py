@@ -283,7 +283,12 @@ class AtLeast(Constraint):
         overall_passed = passed_count >= self.n
 
         # Score based on how many passed relative to required
-        overall_score = 1.0 if self.n == 0 else min(1.0, passed_count / self.n)
+        # Quadratic penalty for stricter GRPO training
+        if self.n == 0:
+            overall_score = 1.0
+        else:
+            linear_score = min(1.0, passed_count / self.n)
+            overall_score = linear_score**2
 
         # Combine rubrics
         rubric: list[RubricItem] = []
@@ -341,11 +346,13 @@ class AtMost(Constraint):
         overall_passed = passed_count <= self.n
 
         # Score inversely related to excess
+        # Quadratic penalty for stricter GRPO training
         if passed_count <= self.n:
             overall_score = 1.0
         else:
             excess = passed_count - self.n
-            overall_score = max(0.0, 1.0 - excess / len(self.constraints))
+            linear_score = max(0.0, 1.0 - excess / len(self.constraints))
+            overall_score = linear_score**2
 
         # Combine rubrics
         rubric: list[RubricItem] = []

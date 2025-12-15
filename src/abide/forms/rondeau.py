@@ -102,16 +102,18 @@ class Rondeau(Constraint):
             )
             scores.append(0.8)
         else:
+            # Quadratic penalty for stricter GRPO training
+            linear_score = structure.line_count / expected_lines
             rubric.append(
                 RubricItem(
                     criterion="Line count",
                     expected=str(expected_lines),
                     actual=str(structure.line_count),
-                    score=structure.line_count / expected_lines,
+                    score=linear_score**2,
                     passed=False,
                 )
             )
-            scores.append(structure.line_count / expected_lines)
+            scores.append(linear_score**2)
 
         if structure.line_count < 3:
             return VerificationResult(
