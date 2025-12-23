@@ -58,7 +58,7 @@ class TrainingConfig:
     num_train_epochs: int = 1
     rollouts_per_example: int = 16
     batch_size: int = 32
-    micro_batch_size: int = 8
+    micro_batch_size: int = 2  # Keep small to avoid OOM during backward pass
     learning_rate: float = 1e-6
     max_seq_len: int = 1024  # Reduced - poems are small
     max_prompt_len: int = 384
