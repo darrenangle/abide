@@ -153,8 +153,19 @@ class Pantoum(Constraint):
                 )
                 repetition_scores.append(score_4_to_3)
 
+        # For repetition checks, use steep penalty for violations
+        # Count how many repetition checks failed (score < threshold)
         if repetition_scores:
-            scores.append(sum(repetition_scores) / len(repetition_scores))
+            num_rep_violations = sum(1 for s in repetition_scores if s < self.refrain_threshold)
+            if num_rep_violations == 0:
+                rep_score = 1.0
+            elif num_rep_violations == 1:
+                rep_score = 0.5
+            elif num_rep_violations == 2:
+                rep_score = 0.25
+            else:
+                rep_score = 0.05
+            scores.append(rep_score)
 
         # Check circular closing (optional)
         if self.check_circular and len(structure.stanzas) >= 2:
@@ -185,7 +196,20 @@ class Pantoum(Constraint):
                         passed=score_close_3 >= self.refrain_threshold,
                     )
                 )
-                scores.append((score_close_1 + score_close_3) / 2)
+                # Apply steep penalty for circular closing violations
+                num_close_violations = sum(
+                    [
+                        1 if score_close_1 < self.refrain_threshold else 0,
+                        1 if score_close_3 < self.refrain_threshold else 0,
+                    ]
+                )
+                if num_close_violations == 0:
+                    close_score = 1.0
+                elif num_close_violations == 1:
+                    close_score = 0.5
+                else:
+                    close_score = 0.25
+                scores.append(close_score)
 
         overall_score = sum(scores) / len(scores) if scores else 0.0
         overall_passed = all(r.passed for r in rubric) if self.strict else overall_score >= 0.6

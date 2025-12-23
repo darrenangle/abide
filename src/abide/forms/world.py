@@ -93,14 +93,68 @@ class Tanaga(Constraint):
             self._constraint = WeightedSum(constraints, threshold=0.7)
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
-        result = self._constraint.verify(poem)
+        structure = self._ensure_structure(poem)
+
+        # Get individual constraint results
+        line_result = self._line_count.verify(poem)
+        stanza_result = self._stanza_count.verify(poem)
+        syllables_result = self._syllables.verify(poem)
+        rhyme_result = self._rhyme.verify(poem)
+
+        # Count violations in syllable pattern (4 lines of 7 syllables each)
+        from abide.primitives import count_line_syllables
+
+        expected = [7, 7, 7, 7]
+        violations = 0
+        for i, exp_syl in enumerate(expected):
+            if i < len(structure.lines):
+                actual_syl = count_line_syllables(structure.lines[i])
+                if abs(actual_syl - exp_syl) > self.syllable_tolerance:
+                    violations += 1
+            else:
+                violations += 1  # Missing line is a violation
+
+        # Apply steep penalty based on violations
+        if violations == 0:
+            syllable_score = 1.0
+        elif violations == 1:
+            syllable_score = 0.5
+        elif violations == 2:
+            syllable_score = 0.25
+        else:
+            syllable_score = 0.05
+
+        # Combine scores
+        scores = [
+            (line_result.score, 2.0),
+            (stanza_result.score, 0.5),
+            (syllable_score, 2.0),
+            (rhyme_result.score, 1.5),
+        ]
+        total_weight = sum(w for _, w in scores)
+        score = sum(s * w for s, w in scores) / total_weight
+
+        passed = (
+            score >= 0.7
+            if not self.strict_mode
+            else (
+                violations == 0
+                and line_result.passed
+                and stanza_result.passed
+                and rhyme_result.passed
+            )
+        )
+
         return VerificationResult(
-            score=result.score,
-            passed=result.passed,
-            rubric=result.rubric,
+            score=score,
+            passed=passed,
+            rubric=line_result.rubric
+            + stanza_result.rubric
+            + syllables_result.rubric
+            + rhyme_result.rubric,
             constraint_name=self.name,
             constraint_type=self.constraint_type,
-            details=result.details,
+            details={"violations": violations},
         )
 
     def describe(self) -> str:
@@ -161,15 +215,27 @@ class Naani(Constraint):
 
         total_syllables = sum(count_line_syllables(line) for line in structure.lines)
 
-        # Score syllable count - quadratic penalty for stricter GRPO training
+        # Score syllable count - steep penalty for strict GRPO training
+        # Treat syllable range violation as a single violation
         if self.min_syllables <= total_syllables <= self.max_syllables:
             syllable_score = 1.0
-        elif total_syllables < self.min_syllables:
-            linear_syl = total_syllables / self.min_syllables
-            syllable_score = linear_syl**2
         else:
-            linear_syl = self.max_syllables / total_syllables
-            syllable_score = linear_syl**2
+            # Out of range is a violation - apply steep penalty
+            # Calculate "distance" from range as violation count
+            if total_syllables < self.min_syllables:
+                diff = self.min_syllables - total_syllables
+            else:
+                diff = total_syllables - self.max_syllables
+
+            # Convert difference to violation count (every 2-3 syllables off = 1 violation)
+            violations = max(1, (diff + 1) // 2)
+
+            if violations == 1:
+                syllable_score = 0.5
+            elif violations == 2:
+                syllable_score = 0.25
+            else:
+                syllable_score = 0.05
 
         # Combine scores
         scores = [
@@ -352,8 +418,22 @@ class Lai(Constraint):
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
+
+        # Count violations (rubric items that failed)
+        violations = sum(1 for r in result.rubric if not r.passed)
+
+        # Steep penalty scoring: 0 violations = 1.0, 1 = 0.5, 2 = 0.25, 3+ = 0.05
+        if violations == 0:
+            overall_score = 1.0
+        elif violations == 1:
+            overall_score = 0.5
+        elif violations == 2:
+            overall_score = 0.25
+        else:
+            overall_score = 0.05
+
         return VerificationResult(
-            score=result.score,
+            score=overall_score,
             passed=result.passed,
             rubric=result.rubric,
             constraint_name=self.name,

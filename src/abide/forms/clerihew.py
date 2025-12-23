@@ -66,7 +66,7 @@ class Clerihew(Constraint):
         structure = self._ensure_structure(poem)
 
         rubric: list[RubricItem] = []
-        scores: list[float] = []
+        violations = 0
 
         # Check line count (exactly 4)
         if structure.line_count == 4:
@@ -79,22 +79,22 @@ class Clerihew(Constraint):
                     passed=True,
                 )
             )
-            scores.append(1.0)
         else:
             rubric.append(
                 RubricItem(
                     criterion="Line count",
                     expected="4",
                     actual=str(structure.line_count),
-                    score=0.0 if structure.line_count > 6 else 0.5,
+                    score=0.0,
                     passed=False,
                 )
             )
-            scores.append(0.0 if structure.line_count > 6 else 0.5)
+            violations += 1
 
         if structure.line_count < 4:
+            # Can't verify further constraints without enough lines
             return VerificationResult(
-                score=0.0,
+                score=0.05,
                 passed=False,
                 rubric=rubric,
                 constraint_name=self.name,
@@ -115,18 +115,17 @@ class Clerihew(Constraint):
                     passed=True,
                 )
             )
-            scores.append(1.0)
         else:
             rubric.append(
                 RubricItem(
                     criterion="First line contains name",
                     expected="capitalized proper noun",
                     actual=first_line,
-                    score=0.3,
+                    score=0.0,
                     passed=False,
                 )
             )
-            scores.append(0.3)
+            violations += 1
 
         # Check AABB rhyme scheme
         end_words = [self._get_end_word(line) for line in structure.lines[:4]]
@@ -145,7 +144,8 @@ class Clerihew(Constraint):
                     passed=passed_12,
                 )
             )
-            scores.append(rhyme_12)
+            if not passed_12:
+                violations += 1
 
         # Second couplet (lines 3-4)
         if len(end_words) >= 4:
@@ -161,10 +161,20 @@ class Clerihew(Constraint):
                     passed=passed_34,
                 )
             )
-            scores.append(rhyme_34)
+            if not passed_34:
+                violations += 1
 
-        overall_score = sum(scores) / len(scores) if scores else 0.0
-        overall_passed = all(r.passed for r in rubric) if self.strict else overall_score >= 0.5
+        # Steep penalty scoring: 0 violations = 1.0, 1 = 0.5, 2 = 0.25, 3+ = 0.05
+        if violations == 0:
+            overall_score = 1.0
+        elif violations == 1:
+            overall_score = 0.5
+        elif violations == 2:
+            overall_score = 0.25
+        else:  # 3 or more violations
+            overall_score = 0.05
+
+        overall_passed = violations == 0 if self.strict else overall_score >= 0.5
 
         return VerificationResult(
             score=overall_score,

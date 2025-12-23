@@ -234,7 +234,19 @@ class Ballade(Constraint):
             )
             scores.append(avg_c)
 
-        overall_score = sum(scores) / len(scores) if scores else 0.0
+        # Count violations (rubric items that failed)
+        violations = sum(1 for r in rubric if not r.passed)
+
+        # Steep penalty scoring: 0 violations = 1.0, 1 = 0.5, 2 = 0.25, 3+ = 0.05
+        if violations == 0:
+            overall_score = 1.0
+        elif violations == 1:
+            overall_score = 0.5
+        elif violations == 2:
+            overall_score = 0.25
+        else:
+            overall_score = 0.05
+
         overall_passed = all(r.passed for r in rubric) if self.strict else overall_score >= 0.6
 
         return VerificationResult(

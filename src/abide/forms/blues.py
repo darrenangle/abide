@@ -164,10 +164,27 @@ class BluesPoem(Constraint):
                 )
                 rhyme_scores.append(avg_rhyme)
 
-        if repetition_scores:
-            scores.append(sum(repetition_scores) / len(repetition_scores))
-        if rhyme_scores:
-            scores.append(sum(rhyme_scores) / len(rhyme_scores))
+        # Apply steep penalty based on violation count
+        # Count violations in repetition and rhyme
+        repetition_violations = sum(
+            1 for score in repetition_scores if score < self.repetition_threshold
+        )
+        rhyme_violations = sum(1 for score in rhyme_scores if score < self.rhyme_threshold)
+        total_violations = repetition_violations + rhyme_violations
+
+        # Steep penalty: 0=1.0, 1=0.5, 2=0.25, 3+=0.05
+        if total_violations == 0:
+            pattern_score = 1.0
+        elif total_violations == 1:
+            pattern_score = 0.5
+        elif total_violations == 2:
+            pattern_score = 0.25
+        else:
+            pattern_score = 0.05
+
+        # Add pattern score to overall scores
+        if repetition_scores or rhyme_scores:
+            scores.append(pattern_score)
 
         overall_score = sum(scores) / len(scores) if scores else 0.0
         overall_passed = all(r.passed for r in rubric) if self.strict else overall_score >= 0.5

@@ -121,8 +121,15 @@ class TerzaRima(Constraint):
                 )
                 tercet_scores.append(score_aa)
 
+        # Count rhyme violations for steep penalty
+        violations = 0
+        total_checks = 0
+
         if tercet_scores:
-            scores.append(sum(tercet_scores) / len(tercet_scores))
+            for score in tercet_scores:
+                total_checks += 1
+                if score < self.rhyme_threshold:
+                    violations += 1
 
         # Check chain rhyme (middle of tercet N rhymes with outer of tercet N+1)
         chain_scores = []
@@ -151,9 +158,21 @@ class TerzaRima(Constraint):
                         )
                     )
                     chain_scores.append(avg_score)
+                    total_checks += 1
+                    if avg_score < self.rhyme_threshold:
+                        violations += 1
 
-        if chain_scores:
-            scores.append(sum(chain_scores) / len(chain_scores))
+        # Steep penalty: 0 violations = 1.0, 1 = 0.5, 2 = 0.25, 3+ = 0.05
+        if violations == 0:
+            rhyme_score_final = 1.0
+        elif violations == 1:
+            rhyme_score_final = 0.5
+        elif violations == 2:
+            rhyme_score_final = 0.25
+        else:
+            rhyme_score_final = 0.05
+
+        scores.append(rhyme_score_final)
 
         overall_score = sum(scores) / len(scores) if scores else 0.0
         overall_passed = all(r.passed for r in rubric) if self.strict else overall_score >= 0.6

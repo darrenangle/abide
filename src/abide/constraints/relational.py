@@ -260,7 +260,18 @@ class Refrain(Constraint):
             )
             scores.append(score)
 
-        overall_score = sum(scores) / len(scores) if scores else 0.0
+        # Calculate overall score with steep exponential penalty
+        # 0 violations: 1.0, 1 violation: 0.5, 2 violations: 0.25, 3+ violations: 0.05
+        num_violations = sum(1 for r in rubric if not r.passed)
+        if num_violations == 0:
+            overall_score = 1.0
+        elif num_violations == 1:
+            overall_score = 0.5
+        elif num_violations == 2:
+            overall_score = 0.25
+        else:
+            overall_score = 0.05
+
         overall_passed = all(r.passed for r in rubric)
 
         return VerificationResult(
@@ -415,7 +426,18 @@ class EndWordPattern(Constraint):
             if stanza_scores:
                 scores.append(sum(stanza_scores) / len(stanza_scores))
 
-        overall_score = sum(scores) / len(scores) if scores else 0.0
+        # Calculate overall score with steep exponential penalty
+        # 0 violations: 1.0, 1 violation: 0.5, 2 violations: 0.25, 3+ violations: 0.05
+        num_violations = sum(1 for r in rubric if not r.passed)
+        if num_violations == 0:
+            overall_score = 1.0
+        elif num_violations == 1:
+            overall_score = 0.5
+        elif num_violations == 2:
+            overall_score = 0.25
+        else:
+            overall_score = 0.05
+
         overall_passed = all(r.passed for r in rubric)
 
         return VerificationResult(

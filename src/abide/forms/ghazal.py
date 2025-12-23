@@ -162,7 +162,8 @@ class Ghazal(Constraint):
             scores.append(matla_score)
 
         # Check subsequent couplets - second line should have radif
-        radif_scores = []
+        radif_violations = 0
+        radif_total = 0
         for i in range(1, num_couplets):
             line_idx = i * 2 + 1  # Second line of each couplet
             if line_idx < len(structure.lines):
@@ -170,6 +171,9 @@ class Ghazal(Constraint):
                 if radif:
                     has_radif = self._ends_with_phrase(line, radif)
                     score = 1.0 if has_radif else 0.3
+                    radif_total += 1
+                    if not has_radif:
+                        radif_violations += 1
                 else:
                     score = 0.5  # No radif to check against
 
@@ -182,10 +186,18 @@ class Ghazal(Constraint):
                         passed=score >= 0.8,
                     )
                 )
-                radif_scores.append(score)
 
-        if radif_scores:
-            scores.append(sum(radif_scores) / len(radif_scores))
+        # Steep penalty for radif violations
+        if radif_total > 0:
+            if radif_violations == 0:
+                radif_score_final = 1.0
+            elif radif_violations == 1:
+                radif_score_final = 0.5
+            elif radif_violations == 2:
+                radif_score_final = 0.25
+            else:
+                radif_score_final = 0.05
+            scores.append(radif_score_final)
 
         # Check qafiya (rhyme before radif) - all rhyming lines should rhyme
         qafiya_words = []
@@ -206,12 +218,16 @@ class Ghazal(Constraint):
                         qafiya_words.append((i, 1, word))
 
         # Check that all qafiya words rhyme with first one
+        qafiya_violations = 0
+        qafiya_total = 0
         if len(qafiya_words) >= 2:
             base_word = qafiya_words[0][2]
-            qafiya_scores = []
             for couplet_i, _line_j, word in qafiya_words[1:]:
                 score = rhyme_score(base_word, word)
                 passed = score >= self.rhyme_threshold
+                qafiya_total += 1
+                if not passed:
+                    qafiya_violations += 1
                 rubric.append(
                     RubricItem(
                         criterion=f"Qafiya: couplet {couplet_i + 1}",
@@ -221,10 +237,18 @@ class Ghazal(Constraint):
                         passed=passed,
                     )
                 )
-                qafiya_scores.append(score)
 
-            if qafiya_scores:
-                scores.append(sum(qafiya_scores) / len(qafiya_scores))
+            # Steep penalty for qafiya violations
+            if qafiya_total > 0:
+                if qafiya_violations == 0:
+                    qafiya_score_final = 1.0
+                elif qafiya_violations == 1:
+                    qafiya_score_final = 0.5
+                elif qafiya_violations == 2:
+                    qafiya_score_final = 0.25
+                else:
+                    qafiya_score_final = 0.05
+                scores.append(qafiya_score_final)
 
         overall_score = sum(scores) / len(scores) if scores else 0.0
         overall_passed = all(r.passed for r in rubric) if self.strict else overall_score >= 0.6
