@@ -14,7 +14,7 @@ Features:
 
 Usage:
     # Start vf-vllm on GPU 0 first (in separate terminal):
-    CUDA_VISIBLE_DEVICES=0 vf-vllm --model google/gemma-3n-e2b-it --port 8000 --enforce-eager
+    CUDA_VISIBLE_DEVICES=0 vf-vllm --model google/gemma-3-270m-it --port 8000 --enforce-eager
 
     # Then run training on GPU 1:
     CUDA_VISIBLE_DEVICES=1 python scripts/train_grpo.py
@@ -44,21 +44,21 @@ sys.path.insert(0, str(Path(__file__).parent))
 class TrainingConfig:
     """Training configuration with sensible defaults for 2x4090."""
 
-    # Model
-    model_name: str = "google/gemma-3n-e2b-it"  # Override with --model or ABIDE_MODEL env
+    # Model - Gemma 3 270M is tiny (0.3B) and fast to train
+    model_name: str = "google/gemma-3-270m-it"  # Override with --model or ABIDE_MODEL env
 
     # Dataset
-    num_prompts: int = 10000
+    num_prompts: int = 100000
     seed: int = 42
 
     # Training hyperparameters
     num_train_epochs: int = 1
     rollouts_per_example: int = 8
-    batch_size: int = 16
-    micro_batch_size: int = 2
+    batch_size: int = 8  # Reduced for OOM
+    micro_batch_size: int = 1  # Reduced for OOM
     learning_rate: float = 1e-6
-    max_seq_len: int = 2048
-    max_prompt_len: int = 512
+    max_seq_len: int = 1024  # Reduced - poems are small
+    max_prompt_len: int = 384
 
     # Checkpointing
     output_dir: str = "models/abide_grpo"
@@ -144,22 +144,79 @@ class BestModelTracker:
 
 
 def get_forms() -> dict[str, object]:
-    """Load all training forms."""
-    from abide.forms import hard, mathematical, novel
+    """Load ALL training forms from abide.forms."""
+    import abide.forms as forms_module
 
-    return {
-        "StaircasePoem": hard.StaircasePoem(num_words=7),
-        "VowelBudgetPoem": hard.VowelBudgetPoem(vowel_count=30),
-        "PrecisionVerse": hard.PrecisionVerse(chars_per_line=25),
-        "ExactWordPoem": hard.ExactWordPoem(word_count=20),
-        "CharacterBudgetPoem": hard.CharacterBudgetPoem(character="e", count=10),
-        "FibonacciVerse": mathematical.FibonacciVerse(num_lines=5),
-        "TriangularVerse": mathematical.TriangularVerse(num_lines=4),
-        "PiKu": mathematical.PiKu(num_lines=5),
-        "HourglassVerse": novel.HourglassVerse(),
-        "PrimeVerse": novel.PrimeVerse(),
-        "GoldenRatio": novel.GoldenRatio(),
-    }
+    all_forms = {}
+    for name in forms_module.__all__:
+        try:
+            form_class = getattr(forms_module, name)
+            # Try to instantiate with no args first
+            try:
+                all_forms[name] = form_class()
+            except TypeError:
+                # Some forms need specific params - use sensible defaults
+                if name == "StaircasePoem" or name == "DescendingStaircasePoem":
+                    all_forms[name] = form_class(num_words=7)
+                elif name == "VowelBudgetPoem":
+                    all_forms[name] = form_class(vowel_count=30)
+                elif name == "PrecisionVerse":
+                    all_forms[name] = form_class(chars_per_line=25)
+                elif name == "ExactWordPoem":
+                    all_forms[name] = form_class(word_count=20)
+                elif name == "CharacterBudgetPoem":
+                    all_forms[name] = form_class(character="e", count=10)
+                elif name == "TotalCharacterPoem":
+                    all_forms[name] = form_class(total_chars=100)
+                elif name == "FibonacciVerse":
+                    all_forms[name] = form_class(num_lines=5)
+                elif name == "TriangularVerse":
+                    all_forms[name] = form_class(num_lines=4)
+                elif name == "PiKu":
+                    all_forms[name] = form_class(num_lines=5)
+                elif name == "PrecisionHaiku":
+                    all_forms[name] = form_class(chars_per_line=17)
+                elif name == "ArithmeticVerse":
+                    all_forms[name] = form_class(start=2, diff=2, num_lines=5)
+                elif name == "PositionalPoem":
+                    all_forms[name] = form_class(positions=[1, 2, 3])
+                elif name == "IsolatedCouplet":
+                    all_forms[name] = form_class(position=3)
+                elif name == "AlternatingIsolation":
+                    all_forms[name] = form_class(num_lines=6)
+                elif name == "DoubleAcrosticPoem":
+                    all_forms[name] = form_class(word="POETRY")
+                elif name == "CombinedChallenge":
+                    all_forms[name] = form_class(num_lines=4)
+                elif name == "Lipogram":
+                    all_forms[name] = form_class(forbidden="e")
+                elif name == "Univocalic":
+                    all_forms[name] = form_class(vowel="a")
+                elif name == "Mesostic":
+                    all_forms[name] = form_class(spine="POEM")
+                elif name == "Anaphora":
+                    all_forms[name] = form_class(phrase="I am", num_lines=4)
+                elif name == "ModularVerse":
+                    all_forms[name] = form_class(modulus=3, num_lines=6)
+                elif name == "CoprimeVerse":
+                    all_forms[name] = form_class(base=6, num_lines=4)
+                elif name == "SquareStanzas":
+                    all_forms[name] = form_class(size=4)
+                elif name == "SelfReferential":
+                    all_forms[name] = form_class(num_lines=4)
+                elif name == "GoldenRatioVerse":
+                    all_forms[name] = form_class(num_lines=6)
+                elif name == "PythagoreanTercet":
+                    all_forms[name] = form_class(scale=2)
+                else:
+                    # Skip forms we can't instantiate
+                    print(f"  Skipping {name} (needs params)")
+                    continue
+        except Exception as e:
+            print(f"  Error loading {name}: {e}")
+            continue
+
+    return all_forms
 
 
 def get_completion_text(completion) -> str:
@@ -178,22 +235,34 @@ def get_completion_text(completion) -> str:
 def create_reward_function(forms: dict[str, object]):
     """Create reward function closure over forms."""
 
+    _call_count = [0]  # Mutable to track calls
+
     def abide_reward(completion, **kwargs) -> float:
         """Score poem against the target form. Returns 0-1 score."""
+        _call_count[0] += 1
         try:
             poem = get_completion_text(completion)
             if not poem or len(poem.strip()) < 10:
                 return 0.0
 
-            form_name = kwargs.get("form_name")
+            # form_name is in the 'info' dict (set in dataset)
+            info = kwargs.get("info", {})
+            form_name = info.get("form_name") if isinstance(info, dict) else None
+
             if not form_name:
+                if _call_count[0] <= 3:
+                    print(f"[DEBUG] No form_name in info: {info}")
                 return 0.0
 
             form_instance = forms.get(form_name)
             if form_instance is None:
+                if _call_count[0] <= 3:
+                    print(f"[DEBUG] Form not found: {form_name}")
                 return 0.0
 
             result = form_instance.verify(poem)
+            if _call_count[0] <= 3:
+                print(f"[DEBUG] {form_name}: score={result.score:.3f}")
             return result.score
         except Exception as e:
             print(f"[reward error: {e}]")
@@ -293,11 +362,12 @@ def train_with_retry(config: TrainingConfig) -> int:
                 max_prompt_len=config.max_prompt_len,
                 vllm_server_port=config.vllm_port,
                 temperature=0.7,
-                max_tokens=1500,
+                max_tokens=512,  # Must be < max_seq_len - max_prompt_len
                 bf16=True,
                 gradient_checkpointing=True,
                 logging_steps=config.logging_steps,
                 save_steps=config.save_steps,
+                save_total_limit=5,  # Keep only last 5 checkpoints
                 report_to="wandb" if config.use_wandb else "none",
                 remove_unused_columns=False,
                 use_lora=True,

@@ -6,7 +6,7 @@ set -e
 # (GPU order matters for NCCL - training must be on GPU 0)
 
 # Configuration
-MODEL="${ABIDE_MODEL:-google/gemma-3n-e2b-it}"
+MODEL="${ABIDE_MODEL:-google/gemma-3-270m-it}"
 PORT=8000
 VLLM_PID=""
 
@@ -42,9 +42,9 @@ echo "Starting vf-vllm on GPU 1..."
 CUDA_VISIBLE_DEVICES=1 nohup /home/darren/miniconda3/bin/vf-vllm \
     --model "$MODEL" \
     --port $PORT \
-    --gpu-memory-utilization 0.85 \
+    --gpu-memory-utilization 0.7 \
     --tensor-parallel-size 1 \
-    --max-model-len 2048 \
+    --max-model-len 1024 \
     --trust-remote-code \
     --disable-log-stats \
     --enforce-eager \
@@ -66,6 +66,7 @@ echo "vLLM is ready!"
 echo ""
 echo "Starting training on GPU 0..."
 export OMP_NUM_THREADS=4
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 CUDA_VISIBLE_DEVICES=0 /home/darren/miniconda3/bin/torchrun --nproc_per_node=1 scripts/train_grpo.py
 
 # Cleanup
