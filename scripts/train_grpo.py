@@ -25,6 +25,7 @@ Usage:
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import shutil
@@ -34,6 +35,8 @@ import time
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
+
+import wandb
 
 # Add src and scripts to path for development
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -318,8 +321,6 @@ def train_with_retry(config: TrainingConfig) -> int:
     """Run training with retry logic."""
     from verifiers.rl.trainer import RLConfig, RLTrainer
 
-    os.environ["WANDB_PROJECT"] = config.wandb_project
-
     print("=" * 60)
     print("Abide GRPO Training")
     print("=" * 60)
@@ -330,6 +331,29 @@ def train_with_retry(config: TrainingConfig) -> int:
     print(f"Output: {config.output_dir}")
     print("=" * 60)
     print()
+
+    # Initialize wandb (wrapped in try-except to avoid crashing on sync issues)
+    wandb_enabled = False
+    if config.use_wandb:
+        try:
+            wandb.init(
+                project=config.wandb_project,
+                name=f"grpo-{config.model_name.split('/')[-1]}",
+                config={
+                    "model": config.model_name,
+                    "num_prompts": config.num_prompts,
+                    "rollouts_per_example": config.rollouts_per_example,
+                    "batch_size": config.batch_size,
+                    "micro_batch_size": config.micro_batch_size,
+                    "learning_rate": config.learning_rate,
+                    "max_seq_len": config.max_seq_len,
+                },
+            )
+            wandb_enabled = True
+            print("Wandb initialized successfully")
+        except Exception as e:
+            print(f"Warning: Failed to initialize wandb: {e}")
+            print("Continuing without wandb logging...")
 
     # Load forms
     forms = get_forms()
@@ -414,10 +438,17 @@ def train_with_retry(config: TrainingConfig) -> int:
             if best_path:
                 print(f"Best model: {best_path}")
 
+            if wandb_enabled:
+                with contextlib.suppress(Exception):
+                    wandb.finish()
+
             return 0
 
         except KeyboardInterrupt:
             print("\nTraining interrupted by user.")
+            if wandb_enabled:
+                with contextlib.suppress(Exception):
+                    wandb.finish()
             return 1
 
         except Exception as e:
@@ -436,8 +467,14 @@ def train_with_retry(config: TrainingConfig) -> int:
                     print(f"Will resume from {config.resume_from}")
             else:
                 print("Max retries exceeded. Training failed.")
+                if wandb_enabled:
+                    with contextlib.suppress(Exception):
+                        wandb.finish()
                 return 1
 
+    if wandb_enabled:
+        with contextlib.suppress(Exception):
+            wandb.finish()
     return 1
 
 
