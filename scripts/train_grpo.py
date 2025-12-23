@@ -488,9 +488,9 @@ def main() -> int:
         epilog=__doc__,
     )
     parser.add_argument("--model", default=None, help="Model name or path")
-    parser.add_argument("--prompts", type=int, default=10000, help="Number of prompts")
-    parser.add_argument("--rollouts", type=int, default=8, help="Rollouts per example")
-    parser.add_argument("--batch-size", type=int, default=16, help="Batch size")
+    parser.add_argument("--prompts", type=int, default=100000, help="Number of prompts")
+    parser.add_argument("--rollouts", type=int, default=16, help="Rollouts per example")
+    parser.add_argument("--batch-size", type=int, default=32, help="Batch size")
     parser.add_argument("--lr", type=float, default=1e-6, help="Learning rate")
     parser.add_argument("--output", default="models/abide_grpo", help="Output directory")
     parser.add_argument("--save-steps", type=int, default=100, help="Save every N steps")
