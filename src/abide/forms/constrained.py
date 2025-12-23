@@ -160,10 +160,14 @@ class Lipogram(Constraint):
 
         if total_letters == 0:
             lipogram_score = 0.0
+        elif forbidden_count == 0:
+            lipogram_score = 1.0
+        elif forbidden_count <= 2:
+            # Lenient for 1-2 mistakes: 1 -> 0.5, 2 -> 0.25
+            lipogram_score = 0.5**forbidden_count
         else:
-            # Quadratic penalty for stricter GRPO training
-            linear_lipogram = 1.0 - (forbidden_count / total_letters)
-            lipogram_score = linear_lipogram**2
+            # Binary after that - near zero
+            lipogram_score = 0.05
 
         # Combine scores
         score = line_result.score * 0.1 + lipogram_score * 0.9
@@ -238,10 +242,14 @@ class Univocalic(Constraint):
 
         if total_vowels == 0:
             univocalic_score = 0.0
+        elif wrong_vowels == 0:
+            univocalic_score = 1.0
+        elif wrong_vowels <= 2:
+            # Lenient for 1-2 wrong vowels: 1 -> 0.5, 2 -> 0.25
+            univocalic_score = 0.5**wrong_vowels
         else:
-            # Quadratic penalty for stricter GRPO training
-            linear_univocalic = correct_vowels / total_vowels
-            univocalic_score = linear_univocalic**2
+            # Binary after that - near zero
+            univocalic_score = 0.05
 
         # Combine scores
         score = line_result.score * 0.1 + univocalic_score * 0.9
