@@ -23,11 +23,12 @@ classifiers = [
 ]
 
 dependencies = [
-    "pronouncing>=0.2.0",       # CMU Pronouncing Dictionary wrapper
-    "setuptools",               # Required by pronouncing for pkg_resources
-    "numpy>=1.24.0",            # Numerical operations
-    "jellyfish>=1.0.0",         # Phonetic encodings (Soundex, Metaphone, etc.)
-    "pyphen>=0.14.0",           # Hyphenation for syllable fallback
+    "pronouncing>=0.2.0", # CMU Pronouncing Dictionary wrapper
+    "setuptools", # Required by pronouncing for pkg_resources
+    "numpy>=1.24.0", # Numerical operations
+    "jellyfish>=1.0.0", # Phonetic encodings (Soundex, Metaphone, etc.)
+    "pyphen>=0.14.0", # Hyphenation for syllable fallback
+    "flashinfer-python>=0.5.3",
 ]
 
 [project.optional-dependencies]

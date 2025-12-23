@@ -26,23 +26,8 @@ from openai import OpenAI
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-# Forms to evaluate (same as training)
-EVAL_FORMS = [
-    # Hard forms
-    "StaircasePoem",
-    "VowelBudgetPoem",
-    "PrecisionVerse",
-    "ExactWordPoem",
-    "CharacterBudgetPoem",
-    # Mathematical forms
-    "FibonacciVerse",
-    "TriangularVerse",
-    "PiKu",
-    # Novel forms
-    "HourglassVerse",
-    "PrimeVerse",
-    "GoldenRatio",
-]
+# Forms to evaluate - dynamically loaded, but can override with --forms
+EVAL_FORMS = None  # Will load all forms dynamically
 
 TOPICS = [
     "the passage of time",
@@ -53,34 +38,79 @@ TOPICS = [
 ]
 
 
-def get_forms(form_names: list[str]) -> dict[str, object]:
-    """Load form instances."""
-    from abide.forms import hard, mathematical, novel
+def get_forms(form_names: list[str] | None = None) -> dict[str, object]:
+    """Load form instances. If form_names is None, load ALL forms."""
+    import abide.forms as forms_module
 
-    form_configs = {
-        # Hard forms
-        "StaircasePoem": (hard, "StaircasePoem", {"num_words": 7}),
-        "VowelBudgetPoem": (hard, "VowelBudgetPoem", {"vowel_count": 30}),
-        "PrecisionVerse": (hard, "PrecisionVerse", {"chars_per_line": 25}),
-        "ExactWordPoem": (hard, "ExactWordPoem", {"word_count": 20}),
-        "CharacterBudgetPoem": (hard, "CharacterBudgetPoem", {"character": "e", "count": 10}),
-        # Mathematical forms
-        "FibonacciVerse": (mathematical, "FibonacciVerse", {"num_lines": 5}),
-        "TriangularVerse": (mathematical, "TriangularVerse", {"num_lines": 4}),
-        "PiKu": (mathematical, "PiKu", {"num_lines": 5}),
-        # Novel forms
-        "HourglassVerse": (novel, "HourglassVerse", {}),
-        "PrimeVerse": (novel, "PrimeVerse", {}),
-        "GoldenRatio": (novel, "GoldenRatio", {}),
-    }
+    all_forms = {}
+    names_to_load = form_names if form_names else forms_module.__all__
 
-    forms = {}
-    for name in form_names:
-        if name in form_configs:
-            module, cls_name, kwargs = form_configs[name]
-            form_class = getattr(module, cls_name)
-            forms[name] = form_class(**kwargs)
-    return forms
+    for name in names_to_load:
+        try:
+            form_class = getattr(forms_module, name)
+            # Try to instantiate with no args first
+            try:
+                all_forms[name] = form_class()
+            except TypeError:
+                # Some forms need specific params - use sensible defaults
+                if name == "StaircasePoem" or name == "DescendingStaircasePoem":
+                    all_forms[name] = form_class(num_words=7)
+                elif name == "VowelBudgetPoem":
+                    all_forms[name] = form_class(vowel_count=30)
+                elif name == "PrecisionVerse":
+                    all_forms[name] = form_class(chars_per_line=25)
+                elif name == "ExactWordPoem":
+                    all_forms[name] = form_class(word_count=20)
+                elif name == "CharacterBudgetPoem":
+                    all_forms[name] = form_class(character="e", count=10)
+                elif name == "TotalCharacterPoem":
+                    all_forms[name] = form_class(total_chars=100)
+                elif name == "FibonacciVerse":
+                    all_forms[name] = form_class(num_lines=5)
+                elif name == "TriangularVerse":
+                    all_forms[name] = form_class(num_lines=4)
+                elif name == "PiKu":
+                    all_forms[name] = form_class(num_lines=5)
+                elif name == "PrecisionHaiku":
+                    all_forms[name] = form_class(chars_per_line=17)
+                elif name == "ArithmeticVerse":
+                    all_forms[name] = form_class(start=2, diff=2, num_lines=5)
+                elif name == "PositionalPoem":
+                    all_forms[name] = form_class(positions=[1, 2, 3])
+                elif name == "IsolatedCouplet":
+                    all_forms[name] = form_class(position=3)
+                elif name == "AlternatingIsolation":
+                    all_forms[name] = form_class(num_lines=6)
+                elif name == "DoubleAcrosticPoem":
+                    all_forms[name] = form_class(word="POETRY")
+                elif name == "CombinedChallenge":
+                    all_forms[name] = form_class(num_lines=4)
+                elif name == "Lipogram":
+                    all_forms[name] = form_class(forbidden="e")
+                elif name == "Univocalic":
+                    all_forms[name] = form_class(vowel="a")
+                elif name == "Mesostic":
+                    all_forms[name] = form_class(spine="POEM")
+                elif name == "Anaphora":
+                    all_forms[name] = form_class(phrase="I am", num_lines=4)
+                elif name == "ModularVerse":
+                    all_forms[name] = form_class(modulus=3, num_lines=6)
+                elif name == "CoprimeVerse":
+                    all_forms[name] = form_class(base=6, num_lines=4)
+                elif name == "SquareStanzas":
+                    all_forms[name] = form_class(size=4)
+                elif name == "SelfReferential":
+                    all_forms[name] = form_class(num_lines=4)
+                elif name == "GoldenRatioVerse":
+                    all_forms[name] = form_class(num_lines=6)
+                elif name == "PythagoreanTercet":
+                    all_forms[name] = form_class(scale=2)
+                else:
+                    continue
+        except Exception:
+            continue
+
+    return all_forms
 
 
 def evaluate_form(
@@ -161,8 +191,8 @@ def main() -> int:
         print(f"Failed to connect to vLLM at {args.url}: {e}")
         return 1
 
-    # Load forms
-    form_names = args.forms.split(",") if args.forms else EVAL_FORMS
+    # Load forms (None means all)
+    form_names = args.forms.split(",") if args.forms else None
     forms = get_forms(form_names)
     print(f"\nEvaluating {len(forms)} forms with {args.samples} samples per topic")
     print(f"Forms: {', '.join(forms.keys())}")

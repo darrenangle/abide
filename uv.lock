@@ -15,6 +15,7 @@ name = "abide"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "flashinfer-python" },
     { name = "jellyfish" },
     { name = "numpy" },
     { name = "pronouncing" },
@@ -77,6 +78,7 @@ dev = [
 requires-dist = [
     { name = "abide", extras = ["nn", "nlp", "evals", "dev", "training"], marker = "extra == 'all'" },
     { name = "datasets", marker = "extra == 'evals'", specifier = ">=2.0.0" },
+    { name = "flashinfer-python", specifier = ">=0.5.3" },
     { name = "httpx", marker = "extra == 'evals'", specifier = ">=0.27.0" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.100.0" },
     { name = "jellyfish", specifier = ">=1.0.0" },
@@ -3140,6 +3142,7 @@ dependencies = [
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ac/48/52907ac203c6de58b451511e251c8b1fc77c414dcb32aef3a0cd5194c7bd/nvidia_cutlass_dsl-4.3.3-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:dca550c8a7f7556a4c46bd4b85453342ae4e70600dc4aa3b5a6f1ebcd39a5ce5", size = 58734224, upload-time = "2025-12-10T09:45:22.008Z" },
     { url = "https://files.pythonhosted.org/packages/44/d7/f1936fdf697a8b76eea1f60d4bcfe41faa015e5bca925c4e767035e6857a/nvidia_cutlass_dsl-4.3.3-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:0d92144b9f161328be4a6734911c101d03c7d5335e307112ad579d826d7ac3b1", size = 58596215, upload-time = "2025-12-10T10:35:19.436Z" },
+    { url = "https://files.pythonhosted.org/packages/53/ff/41a855a356067cab074c77e79ddb308a8d3df0e74659bdc2195f5c19bb10/nvidia_cutlass_dsl-4.3.3-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:7d3914b3e865cf17334d3139c11d38aed1160b5855c29eaa4e3a470ea1fcfaba", size = 58731282, upload-time = "2025-12-17T09:17:36.918Z" },
     { url = "https://files.pythonhosted.org/packages/ef/75/79f494e08b85ea921eb376a5363a7a357db2352a6a1dfdfc659721fe94b2/nvidia_cutlass_dsl-4.3.3-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:046f3fc3fe3fa60f3207133e57512f2f5581ca36943f0763f3f7e8ab11180e16", size = 58596543, upload-time = "2025-12-10T10:09:13.657Z" },
     { url = "https://files.pythonhosted.org/packages/c6/d4/7c5ef53ccf75d7f99a9ea29cae9f9c0233229b75b3b22f85a4ef4f52e6ab/nvidia_cutlass_dsl-4.3.3-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:3278526f54bddd920d8e539771e5820c6166c549a1e67813375025f39417dec6", size = 58734009, upload-time = "2025-12-10T09:23:29.305Z" },
     { url = "https://files.pythonhosted.org/packages/88/a8/a27562194cc4182c67793cd21c5dbf9468cd5a49c775a487153c6f28364c/nvidia_cutlass_dsl-4.3.3-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:f2b25816b8bb8bc332bcbf6fc341347b5d728344cf185c65af0dd73e8503d5c7", size = 58596724, upload-time = "2025-12-10T11:01:07.228Z" },
