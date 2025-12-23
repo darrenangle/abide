@@ -371,11 +371,18 @@ def train_with_retry(config: TrainingConfig) -> int:
             print(f"\nTraining attempt {attempt + 1}/{config.max_retries}")
 
             # Configure training
+            # Compute max_steps from num_prompts (verifiers defaults to 500!)
+            max_steps = (config.num_prompts // config.batch_size) * config.num_train_epochs
+            print(
+                f"Computed max_steps: {max_steps} ({config.num_prompts} prompts / {config.batch_size} batch x {config.num_train_epochs} epochs)"
+            )
+
             rl_config = RLConfig(
                 output_dir=config.output_dir,
                 run_name=f"abide-grpo-{int(time.time())}",
                 learning_rate=config.learning_rate,
                 num_train_epochs=config.num_train_epochs,
+                max_steps=max_steps,  # Override verifiers default of 500!
                 per_device_train_batch_size=config.micro_batch_size,
                 batch_size=config.batch_size,
                 micro_batch_size=config.micro_batch_size,
