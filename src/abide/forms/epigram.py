@@ -70,26 +70,43 @@ class Epigram(Constraint):
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
 
-        # Check line count - quadratic penalty for stricter GRPO training
+        # Check line count - steep penalties for strict GRPO training
+        # Perfect = 1.0, 1 violation = 0.5, 2 violations = 0.25, 3+ = 0.05
         if structure.line_count < self.min_lines:
-            linear_score = structure.line_count / self.min_lines
+            violations = self.min_lines - structure.line_count
+            if violations == 1:
+                score = 0.5
+            elif violations == 2:
+                score = 0.25
+            else:
+                score = 0.05
             return VerificationResult(
-                score=linear_score**2,
+                score=score,
                 passed=False,
                 rubric=[],
                 constraint_name=self.name,
                 constraint_type=self.constraint_type,
-                details={"error": f"Too few lines (minimum {self.min_lines})"},
+                details={
+                    "error": f"Too few lines (minimum {self.min_lines}, got {structure.line_count})"
+                },
             )
         if structure.line_count > self.max_lines:
-            linear_score = self.max_lines / structure.line_count
+            violations = structure.line_count - self.max_lines
+            if violations == 1:
+                score = 0.5
+            elif violations == 2:
+                score = 0.25
+            else:
+                score = 0.05
             return VerificationResult(
-                score=linear_score**2,
+                score=score,
                 passed=False,
                 rubric=[],
                 constraint_name=self.name,
                 constraint_type=self.constraint_type,
-                details={"error": f"Too many lines (maximum {self.max_lines})"},
+                details={
+                    "error": f"Too many lines (maximum {self.max_lines}, got {structure.line_count})"
+                },
             )
 
         # For 2-line epigrams, check couplet rhyme

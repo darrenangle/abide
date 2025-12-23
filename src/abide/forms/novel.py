@@ -200,12 +200,19 @@ class VowelPilgrimage(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ empty line")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_vowel = matches / 5
-        vowel_score = linear_vowel**2
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+        violations = 5 - matches
+        if violations == 0:
+            vowel_score = 1.0
+        elif violations == 1:
+            vowel_score = 0.5
+        elif violations == 2:
+            vowel_score = 0.25
+        else:
+            vowel_score = 0.05
 
         score = line_result.score * 0.1 + vowel_score * 0.9
-        passed = matches == 5 and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -380,12 +387,19 @@ class QuestionQuest(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ not a question")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_question = questions / max(1, len(structure.lines))
-        question_score = linear_question**2
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+        violations = len(structure.lines) - questions
+        if violations == 0:
+            question_score = 1.0
+        elif violations == 1:
+            question_score = 0.5
+        elif violations == 2:
+            question_score = 0.25
+        else:
+            question_score = 0.05
 
         score = line_result.score * 0.1 + question_score * 0.9
-        passed = question_score == 1.0 and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -443,12 +457,19 @@ class WhisperPoem(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ {length} chars (max {self.max_chars})")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_char = short_lines / max(1, len(structure.lines))
-        char_score = linear_char**2
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+        violations = len(structure.lines) - short_lines
+        if violations == 0:
+            char_score = 1.0
+        elif violations == 1:
+            char_score = 0.5
+        elif violations == 2:
+            char_score = 0.25
+        else:
+            char_score = 0.05
 
         score = line_result.score * 0.1 + char_score * 0.9
-        passed = linear_char == 1.0 and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -505,12 +526,19 @@ class ThunderVerse(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ {length} chars (min {self.min_chars})")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_char = long_lines / max(1, len(structure.lines))
-        char_score = linear_char**2
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+        violations = len(structure.lines) - long_lines
+        if violations == 0:
+            char_score = 1.0
+        elif violations == 1:
+            char_score = 0.5
+        elif violations == 2:
+            char_score = 0.25
+        else:
+            char_score = 0.05
 
         score = line_result.score * 0.1 + char_score * 0.9
-        passed = linear_char == 1.0 and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -575,12 +603,19 @@ class AlphabeticTerminus(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ no words found")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_alpha = matches / max(1, len(self.letters))
-        alpha_score = linear_alpha**2
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+        violations = len(self.letters) - matches
+        if violations == 0:
+            alpha_score = 1.0
+        elif violations == 1:
+            alpha_score = 0.5
+        elif violations == 2:
+            alpha_score = 0.25
+        else:
+            alpha_score = 0.05
 
         score = line_result.score * 0.1 + alpha_score * 0.9
-        passed = matches == len(self.letters) and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -647,12 +682,19 @@ class OddEvenDance(Constraint):
                     f"Line {i+1} ({'odd' if (i+1)%2==1 else 'even'}): ✗ {actual} (expected {expected})"
                 )
 
-        # Quadratic penalty for stricter GRPO training
-        linear_dance = matches / max(1, len(structure.lines))
-        dance_score = linear_dance**2
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+        violations = len(structure.lines) - matches
+        if violations == 0:
+            dance_score = 1.0
+        elif violations == 1:
+            dance_score = 0.5
+        elif violations == 2:
+            dance_score = 0.25
+        else:
+            dance_score = 0.05
 
         score = line_result.score * 0.1 + dance_score * 0.9
-        passed = dance_score == 1.0 and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -768,12 +810,19 @@ class ColorSpectrum(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ missing '{color}'")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_color = matches / 7
-        color_score = linear_color**2
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+        violations = 7 - matches
+        if violations == 0:
+            color_score = 1.0
+        elif violations == 1:
+            color_score = 0.5
+        elif violations == 2:
+            color_score = 0.25
+        else:
+            color_score = 0.05
 
         score = line_result.score * 0.1 + color_score * 0.9
-        passed = matches == 7 and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -870,12 +919,19 @@ class ElementalVerse(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ no unique element found")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_element = matches / max(1, len(structure.lines))
-        element_score = linear_element**2
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+        violations = len(structure.lines) - matches
+        if violations == 0:
+            element_score = 1.0
+        elif violations == 1:
+            element_score = 0.5
+        elif violations == 2:
+            element_score = 0.25
+        else:
+            element_score = 0.05
 
         score = line_result.score * 0.1 + element_score * 0.9
-        passed = element_score >= 0.8 and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -947,12 +1003,19 @@ class NumberWord(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ missing '{number}'")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_number = matches / self.num_lines
-        number_score = linear_number**2
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+        violations = self.num_lines - matches
+        if violations == 0:
+            number_score = 1.0
+        elif violations == 1:
+            number_score = 0.5
+        elif violations == 2:
+            number_score = 0.25
+        else:
+            number_score = 0.05
 
         score = line_result.score * 0.1 + number_score * 0.9
-        passed = matches == self.num_lines and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -1052,12 +1115,19 @@ class TemporalVerse(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ no time word found")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_time = matches / max(1, len(structure.lines))
-        time_score = linear_time**2
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+        violations = len(structure.lines) - matches
+        if violations == 0:
+            time_score = 1.0
+        elif violations == 1:
+            time_score = 0.5
+        elif violations == 2:
+            time_score = 0.25
+        else:
+            time_score = 0.05
 
         score = line_result.score * 0.1 + time_score * 0.9
-        passed = time_score == 1.0 and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -1111,12 +1181,19 @@ class ExclamationEcho(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ missing '!'")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_exclaim = exclamations / max(1, len(structure.lines))
-        exclaim_score = linear_exclaim**2
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+        violations = len(structure.lines) - exclamations
+        if violations == 0:
+            exclaim_score = 1.0
+        elif violations == 1:
+            exclaim_score = 0.5
+        elif violations == 2:
+            exclaim_score = 0.25
+        else:
+            exclaim_score = 0.05
 
         score = line_result.score * 0.1 + exclaim_score * 0.9
-        passed = exclaim_score == 1.0 and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -1355,12 +1432,17 @@ class ConsonantCascade(Constraint):
             else:
                 details.append(f"Lines {i}/{i+1}: ✓ no consonant repeat")
 
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
         if len(first_consonants) <= 1:
             cascade_score = 0.0
+        elif violations == 0:
+            cascade_score = 1.0
+        elif violations == 1:
+            cascade_score = 0.5
+        elif violations == 2:
+            cascade_score = 0.25
         else:
-            # Quadratic penalty for stricter GRPO training
-            linear_cascade = 1.0 - (violations / (len(first_consonants) - 1))
-            cascade_score = linear_cascade**2
+            cascade_score = 0.05
 
         score = line_result.score * 0.1 + cascade_score * 0.9
         passed = violations == 0 and line_result.passed
@@ -1418,12 +1500,24 @@ class SandwichSonnet(Constraint):
             last_couplet = [line.strip().lower() for line in structure.lines[-2:]]
 
             matches = sum(1 for a, b in zip(first_couplet, last_couplet) if a == b)
-            # Quadratic penalty for stricter GRPO training
-            linear_sandwich = matches / 2
-            sandwich_score = linear_sandwich**2
+            # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
+
+            violations = 2 - matches
+
+            if violations == 0:
+                sandwich_score = 1.0
+
+            elif violations == 1:
+                sandwich_score = 0.5
+
+            elif violations == 2:
+                sandwich_score = 0.25
+
+            else:
+                sandwich_score = 0.05
 
         score = line_result.score * 0.1 + sandwich_score * 0.9
-        passed = matches == 2 and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -1517,12 +1611,24 @@ class VoidVerse(Constraint):
             else:
                 details.append(f"Line {i+1}: ✗ no void word found")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_void = matches / max(1, len(structure.lines))
-        void_score = linear_void**2
+        # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
+
+        violations = max(1, len(structure.lines)) - matches
+
+        if violations == 0:
+            void_score = 1.0
+
+        elif violations == 1:
+            void_score = 0.5
+
+        elif violations == 2:
+            void_score = 0.25
+
+        else:
+            void_score = 0.05
 
         score = line_result.score * 0.1 + void_score * 0.9
-        passed = void_score == 1.0 and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,
@@ -1646,12 +1752,24 @@ class EchoEnd(Constraint):
             target = Counter(last_word_firsts).most_common(1)[0][0]
 
         matches = sum(1 for ltr in last_word_firsts if ltr == target)
-        # Quadratic penalty for stricter GRPO training
-        linear_echo = matches / len(last_word_firsts)
-        echo_score = linear_echo**2
+        # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
+
+        violations = len(last_word_firsts) - matches
+
+        if violations == 0:
+            echo_score = 1.0
+
+        elif violations == 1:
+            echo_score = 0.5
+
+        elif violations == 2:
+            echo_score = 0.25
+
+        else:
+            echo_score = 0.05
 
         score = line_result.score * 0.1 + echo_score * 0.9
-        passed = echo_score == 1.0 and line_result.passed
+        passed = violations == 0 and line_result.passed
 
         return VerificationResult(
             score=score,

@@ -83,9 +83,17 @@ class Abecedarian(Constraint):
             else:
                 details.append(f"Line {i + 1}: ✗ empty line")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_letter = matches / max(1, min(len(self.letters), len(structure.lines)))
-        letter_score = linear_letter**2
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+        expected_matches = min(len(self.letters), len(structure.lines))
+        violations = expected_matches - matches
+        if violations == 0:
+            letter_score = 1.0
+        elif violations == 1:
+            letter_score = 0.5
+        elif violations == 2:
+            letter_score = 0.25
+        else:
+            letter_score = 0.05
 
         # Combine scores
         score = line_result.score * 0.1 + letter_score * 0.9
@@ -335,9 +343,17 @@ class Mesostic(Constraint):
             else:
                 details.append(f"Line {i + 1}: ✗ missing '{target_letter}' in middle")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_mesostic = matches / max(1, min(len(self.target_word), len(structure.lines)))
-        mesostic_score = linear_mesostic**2
+        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+        expected_matches = min(len(self.target_word), len(structure.lines))
+        violations = expected_matches - matches
+        if violations == 0:
+            mesostic_score = 1.0
+        elif violations == 1:
+            mesostic_score = 0.5
+        elif violations == 2:
+            mesostic_score = 0.25
+        else:
+            mesostic_score = 0.05
 
         # Combine scores
         score = line_result.score * 0.1 + mesostic_score * 0.9
@@ -440,12 +456,17 @@ class Anaphora(Constraint):
             opening_counts = Counter(openings)
             detected_phrase, repeats = opening_counts.most_common(1)[0]
 
-        # Score based on repeats - quadratic penalty for stricter GRPO training
+        # Score based on repeats - steep penalties for GRPO training
         if repeats >= self.min_repeats:
             anaphora_score = 1.0
         else:
-            linear_anaphora = repeats / self.min_repeats
-            anaphora_score = linear_anaphora**2
+            violations = self.min_repeats - repeats
+            if violations == 1:
+                anaphora_score = 0.5
+            elif violations == 2:
+                anaphora_score = 0.25
+            else:
+                anaphora_score = 0.05
 
         # Combine scores
         score = line_result.score * 0.1 + anaphora_score * 0.9
@@ -522,9 +543,16 @@ class PalindromePoem(Constraint):
             palindrome_lines = sum(
                 1 for line in structure.lines if self._is_letter_palindrome(line)
             )
-            # Quadratic penalty for stricter GRPO training
-            linear_palindrome = palindrome_lines / max(1, len(structure.lines))
-            palindrome_score = linear_palindrome**2
+            # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+            violations = len(structure.lines) - palindrome_lines
+            if violations == 0:
+                palindrome_score = 1.0
+            elif violations == 1:
+                palindrome_score = 0.5
+            elif violations == 2:
+                palindrome_score = 0.25
+            else:
+                palindrome_score = 0.05
         else:
             # Word level: first half of lines mirror second half
             lines = [line.strip().lower() for line in structure.lines]
@@ -541,9 +569,16 @@ class PalindromePoem(Constraint):
                     if lines[i] == lines[n - 1 - i]:
                         matches += 1
 
-                # Quadratic penalty for stricter GRPO training
-                linear_palindrome = matches / max(1, comparisons)
-                palindrome_score = linear_palindrome**2
+                # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
+                violations = comparisons - matches
+                if violations == 0:
+                    palindrome_score = 1.0
+                elif violations == 1:
+                    palindrome_score = 0.5
+                elif violations == 2:
+                    palindrome_score = 0.25
+                else:
+                    palindrome_score = 0.05
 
         # Combine scores
         score = line_result.score * 0.1 + palindrome_score * 0.9

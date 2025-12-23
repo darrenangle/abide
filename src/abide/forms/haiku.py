@@ -78,14 +78,58 @@ class Haiku(Constraint):
             )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
-        result = self._constraint.verify(poem)
+        structure = self._ensure_structure(poem)
+
+        # Get individual constraint results
+        line_result = self._line_count.verify(poem)
+        stanza_result = self._stanza_count.verify(poem)
+        syllables_result = self._syllables.verify(poem)
+
+        # Count violations in syllable pattern
+        from abide.primitives import count_line_syllables
+
+        expected = [5, 7, 5]
+        violations = 0
+        for i, exp_syl in enumerate(expected):
+            if i < len(structure.lines):
+                actual_syl = count_line_syllables(structure.lines[i])
+                if abs(actual_syl - exp_syl) > self.syllable_tolerance:
+                    violations += 1
+            else:
+                violations += 1  # Missing line is a violation
+
+        # Apply steep penalty based on violations
+        if violations == 0:
+            syllable_score = 1.0
+        elif violations == 1:
+            syllable_score = 0.5
+        elif violations == 2:
+            syllable_score = 0.25
+        else:
+            syllable_score = 0.05
+
+        # Combine scores
+        scores = [
+            (line_result.score, 1.0),
+            (stanza_result.score, 0.5),
+            (syllable_score, 2.0),
+        ]
+        total_weight = sum(w for _, w in scores)
+        score = sum(s * w for s, w in scores) / total_weight
+
+        passed = (
+            score >= 0.7
+            if not self.strict
+            else (violations == 0 and line_result.passed and stanza_result.passed)
+        )
+
         return VerificationResult(
-            score=result.score,
-            passed=result.passed,
-            rubric=result.rubric,
+            score=score,
+            passed=passed,
+            rubric=line_result.rubric + stanza_result.rubric + syllables_result.rubric,
             constraint_name=self.name,
             constraint_type=self.constraint_type,
-            details=result.details,
+            details={"violations": violations},
         )
 
     def describe(self) -> str:
@@ -138,14 +182,58 @@ class Tanka(Constraint):
             )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
-        result = self._constraint.verify(poem)
+        structure = self._ensure_structure(poem)
+
+        # Get individual constraint results
+        line_result = self._line_count.verify(poem)
+        stanza_result = self._stanza_count.verify(poem)
+        syllables_result = self._syllables.verify(poem)
+
+        # Count violations in syllable pattern
+        from abide.primitives import count_line_syllables
+
+        expected = [5, 7, 5, 7, 7]
+        violations = 0
+        for i, exp_syl in enumerate(expected):
+            if i < len(structure.lines):
+                actual_syl = count_line_syllables(structure.lines[i])
+                if abs(actual_syl - exp_syl) > self.syllable_tolerance:
+                    violations += 1
+            else:
+                violations += 1  # Missing line is a violation
+
+        # Apply steep penalty based on violations
+        if violations == 0:
+            syllable_score = 1.0
+        elif violations == 1:
+            syllable_score = 0.5
+        elif violations == 2:
+            syllable_score = 0.25
+        else:
+            syllable_score = 0.05
+
+        # Combine scores
+        scores = [
+            (line_result.score, 1.0),
+            (stanza_result.score, 0.5),
+            (syllable_score, 2.0),
+        ]
+        total_weight = sum(w for _, w in scores)
+        score = sum(s * w for s, w in scores) / total_weight
+
+        passed = (
+            score >= 0.7
+            if not self.strict
+            else (violations == 0 and line_result.passed and stanza_result.passed)
+        )
+
         return VerificationResult(
-            score=result.score,
-            passed=result.passed,
-            rubric=result.rubric,
+            score=score,
+            passed=passed,
+            rubric=line_result.rubric + stanza_result.rubric + syllables_result.rubric,
             constraint_name=self.name,
             constraint_type=self.constraint_type,
-            details=result.details,
+            details={"violations": violations},
         )
 
     def describe(self) -> str:

@@ -96,12 +96,19 @@ class FibonacciVerse(Constraint):
             else:
                 details.append(f"Line {i + 1}: ✗ {words} words (expected {expected})")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_score = matches / self.num_lines
-        score = linear_score**2
+        # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
+        violations = self.num_lines - matches
+        if violations == 0:
+            score = 1.0
+        elif violations == 1:
+            score = 0.5
+        elif violations == 2:
+            score = 0.25
+        else:
+            score = 0.05
         return VerificationResult(
             score=score,
-            passed=linear_score == 1.0,
+            passed=violations == 0,
             rubric=[],
             constraint_name=self.name,
             constraint_type=self.constraint_type,
@@ -170,12 +177,20 @@ class GoldenRatioVerse(Constraint):
                     f"expected ~{self.PHI:.3f})"
                 )
 
-        # Quadratic penalty for stricter GRPO training
-        linear_score = matches / (self.num_lines - 1)  # n-1 ratios to check
-        score = linear_score**2
+        # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
+        total_checks = self.num_lines - 1  # n-1 ratios to check
+        violations = total_checks - matches
+        if violations == 0:
+            score = 1.0
+        elif violations == 1:
+            score = 0.5
+        elif violations == 2:
+            score = 0.25
+        else:
+            score = 0.05
         return VerificationResult(
             score=score,
-            passed=linear_score >= 0.8,
+            passed=violations == 0,
             rubric=[],
             constraint_name=self.name,
             constraint_type=self.constraint_type,
@@ -229,12 +244,19 @@ class TriangularVerse(Constraint):
             else:
                 details.append(f"Line {i + 1}: ✗ {words} words (expected {expected})")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_score = matches / self.num_lines
-        score = linear_score**2
+        # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
+        violations = self.num_lines - matches
+        if violations == 0:
+            score = 1.0
+        elif violations == 1:
+            score = 0.5
+        elif violations == 2:
+            score = 0.25
+        else:
+            score = 0.05
         return VerificationResult(
             score=score,
-            passed=linear_score == 1.0,
+            passed=violations == 0,
             rubric=[],
             constraint_name=self.name,
             constraint_type=self.constraint_type,
@@ -314,12 +336,19 @@ class PythagoreanTercet(Constraint):
                     f"{sorted_w[0]}² + {sorted_w[1]}² = {lhs} ≠ {rhs}"
                 )
 
-        # Quadratic penalty for stricter GRPO training
-        linear_score = matches / self.num_stanzas
-        score = linear_score**2
+        # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
+        violations = self.num_stanzas - matches
+        if violations == 0:
+            score = 1.0
+        elif violations == 1:
+            score = 0.5
+        elif violations == 2:
+            score = 0.25
+        else:
+            score = 0.05
         return VerificationResult(
             score=score,
-            passed=linear_score == 1.0,
+            passed=violations == 0,
             rubric=[],
             constraint_name=self.name,
             constraint_type=self.constraint_type,
@@ -378,12 +407,20 @@ class CoprimeVerse(Constraint):
             else:
                 details.append(f"Line {i + 1}: ✗ {b} words (GCD({a},{b}) = {g})")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_score = matches / (self.num_lines - 1)
-        score = linear_score**2
+        # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
+        total_checks = self.num_lines - 1
+        violations = total_checks - matches
+        if violations == 0:
+            score = 1.0
+        elif violations == 1:
+            score = 0.5
+        elif violations == 2:
+            score = 0.25
+        else:
+            score = 0.05
         return VerificationResult(
             score=score,
-            passed=linear_score == 1.0,
+            passed=violations == 0,
             rubric=[],
             constraint_name=self.name,
             constraint_type=self.constraint_type,
@@ -459,12 +496,19 @@ class PiKu(Constraint):
             else:
                 details.append(f"Line {i + 1}: ✗ {syllables} syllables (expected {expected})")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_score = matches / self.num_lines
-        score = linear_score**2
+        # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
+        violations = self.num_lines - matches
+        if violations == 0:
+            score = 1.0
+        elif violations == 1:
+            score = 0.5
+        elif violations == 2:
+            score = 0.25
+        else:
+            score = 0.05
         return VerificationResult(
             score=score,
-            passed=linear_score == 1.0,
+            passed=violations == 0,
             rubric=[],
             constraint_name=self.name,
             constraint_type=self.constraint_type,
@@ -520,12 +564,19 @@ class SquareStanzas(Constraint):
             else:
                 details.append(f"Stanza {i + 1}: ✗ {words} words (expected {expected} = {i + 1}²)")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_score = matches / self.num_stanzas
-        score = linear_score**2
+        # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
+        violations = self.num_stanzas - matches
+        if violations == 0:
+            score = 1.0
+        elif violations == 1:
+            score = 0.5
+        elif violations == 2:
+            score = 0.25
+        else:
+            score = 0.05
         return VerificationResult(
             score=score,
-            passed=linear_score == 1.0,
+            passed=violations == 0,
             rubric=[],
             constraint_name=self.name,
             constraint_type=self.constraint_type,
@@ -598,12 +649,19 @@ class SelfReferential(Constraint):
                     f"Line {n}: ✗ contains {total}x '{n}'/'{self.WORDS[n]}' (expected {n})"
                 )
 
-        # Quadratic penalty for stricter GRPO training
-        linear_score = matches / self.num_lines
-        score = linear_score**2
+        # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
+        violations = self.num_lines - matches
+        if violations == 0:
+            score = 1.0
+        elif violations == 1:
+            score = 0.5
+        elif violations == 2:
+            score = 0.25
+        else:
+            score = 0.05
         return VerificationResult(
             score=score,
-            passed=linear_score == 1.0,
+            passed=violations == 0,
             rubric=[],
             constraint_name=self.name,
             constraint_type=self.constraint_type,
@@ -662,10 +720,17 @@ class ModularVerse(Constraint):
             else:
                 failures.append(f"{word}({len(clean)})")
 
-        # Quadratic penalty for stricter GRPO training
-        linear_score = matches / len(all_words)
-        score = linear_score**2
-        passed = linear_score == 1.0
+        # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
+        violations = len(all_words) - matches
+        if violations == 0:
+            score = 1.0
+        elif violations == 1:
+            score = 0.5
+        elif violations == 2:
+            score = 0.25
+        else:
+            score = 0.05
+        passed = violations == 0
 
         return VerificationResult(
             score=score,
