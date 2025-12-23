@@ -318,8 +318,6 @@ def train_with_retry(config: TrainingConfig) -> int:
     """Run training with retry logic."""
     from verifiers.rl.trainer import RLConfig, RLTrainer
 
-    # Set WandB to offline to prevent network errors from crashing
-    os.environ["WANDB_MODE"] = "offline"
     os.environ["WANDB_PROJECT"] = config.wandb_project
 
     print("=" * 60)
