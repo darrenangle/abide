@@ -52,14 +52,15 @@ import re
 BAGUETTOTRON_PATH = "/home/darren/10k-poems/models/baguettotron_sft/final"
 DEEPSEEK_R1_PATH = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
 OLMO_THINK_PATH = "allenai/OLMo-3-7B-Think-DPO"
+OLMO_INSTRUCT_PATH = "allenai/OLMo-3-7B-Instruct"
 
 
 @dataclass
 class TrainingConfig:
     """Training configuration with sensible defaults for 2x4090."""
 
-    # Model - OLMo-3-7B-Think-DPO (7B reasoning model with native thinking)
-    model_name: str = OLMO_THINK_PATH  # Override with --model or ABIDE_MODEL env
+    # Model - OLMo-3-7B-Instruct (7B instruction-tuned model for poetry)
+    model_name: str = OLMO_INSTRUCT_PATH  # Override with --model or ABIDE_MODEL env
 
     # Dataset
     num_prompts: int = 100000
@@ -358,9 +359,10 @@ def create_environment(forms: dict[str, object], config: TrainingConfig):
     # Detect if using a thinking model (requires </think> tag in completions)
     # These models use explicit <think>...</think> tags in their chat templates
     model_lower = config.model_name.lower()
+    # Only true thinking models (NOT olmo-instruct which has no think tags)
     is_thinking_model = any(
         x in model_lower
-        for x in ["baguettotron", "qwq", "qwen3", "deepseek-r1", "r1-distill", "olmo"]
+        for x in ["baguettotron", "qwq", "qwen3", "deepseek-r1", "r1-distill", "olmo-think"]
     )
     if is_thinking_model:
         print("Thinking model detected: requiring </think> tag in completions")
@@ -480,7 +482,7 @@ def train_with_retry(config: TrainingConfig) -> int:
                 temperature=0.6,  # Nemotron starts at 0.6, increases later
                 top_p=0.95,  # Nemotron uses 0.95 for diverse sampling
                 repetition_penalty=1.2,  # Mild penalty to break loops
-                max_tokens=2000,  # Balance: enough for thinking, fits in GPU memory
+                max_tokens=2048,  # Poem output only (no thinking overhead)
                 mask_truncated_completions=True,  # DAPO: exclude truncated from loss
                 bf16=True,
                 gradient_checkpointing=True,
