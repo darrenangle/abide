@@ -14,13 +14,16 @@ Features:
 
 Usage:
     # Start vf-vllm on GPU 0 first (in separate terminal):
-    CUDA_VISIBLE_DEVICES=0 vf-vllm --model google/gemma-3-270m-it --port 8000 --enforce-eager
+    CUDA_VISIBLE_DEVICES=0 vf-vllm --model /home/darren/10k-poems/models/baguettotron_sft/final --port 8000 --enforce-eager
 
     # Then run training on GPU 1:
     CUDA_VISIBLE_DEVICES=1 python scripts/train_grpo.py
 
     # Resume from checkpoint:
     CUDA_VISIBLE_DEVICES=1 python scripts/train_grpo.py --resume models/abide_grpo/checkpoint-500
+
+    # Or use a different model:
+    CUDA_VISIBLE_DEVICES=1 python scripts/train_grpo.py --model google/gemma-3-270m-it
 """
 
 from __future__ import annotations
@@ -43,12 +46,20 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent))
 
 
+import re
+
+# Model paths
+BAGUETTOTRON_PATH = "/home/darren/10k-poems/models/baguettotron_sft/final"
+DEEPSEEK_R1_PATH = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
+OLMO_THINK_PATH = "allenai/OLMo-3-7B-Think-DPO"
+
+
 @dataclass
 class TrainingConfig:
     """Training configuration with sensible defaults for 2x4090."""
 
-    # Model - Gemma 3 270M is tiny (0.3B) and fast to train
-    model_name: str = "google/gemma-3-270m-it"  # Override with --model or ABIDE_MODEL env
+    # Model - OLMo-3-7B-Think-DPO (7B reasoning model with native thinking)
+    model_name: str = OLMO_THINK_PATH  # Override with --model or ABIDE_MODEL env
 
     # Dataset
     num_prompts: int = 100000
@@ -58,9 +69,9 @@ class TrainingConfig:
     num_train_epochs: int = 1
     rollouts_per_example: int = 16
     batch_size: int = 32
-    micro_batch_size: int = 2  # Keep small to avoid OOM during backward pass
-    learning_rate: float = 1e-6
-    max_seq_len: int = 1024  # Reduced - poems are small
+    micro_batch_size: int = 1  # Keep at 1 for 7B models to avoid OOM
+    learning_rate: float = 1e-6  # Nemotron uses 1e-6 for stable GRPO
+    max_seq_len: int = 2048  # Room for reasoning traces + poem
     max_prompt_len: int = 384
 
     # Checkpointing
@@ -222,8 +233,19 @@ def get_forms() -> dict[str, object]:
     return all_forms
 
 
-def get_completion_text(completion) -> str:
-    """Extract text from completion."""
+def get_completion_text(completion, require_think_close: bool = True) -> str:
+    """Extract poem text from completion, requiring proper </think> tag.
+
+    For Baguettotron: The chat template already includes <think> in the prompt,
+    so completions look like: "reasoning here</think>poem here"
+
+    If require_think_close=True (default for Baguettotron):
+      - MUST have </think> tag, otherwise returns "" (0 reward)
+      - Returns only what comes AFTER </think>
+
+    If require_think_close=False (for non-reasoning models):
+      - Returns the text as-is (after stripping special tokens)
+    """
     val = completion
     if isinstance(val, list):
         if len(val) > 0 and isinstance(val[0], dict):
@@ -232,11 +254,61 @@ def get_completion_text(completion) -> str:
             val = "".join(val)
     if isinstance(val, list):
         val = "".join([str(x) for x in val])
-    return str(val)
+
+    text = str(val)
+
+    # Check for thinking close tags (different models use different formats)
+    # Baguettotron: </think>
+    # OLMo-Think: <|/thinking|>
+    has_think_close = "</think>" in text or "<|/thinking|>" in text
+
+    if require_think_close:
+        # For thinking models: completion should be "reasoning[close_tag]poem"
+        if not has_think_close:
+            # No closing tag = incomplete reasoning = 0 reward
+            return ""
+        # Extract only what comes after the thinking section
+        if "</think>" in text:
+            text = text.split("</think>", 1)[-1]
+        elif "<|/thinking|>" in text:
+            text = text.split("<|/thinking|>", 1)[-1]
+
+    # Strip any remaining thinking tags
+    text = text.replace("<think>", "").replace("</think>", "")
+    text = text.replace("<|thinking|>", "").replace("<|/thinking|>", "")
+
+    # Strip ChatML tokens if present
+    text = text.replace("<|im_end|>", "").replace("<|im_start|>", "")
+    text = text.replace("<|end_of_text|>", "").replace("<|begin_of_text|>", "")
+    text = text.replace("<|endoftext|>", "")
+
+    # Strip markdown code blocks (common in chat models)
+    # Handle ```poem\n...\n``` or just ```\n...\n```
+    code_block_match = re.search(r"```(?:\w*\n)?(.*?)```", text, re.DOTALL)
+    if code_block_match:
+        text = code_block_match.group(1)
+
+    # Strip common preambles that chat models add
+    preambles = [
+        "No explanations.",
+        "Here is the poem:",
+        "Here's the poem:",
+        "The poem:",
+    ]
+    for preamble in preambles:
+        if text.strip().startswith(preamble):
+            text = text.strip()[len(preamble) :]
+
+    return text.strip()
 
 
-def create_reward_function(forms: dict[str, object]):
-    """Create reward function closure over forms."""
+def create_reward_function(forms: dict[str, object], require_think_close: bool = True):
+    """Create reward function closure over forms.
+
+    Args:
+        forms: Dict of form_name -> form_instance
+        require_think_close: If True, completions must have </think> tag (for Baguettotron)
+    """
 
     _call_count = [0]  # Mutable to track calls
 
@@ -244,7 +316,7 @@ def create_reward_function(forms: dict[str, object]):
         """Score poem against the target form. Returns 0-1 score."""
         _call_count[0] += 1
         try:
-            poem = get_completion_text(completion)
+            poem = get_completion_text(completion, require_think_close=require_think_close)
             if not poem or len(poem.strip()) < 10:
                 return 0.0
 
@@ -265,7 +337,10 @@ def create_reward_function(forms: dict[str, object]):
 
             result = form_instance.verify(poem)
             if _call_count[0] <= 3:
+                # Show first 200 chars of extracted poem to debug extraction
+                poem_preview = poem.replace("\n", "\\n")[:200]
                 print(f"[DEBUG] {form_name}: score={result.score:.3f}")
+                print(f"[DEBUG] poem: {poem_preview}...")
             return result.score
         except Exception as e:
             print(f"[reward error: {e}]")
@@ -280,6 +355,18 @@ def create_environment(forms: dict[str, object], config: TrainingConfig):
 
     import verifiers as vf
 
+    # Detect if using a thinking model (requires </think> tag in completions)
+    # These models use explicit <think>...</think> tags in their chat templates
+    model_lower = config.model_name.lower()
+    is_thinking_model = any(
+        x in model_lower
+        for x in ["baguettotron", "qwq", "qwen3", "deepseek-r1", "r1-distill", "olmo"]
+    )
+    if is_thinking_model:
+        print("Thinking model detected: requiring </think> tag in completions")
+    else:
+        print("Standard model: not requiring thinking tags")
+
     print(f"Generating {config.num_prompts} prompts...")
     dataset = generate_verifiers_dataset(
         num_prompts=config.num_prompts,
@@ -287,7 +374,7 @@ def create_environment(forms: dict[str, object], config: TrainingConfig):
     )
     print(f"Generated {len(dataset)} prompts")
 
-    reward_fn = create_reward_function(forms)
+    reward_fn = create_reward_function(forms, require_think_close=is_thinking_model)
     rubric = vf.Rubric(funcs=[reward_fn], weights=[1.0])
     env = vf.SingleTurnEnv(dataset=dataset, rubric=rubric)
 
@@ -390,8 +477,11 @@ def train_with_retry(config: TrainingConfig) -> int:
                 max_seq_len=config.max_seq_len,
                 max_prompt_len=config.max_prompt_len,
                 vllm_server_port=config.vllm_port,
-                temperature=0.7,
-                max_tokens=512,  # Must be < max_seq_len - max_prompt_len
+                temperature=0.6,  # Nemotron starts at 0.6, increases later
+                top_p=0.95,  # Nemotron uses 0.95 for diverse sampling
+                repetition_penalty=1.2,  # Mild penalty to break loops
+                max_tokens=2000,  # Balance: enough for thinking, fits in GPU memory
+                mask_truncated_completions=True,  # DAPO: exclude truncated from loss
                 bf16=True,
                 gradient_checkpointing=True,
                 logging_steps=config.logging_steps,
@@ -402,18 +492,62 @@ def train_with_retry(config: TrainingConfig) -> int:
                 use_lora=True,
             )
 
-            # Load model manually (Gemma 3n needs special handling - no Liger, no use_cache)
+            # Inject stop tokens based on model type
+            model_lower = config.model_name.lower()
+            if "baguettotron" in model_lower:
+                rl_config.sampling_args["stop"] = ["<|im_end|>"]
+                print("Added stop token: <|im_end|>")
+            elif "qwen" in model_lower or "deepseek" in model_lower or "olmo" in model_lower:
+                rl_config.sampling_args["stop"] = ["<|im_end|>", "<|endoftext|>"]
+                print("Added stop tokens: <|im_end|>, <|endoftext|>")
+
+            # Load model
             import torch
             from transformers import AutoModelForCausalLM, AutoTokenizer
 
             model_path = config.resume_from or config.model_name
             print(f"Loading model: {model_path}")
-            model = AutoModelForCausalLM.from_pretrained(
-                model_path,
-                torch_dtype=torch.bfloat16,
-                attn_implementation="flash_attention_2",
-            )
-            tokenizer = AutoTokenizer.from_pretrained(model_path)
+
+            model_lower = model_path.lower()
+
+            # Configure model loading based on architecture
+            if "baguettotron" in model_lower:
+                # Baguettotron is llama-based, no flash_attention needed
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_path,
+                    torch_dtype=torch.bfloat16,
+                    trust_remote_code=True,
+                )
+            elif "qwen" in model_lower or "deepseek" in model_lower:
+                # Qwen/DeepSeek works with flash_attention_2
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_path,
+                    torch_dtype=torch.bfloat16,
+                    trust_remote_code=True,
+                    attn_implementation="flash_attention_2",
+                )
+            elif "olmo" in model_lower:
+                # OLMo works with flash_attention_2
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_path,
+                    torch_dtype=torch.bfloat16,
+                    trust_remote_code=True,
+                    attn_implementation="flash_attention_2",
+                )
+            else:
+                # Default: Gemma and others use flash_attention_2
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_path,
+                    torch_dtype=torch.bfloat16,
+                    attn_implementation="flash_attention_2",
+                )
+
+            tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+
+            # Ensure pad token is set (Baguettotron uses [PAD])
+            if tokenizer.pad_token is None:
+                tokenizer.pad_token = tokenizer.eos_token
+            print(f"Tokenizer: pad={tokenizer.pad_token}, eos={tokenizer.eos_token}")
 
             # Create trainer
             trainer = RLTrainer(

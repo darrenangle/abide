@@ -6,7 +6,7 @@ set -e
 # (GPU order matters for NCCL - training must be on GPU 0)
 
 # Configuration
-MODEL="${ABIDE_MODEL:-google/gemma-3-270m-it}"
+MODEL="${ABIDE_MODEL:-allenai/OLMo-3-7B-Think-DPO}"
 PORT=8000
 VLLM_PID=""
 
@@ -38,16 +38,18 @@ sleep 2
 mkdir -p logs
 
 # Start vf-vllm on GPU 1
+# Using V1 engine (patched scheduler assertion)
 echo "Starting vf-vllm on GPU 1..."
 CUDA_VISIBLE_DEVICES=1 nohup /home/darren/miniconda3/bin/vf-vllm \
     --model "$MODEL" \
     --port $PORT \
-    --gpu-memory-utilization 0.7 \
+    --gpu-memory-utilization 0.92 \
     --tensor-parallel-size 1 \
-    --max-model-len 1024 \
+    --max-model-len 4096 \
     --trust-remote-code \
     --disable-log-stats \
     --enforce-eager \
+    --dtype bfloat16 \
     > logs/vllm.log 2>&1 &
 
 VLLM_PID=$!
