@@ -6,7 +6,7 @@ set -e
 # (GPU order matters for NCCL - training must be on GPU 0)
 
 # Configuration
-MODEL="${ABIDE_MODEL:-allenai/OLMo-3-7B-Think-DPO}"
+MODEL="${ABIDE_MODEL:-allenai/OLMo-3-7B-Instruct}"
 PORT=8000
 VLLM_PID=""
 
