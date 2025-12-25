@@ -352,7 +352,7 @@ def create_reward_function(forms: dict[str, object], require_think_close: bool =
 
 def create_environment(forms: dict[str, object], config: TrainingConfig):
     """Create verifiers environment with generated prompts."""
-    from prompt_generator import generate_verifiers_dataset
+    from prompt_generator import generate_traditional_verifiers_dataset, generate_verifiers_dataset
 
     import verifiers as vf
 
@@ -369,11 +369,21 @@ def create_environment(forms: dict[str, object], config: TrainingConfig):
     else:
         print("Standard model: not requiring thinking tags")
 
+    # Check if traditional mode requested via env var or config
+    use_traditional = os.environ.get("ABIDE_TRADITIONAL", "").lower() in ("1", "true", "yes")
+
     print(f"Generating {config.num_prompts} prompts...")
-    dataset = generate_verifiers_dataset(
-        num_prompts=config.num_prompts,
-        seed=config.seed,
-    )
+    if use_traditional:
+        print("Using TRADITIONAL forms only (weighted sampling)")
+        dataset = generate_traditional_verifiers_dataset(
+            num_prompts=config.num_prompts,
+            seed=config.seed,
+        )
+    else:
+        dataset = generate_verifiers_dataset(
+            num_prompts=config.num_prompts,
+            seed=config.seed,
+        )
     print(f"Generated {len(dataset)} prompts")
 
     reward_fn = create_reward_function(forms, require_think_close=is_thinking_model)
