@@ -328,7 +328,7 @@ We're actively running GRPO (Group Relative Policy Optimization) experiments to 
 
 1. **Learnable forms matter**: Forms with high within-rollout variance (model sometimes succeeds, sometimes fails on same prompt) produce better GRPO learning signal than forms that are too easy or too hard.
 
-2. **KL regularization is critical**: Without beta parameter for KL divergence, policy can collapse (entropy → 0, KL → infinity). TRL's GRPOTrainer includes this; verifiers library does not.
+2. **KL regularization helps stability**: Adding a beta parameter for KL divergence (e.g., beta=0.04) helps prevent policy collapse. Still experimenting with the right settings.
 
 3. **Top 10 learnable forms** (by GRPO signal):
    - Epigram, ThunderVerse, ColorSpectrum, CoprimeVerse, ElementalVerse
