@@ -1,5 +1,7 @@
 # Abide
 
+> **Note**: This is an experimental research library in active development. APIs may change.
+
 **Automatic reward functions for training LLMs to write poetry.**
 
 Abide is a composable constraint algebra that transforms poetic form specifications into differentiable reward signals. Define a form once, get verification, scoring, and natural language instructions automatically.
@@ -302,6 +304,37 @@ abide/
 ├── inference/      # Reverse-engineer forms from poems
 └── verifiers/      # RL framework integration
 ```
+
+## Experiments
+
+We're actively running GRPO (Group Relative Policy Optimization) experiments to train language models on poetic form constraints.
+
+### Training Scripts
+
+| Script | Description |
+|--------|-------------|
+| [`scripts/train_grpo.py`](scripts/train_grpo.py) | Main GRPO trainer using verifiers library |
+| [`scripts/train_grpo_trl.py`](scripts/train_grpo_trl.py) | TRL-based GRPO with KL regularization (beta parameter) |
+| [`scripts/find_learnable_forms.py`](scripts/find_learnable_forms.py) | Identify forms with high within-rollout variance (best GRPO signal) |
+| [`scripts/prompt_generator.py`](scripts/prompt_generator.py) | Generate training prompts from 140+ poetic forms |
+
+### Run Scripts
+
+| Script | Model | Forms | Notes |
+|--------|-------|-------|-------|
+| [`scripts/run_grpo_trl.sh`](scripts/run_grpo_trl.sh) | Gemma 3 4B | Top 10 learnable | TRL with beta=0.04 KL regularization |
+| [`scripts/run_grpo_learnable.sh`](scripts/run_grpo_learnable.sh) | Gemma 3 4B | Top 10 learnable | Verifiers library GRPO |
+| [`scripts/run_grpo_traditional.sh`](scripts/run_grpo_traditional.sh) | Gemma 3 4B | Traditional forms | Weighted sampling by form popularity |
+
+### Key Findings
+
+1. **Learnable forms matter**: Forms with high within-rollout variance (model sometimes succeeds, sometimes fails on same prompt) produce better GRPO learning signal than forms that are too easy or too hard.
+
+2. **KL regularization is critical**: Without beta parameter for KL divergence, policy can collapse (entropy → 0, KL → infinity). TRL's GRPOTrainer includes this; verifiers library does not.
+
+3. **Top 10 learnable forms** (by GRPO signal):
+   - Epigram, ThunderVerse, ColorSpectrum, CoprimeVerse, ElementalVerse
+   - CharacterPalindromePoem, QuestionQuest, VowelPilgrimage, Mesostic, Terzanelle
 
 ## License
 

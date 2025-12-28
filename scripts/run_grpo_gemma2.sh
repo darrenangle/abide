@@ -1,14 +1,17 @@
 #!/bin/bash
 set -e
 
-# GRPO Training for Traditional Poetry Forms Only
-# Focuses on well-known forms with weighted sampling:
-# - Tier 1 (sonnets, haiku, etc): 40% of training
-# - Tier 2 (ghazal, sestina, etc): 39%
-# - Tier 3 (less common): 21%
+# GRPO Training for Gemma 2 2B-it
+# Pure text model (no multimodal overhead like Gemma 3n)
+# 2.6B parameters - fits easily on a 4090 with room for training
+#
+# Memory notes:
+# - Gemma 2 2B takes ~5-6GB for weights in bfloat16
+# - Plenty of room for KV cache, gradients, and activations
+# - Much simpler architecture than Gemma 3n multimodal models
 
 # Configuration
-MODEL="${ABIDE_MODEL:-allenai/OLMo-3-7B-Instruct}"
+MODEL="google/gemma-2-2b-it"
 PORT=8000
 VLLM_PID=""
 NUM_PROMPTS="${ABIDE_NUM_PROMPTS:-100000}"
@@ -24,10 +27,10 @@ cleanup() {
 trap cleanup INT TERM
 
 echo "============================================================"
-echo "Abide GRPO Training - TRADITIONAL FORMS ONLY"
+echo "Abide GRPO Training - GEMMA 2 2B-it"
 echo "============================================================"
-echo "Model: $MODEL"
-echo "Prompts: $NUM_PROMPTS (doubled for thoroughness, weighted by form popularity)"
+echo "Model: $MODEL (2.6B params, text-only)"
+echo "Prompts: $NUM_PROMPTS (traditional forms, weighted sampling)"
 echo "vLLM: GPU 1, port $PORT"
 echo "Training: GPU 0"
 echo "============================================================"
@@ -53,7 +56,7 @@ CUDA_VISIBLE_DEVICES=1 nohup /home/darren/miniconda3/bin/vf-vllm \
     --disable-log-stats \
     --enforce-eager \
     --dtype bfloat16 \
-    > logs/vllm.log 2>&1 &
+    > logs/vllm_gemma2.log 2>&1 &
 
 VLLM_PID=$!
 echo "vLLM started with PID $VLLM_PID (ctrl-c to abort)"
@@ -61,21 +64,22 @@ echo "vLLM started with PID $VLLM_PID (ctrl-c to abort)"
 # Wait for vLLM to be ready
 echo "Waiting for vLLM to be ready..."
 timeout 300 bash -c "until curl -s localhost:$PORT/health > /dev/null 2>&1; do sleep 2; done" || {
-    echo "ERROR: vLLM failed to start. Check logs/vllm.log"
-    cat logs/vllm.log | tail -50
+    echo "ERROR: vLLM failed to start. Check logs/vllm_gemma2.log"
+    cat logs/vllm_gemma2.log | tail -50
     exit 1
 }
 echo "vLLM is ready!"
 
 # Run training on GPU 0
 echo ""
-echo "Starting traditional forms training on GPU 0..."
+echo "Starting Gemma 2 training on GPU 0..."
 export OMP_NUM_THREADS=4
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-export ABIDE_TRADITIONAL=1  # Flag for train_grpo.py to use traditional forms
+export ABIDE_TRADITIONAL=1  # Use traditional forms only
+export ABIDE_MODEL="$MODEL"
 CUDA_VISIBLE_DEVICES=0 /home/darren/miniconda3/bin/torchrun --nproc_per_node=1 scripts/train_grpo.py \
     --prompts $NUM_PROMPTS \
-    --output models/abide_grpo_traditional
+    --output models/abide_grpo_gemma2
 
 # Cleanup
 echo ""

@@ -764,6 +764,22 @@ TRADITIONAL_FORMS = set(TIER_1_FORMS + TIER_2_FORMS + TIER_3_FORMS)
 # Tier weights for sampling
 TIER_WEIGHTS = {1: 5, 2: 3, 3: 1}
 
+# Top 10 learnable forms from find_learnable_forms.py analysis
+# These have within_prompt_std > 0.1 AND 0.2 < mean_reward < 0.8
+# Sorted by GRPO signal strength (within_std * 4*mean*(1-mean))
+LEARNABLE_FORMS = [
+    "Epigram",  # signal=0.332, mean=0.42, within_std=0.34
+    "ThunderVerse",  # signal=0.280, mean=0.73, within_std=0.35
+    "ColorSpectrum",  # signal=0.250, mean=0.74, within_std=0.33
+    "CoprimeVerse",  # signal=0.238, mean=0.49, within_std=0.24
+    "ElementalVerse",  # signal=0.238, mean=0.39, within_std=0.25
+    "CharacterPalindromePoem",  # signal=0.228, mean=0.42, within_std=0.23
+    "QuestionQuest",  # signal=0.218, mean=0.57, within_std=0.22
+    "VowelPilgrimage",  # signal=0.208, mean=0.37, within_std=0.22
+    "Mesostic",  # signal=0.207, mean=0.66, within_std=0.23
+    "Terzanelle",  # signal=0.191, mean=0.46, within_std=0.19
+]
+
 
 def get_form_tier(form_name: str) -> int:
     """Get the tier of a form (1, 2, 3, or 0 for excluded)."""
@@ -1138,6 +1154,203 @@ def generate_traditional_verifiers_dataset(num_prompts: int = 50000, seed: int =
     from datasets import Dataset
 
     data = generate_traditional_dataset(num_prompts=num_prompts, seed=seed)
+    return Dataset.from_list(data)
+
+
+def generate_single_form_dataset(
+    form_name: str,
+    num_prompts: int = 5000,
+    seed: int = 42,
+) -> list[dict]:
+    """Generate dataset with only a single form for ablation studies.
+
+    Args:
+        form_name: The exact form name (e.g., "SpenserianSonnet")
+        num_prompts: Number of prompts to generate
+        seed: Random seed for reproducibility
+
+    Returns:
+        List of prompt dicts in verifiers format
+    """
+    rng = random.Random(seed)
+
+    forms = get_forms()
+    if form_name not in forms:
+        available = [f for f in forms if form_name.lower() in f.lower()]
+        raise ValueError(f"Form '{form_name}' not found. Similar: {available}")
+
+    form_instance = forms[form_name]
+    all_topics = get_all_topics(seed)
+
+    print(f"  Single form: {form_name}")
+    print(f"  Topics: {len(all_topics)}")
+    print(f"  Tones: {len(TONES)}")
+
+    dataset = []
+    seen_keys = set()
+
+    attempts = 0
+    max_attempts = num_prompts * 3
+
+    while len(dataset) < num_prompts and attempts < max_attempts:
+        attempts += 1
+
+        # Select topic
+        topic = rng.choice(all_topics)
+
+        # Style selection
+        tone = rng.choice(TONES) if rng.random() < 0.7 else None
+        perspective = rng.choice(PERSPECTIVES) if rng.random() < 0.3 else None
+
+        # Check uniqueness
+        key = generate_unique_prompt_key(form_name, topic, tone, perspective, None, None, None)
+
+        if key in seen_keys:
+            continue
+
+        seen_keys.add(key)
+
+        prompt = generate_prompt(
+            form_name=form_name,
+            form_instance=form_instance,
+            topic=topic,
+            tone=tone,
+            perspective=perspective,
+        )
+
+        dataset.append(
+            {
+                "prompt": [{"role": "user", "content": prompt}],
+                "info": {
+                    "form_name": form_name,
+                    "topic": topic,
+                    "tone": tone,
+                    "perspective": perspective,
+                },
+            }
+        )
+
+    print(f"Generated {len(dataset)} prompts for {form_name}")
+
+    # Shuffle the dataset
+    rng.shuffle(dataset)
+
+    return dataset
+
+
+def generate_single_form_verifiers_dataset(form_name: str, num_prompts: int = 5000, seed: int = 42):
+    """Generate single-form dataset in verifiers-compatible format."""
+    from datasets import Dataset
+
+    data = generate_single_form_dataset(form_name=form_name, num_prompts=num_prompts, seed=seed)
+    return Dataset.from_list(data)
+
+
+def get_learnable_forms() -> dict[str, object]:
+    """Load only the top learnable forms (those with GRPO-suitable variance)."""
+    all_forms = get_forms()
+    return {name: form for name, form in all_forms.items() if name in LEARNABLE_FORMS}
+
+
+def generate_learnable_forms_dataset(
+    num_prompts: int = 10000,
+    seed: int = 42,
+) -> list[dict]:
+    """Generate dataset with only the top 10 learnable forms.
+
+    These forms have high within-rollout variance, making them ideal for GRPO:
+    - within_prompt_std > 0.1 (model shows variance on same prompt)
+    - 0.2 < mean_reward < 0.8 (not too easy or too hard)
+
+    Forms are sampled uniformly (equal weight) to maximize learning signal.
+    """
+    rng = random.Random(seed)
+
+    forms = get_learnable_forms()
+    if not forms:
+        raise ValueError("No learnable forms found. Check LEARNABLE_FORMS list.")
+
+    form_names = list(forms.keys())
+    all_topics = get_all_topics(seed)
+
+    print(f"  Learnable forms: {len(forms)}")
+    for name in form_names:
+        print(f"    - {name}")
+    print(f"  Topics: {len(all_topics)}")
+    print(f"  Tones: {len(TONES)}")
+
+    dataset = []
+    seen_keys = set()
+    form_counts = {name: 0 for name in form_names}
+
+    # Ensure balanced distribution across forms
+    prompts_per_form = num_prompts // len(form_names)
+    remainder = num_prompts % len(form_names)
+
+    for form_idx, form_name in enumerate(form_names):
+        form_instance = forms[form_name]
+        target_count = prompts_per_form + (1 if form_idx < remainder else 0)
+
+        attempts = 0
+        max_attempts = target_count * 5
+
+        while form_counts[form_name] < target_count and attempts < max_attempts:
+            attempts += 1
+
+            # Select topic
+            topic = rng.choice(all_topics)
+
+            # Style selection - keep it simple for focused training
+            tone = rng.choice(TONES) if rng.random() < 0.6 else None
+            perspective = rng.choice(PERSPECTIVES) if rng.random() < 0.25 else None
+
+            # Check uniqueness
+            key = generate_unique_prompt_key(form_name, topic, tone, perspective, None, None, None)
+
+            if key in seen_keys:
+                continue
+
+            seen_keys.add(key)
+
+            prompt = generate_prompt(
+                form_name=form_name,
+                form_instance=form_instance,
+                topic=topic,
+                tone=tone,
+                perspective=perspective,
+            )
+
+            dataset.append(
+                {
+                    "prompt": [{"role": "user", "content": prompt}],
+                    "info": {
+                        "form_name": form_name,
+                        "topic": topic,
+                        "tone": tone,
+                        "perspective": perspective,
+                    },
+                }
+            )
+
+            form_counts[form_name] += 1
+
+    # Log distribution
+    print(f"\nForm distribution ({len(dataset)} prompts):")
+    for name in form_names:
+        pct = 100 * form_counts[name] / len(dataset) if dataset else 0
+        print(f"  {name}: {form_counts[name]} ({pct:.1f}%)")
+
+    # Shuffle the dataset
+    rng.shuffle(dataset)
+
+    return dataset
+
+
+def generate_learnable_forms_verifiers_dataset(num_prompts: int = 10000, seed: int = 42):
+    """Generate learnable forms dataset in verifiers-compatible format."""
+    from datasets import Dataset
+
+    data = generate_learnable_forms_dataset(num_prompts=num_prompts, seed=seed)
     return Dataset.from_list(data)
 
 

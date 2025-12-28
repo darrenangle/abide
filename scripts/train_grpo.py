@@ -53,6 +53,7 @@ BAGUETTOTRON_PATH = "/home/darren/10k-poems/models/baguettotron_sft/final"
 DEEPSEEK_R1_PATH = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
 OLMO_THINK_PATH = "allenai/OLMo-3-7B-Think-DPO"
 OLMO_INSTRUCT_PATH = "allenai/OLMo-3-7B-Instruct"
+GEMMA_3N_E4B_PATH = "google/gemma-3n-E4B-it"
 
 
 @dataclass
@@ -71,7 +72,7 @@ class TrainingConfig:
     rollouts_per_example: int = 16
     batch_size: int = 32
     micro_batch_size: int = 1  # Keep at 1 for 7B models to avoid OOM
-    learning_rate: float = 1e-6  # Nemotron uses 1e-6 for stable GRPO
+    learning_rate: float = 5e-5  # Aggressive LR for faster learning
     max_seq_len: int = 2048  # Room for reasoning traces + poem
     max_prompt_len: int = 384
 
@@ -283,6 +284,10 @@ def get_completion_text(completion, require_think_close: bool = True) -> str:
     text = text.replace("<|end_of_text|>", "").replace("<|begin_of_text|>", "")
     text = text.replace("<|endoftext|>", "")
 
+    # Strip Gemma tokens if present
+    text = text.replace("<start_of_turn>", "").replace("<end_of_turn>", "")
+    text = text.replace("<bos>", "").replace("<eos>", "")
+
     # Strip markdown code blocks (common in chat models)
     # Handle ```poem\n...\n``` or just ```\n...\n```
     code_block_match = re.search(r"```(?:\w*\n)?(.*?)```", text, re.DOTALL)
@@ -352,7 +357,12 @@ def create_reward_function(forms: dict[str, object], require_think_close: bool =
 
 def create_environment(forms: dict[str, object], config: TrainingConfig):
     """Create verifiers environment with generated prompts."""
-    from prompt_generator import generate_traditional_verifiers_dataset, generate_verifiers_dataset
+    from prompt_generator import (
+        generate_learnable_forms_verifiers_dataset,
+        generate_single_form_verifiers_dataset,
+        generate_traditional_verifiers_dataset,
+        generate_verifiers_dataset,
+    )
 
     import verifiers as vf
 
@@ -369,11 +379,30 @@ def create_environment(forms: dict[str, object], config: TrainingConfig):
     else:
         print("Standard model: not requiring thinking tags")
 
+    # Check for single-form ablation mode
+    single_form = os.environ.get("ABIDE_SINGLE_FORM", "")
+
     # Check if traditional mode requested via env var or config
     use_traditional = os.environ.get("ABIDE_TRADITIONAL", "").lower() in ("1", "true", "yes")
 
+    # Check if learnable forms mode requested (forms with high within-rollout variance)
+    use_learnable = os.environ.get("ABIDE_LEARNABLE", "").lower() in ("1", "true", "yes")
+
     print(f"Generating {config.num_prompts} prompts...")
-    if use_traditional:
+    if single_form:
+        print(f"ABLATION MODE: Single form only ({single_form})")
+        dataset = generate_single_form_verifiers_dataset(
+            form_name=single_form,
+            num_prompts=config.num_prompts,
+            seed=config.seed,
+        )
+    elif use_learnable:
+        print("Using LEARNABLE forms only (top 10 with highest GRPO signal)")
+        dataset = generate_learnable_forms_verifiers_dataset(
+            num_prompts=config.num_prompts,
+            seed=config.seed,
+        )
+    elif use_traditional:
         print("Using TRADITIONAL forms only (weighted sampling)")
         dataset = generate_traditional_verifiers_dataset(
             num_prompts=config.num_prompts,
@@ -509,6 +538,9 @@ def train_with_retry(config: TrainingConfig) -> int:
             if "baguettotron" in model_lower:
                 rl_config.sampling_args["stop"] = ["<|im_end|>"]
                 print("Added stop token: <|im_end|>")
+            elif "gemma" in model_lower:
+                rl_config.sampling_args["stop"] = ["<end_of_turn>", "<eos>"]
+                print("Added stop tokens: <end_of_turn>, <eos>")
             elif "qwen" in model_lower or "deepseek" in model_lower or "olmo" in model_lower:
                 rl_config.sampling_args["stop"] = ["<|im_end|>", "<|endoftext|>"]
                 print("Added stop tokens: <|im_end|>, <|endoftext|>")
@@ -546,8 +578,16 @@ def train_with_retry(config: TrainingConfig) -> int:
                     trust_remote_code=True,
                     attn_implementation="flash_attention_2",
                 )
+            elif "gemma" in model_lower:
+                # Gemma 3 - use flash_attention_2 for efficiency
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_path,
+                    torch_dtype=torch.bfloat16,
+                    trust_remote_code=True,
+                    attn_implementation="flash_attention_2",
+                )
             else:
-                # Default: Gemma and others use flash_attention_2
+                # Default: use flash_attention_2
                 model = AutoModelForCausalLM.from_pretrained(
                     model_path,
                     torch_dtype=torch.bfloat16,
@@ -644,7 +684,7 @@ def main() -> int:
     parser.add_argument("--prompts", type=int, default=100000, help="Number of prompts")
     parser.add_argument("--rollouts", type=int, default=16, help="Rollouts per example")
     parser.add_argument("--batch-size", type=int, default=32, help="Batch size")
-    parser.add_argument("--lr", type=float, default=1e-6, help="Learning rate")
+    parser.add_argument("--lr", type=float, default=5e-5, help="Learning rate")
     parser.add_argument("--output", default="models/abide_grpo", help="Output directory")
     parser.add_argument("--save-steps", type=int, default=100, help="Save every N steps")
     parser.add_argument("--resume", type=str, help="Resume from checkpoint")
