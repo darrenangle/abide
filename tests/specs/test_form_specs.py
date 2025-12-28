@@ -7,7 +7,6 @@ Tests verify that:
 3. Verification results map back to instruction items
 """
 
-
 from abide.specs import (
     FormSpec,
     haiku_spec,

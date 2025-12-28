@@ -202,9 +202,7 @@ class FormSpec:
         total_weight = sum(item.weight for item in self.items)
         if total_weight == 0:
             return 0.0
-        weighted_sum = sum(
-            results[item.id].score * item.weight for item in self.items
-        )
+        weighted_sum = sum(results[item.id].score * item.weight for item in self.items)
         return weighted_sum / total_weight
 
     def to_dict(self) -> dict[str, Any]:

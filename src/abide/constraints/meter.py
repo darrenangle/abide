@@ -71,9 +71,7 @@ class Meter(Constraint):
         """
         super().__init__(weight)
         self.meter_type = meter_type
-        self.foot_count = (
-            foot_length.value if isinstance(foot_length, FootLength) else foot_length
-        )
+        self.foot_count = foot_length.value if isinstance(foot_length, FootLength) else foot_length
         self.tolerance = tolerance
         self.min_score = min_score
         self.per_line = per_line
@@ -276,9 +274,7 @@ class MeterPattern(Constraint):
 
     def instruction(self) -> str:
         """Generate plain English instruction."""
-        syllable_pattern = [
-            get_expected_syllables(self.meter_type, f) for f in self.foot_pattern
-        ]
+        syllable_pattern = [get_expected_syllables(self.meter_type, f) for f in self.foot_pattern]
         pattern_str = "-".join(str(s) for s in syllable_pattern)
         return (
             f"Write in {self.meter_type.value} meter with a repeating syllable "

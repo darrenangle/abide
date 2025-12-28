@@ -194,11 +194,11 @@ class VowelPilgrimage(Constraint):
                 first_letter = words[0][0].upper() if words[0] else ""
                 if first_letter == expected:
                     matches += 1
-                    details.append(f"Line {i+1}: ✓ starts with '{expected}'")
+                    details.append(f"Line {i + 1}: ✓ starts with '{expected}'")
                 else:
-                    details.append(f"Line {i+1}: ✗ expected '{expected}', got '{first_letter}'")
+                    details.append(f"Line {i + 1}: ✗ expected '{expected}', got '{first_letter}'")
             else:
-                details.append(f"Line {i+1}: ✗ empty line")
+                details.append(f"Line {i + 1}: ✗ empty line")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
         violations = 5 - matches
@@ -383,9 +383,9 @@ class QuestionQuest(Constraint):
             stripped = line.strip()
             if stripped.endswith("?"):
                 questions += 1
-                details.append(f"Line {i+1}: ✓ is question")
+                details.append(f"Line {i + 1}: ✓ is question")
             else:
-                details.append(f"Line {i+1}: ✗ not a question")
+                details.append(f"Line {i + 1}: ✗ not a question")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
         violations = len(structure.lines) - questions
@@ -453,9 +453,9 @@ class WhisperPoem(Constraint):
             length = len(line.strip())
             if length <= self.max_chars:
                 short_lines += 1
-                details.append(f"Line {i+1}: ✓ {length} chars")
+                details.append(f"Line {i + 1}: ✓ {length} chars")
             else:
-                details.append(f"Line {i+1}: ✗ {length} chars (max {self.max_chars})")
+                details.append(f"Line {i + 1}: ✗ {length} chars (max {self.max_chars})")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
         violations = len(structure.lines) - short_lines
@@ -522,9 +522,9 @@ class ThunderVerse(Constraint):
             length = len(line.strip())
             if length >= self.min_chars:
                 long_lines += 1
-                details.append(f"Line {i+1}: ✓ {length} chars")
+                details.append(f"Line {i + 1}: ✓ {length} chars")
             else:
-                details.append(f"Line {i+1}: ✗ {length} chars (min {self.min_chars})")
+                details.append(f"Line {i + 1}: ✗ {length} chars (min {self.min_chars})")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
         violations = len(structure.lines) - long_lines
@@ -597,11 +597,11 @@ class AlphabeticTerminus(Constraint):
                 first_char = last_word[0].upper()
                 if first_char == letter:
                     matches += 1
-                    details.append(f"Line {i+1}: ✓ ends with '{last_word}'")
+                    details.append(f"Line {i + 1}: ✓ ends with '{last_word}'")
                 else:
-                    details.append(f"Line {i+1}: ✗ expected '{letter}', got '{first_char}'")
+                    details.append(f"Line {i + 1}: ✗ expected '{letter}', got '{first_char}'")
             else:
-                details.append(f"Line {i+1}: ✗ no words found")
+                details.append(f"Line {i + 1}: ✗ no words found")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
         violations = len(self.letters) - matches
@@ -676,10 +676,12 @@ class OddEvenDance(Constraint):
 
             if actual == expected:
                 matches += 1
-                details.append(f"Line {i+1} ({'odd' if (i+1)%2==1 else 'even'}): ✓ {actual} words")
+                details.append(
+                    f"Line {i + 1} ({'odd' if (i + 1) % 2 == 1 else 'even'}): ✓ {actual} words"
+                )
             else:
                 details.append(
-                    f"Line {i+1} ({'odd' if (i+1)%2==1 else 'even'}): ✗ {actual} (expected {expected})"
+                    f"Line {i + 1} ({'odd' if (i + 1) % 2 == 1 else 'even'}): ✗ {actual} (expected {expected})"
                 )
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
@@ -707,8 +709,7 @@ class OddEvenDance(Constraint):
 
     def describe(self) -> str:
         return (
-            f"Odd-Even Dance: odd lines {self.odd_words} words, "
-            f"even lines {self.even_words} words"
+            f"Odd-Even Dance: odd lines {self.odd_words} words, even lines {self.even_words} words"
         )
 
 
@@ -806,9 +807,9 @@ class ColorSpectrum(Constraint):
             line_lower = line.lower()
             if color in line_lower:
                 matches += 1
-                details.append(f"Line {i+1}: ✓ contains '{color}'")
+                details.append(f"Line {i + 1}: ✓ contains '{color}'")
             else:
-                details.append(f"Line {i+1}: ✗ missing '{color}'")
+                details.append(f"Line {i + 1}: ✗ missing '{color}'")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
         violations = 7 - matches
@@ -915,9 +916,9 @@ class ElementalVerse(Constraint):
 
             if found:
                 matches += 1
-                details.append(f"Line {i+1}: ✓ contains '{found}'")
+                details.append(f"Line {i + 1}: ✓ contains '{found}'")
             else:
-                details.append(f"Line {i+1}: ✗ no unique element found")
+                details.append(f"Line {i + 1}: ✗ no unique element found")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
         violations = len(structure.lines) - matches
@@ -999,9 +1000,9 @@ class NumberWord(Constraint):
             pattern = r"\b" + number + r"\b"
             if re.search(pattern, line.lower()):
                 matches += 1
-                details.append(f"Line {i+1}: ✓ contains '{number}'")
+                details.append(f"Line {i + 1}: ✓ contains '{number}'")
             else:
-                details.append(f"Line {i+1}: ✗ missing '{number}'")
+                details.append(f"Line {i + 1}: ✗ missing '{number}'")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
         violations = self.num_lines - matches
@@ -1027,7 +1028,7 @@ class NumberWord(Constraint):
         )
 
     def describe(self) -> str:
-        return f"Number Word: {self.num_lines} lines containing 'one' through '{self.NUMBERS[self.num_lines-1]}'"
+        return f"Number Word: {self.num_lines} lines containing 'one' through '{self.NUMBERS[self.num_lines - 1]}'"
 
 
 class TemporalVerse(Constraint):
@@ -1111,9 +1112,9 @@ class TemporalVerse(Constraint):
 
             if found:
                 matches += 1
-                details.append(f"Line {i+1}: ✓ contains '{found}'")
+                details.append(f"Line {i + 1}: ✓ contains '{found}'")
             else:
-                details.append(f"Line {i+1}: ✗ no time word found")
+                details.append(f"Line {i + 1}: ✗ no time word found")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
         violations = len(structure.lines) - matches
@@ -1177,9 +1178,9 @@ class ExclamationEcho(Constraint):
         for i, line in enumerate(structure.lines):
             if line.strip().endswith("!"):
                 exclamations += 1
-                details.append(f"Line {i+1}: ✓ ends with '!'")
+                details.append(f"Line {i + 1}: ✓ ends with '!'")
             else:
-                details.append(f"Line {i+1}: ✗ missing '!'")
+                details.append(f"Line {i + 1}: ✗ missing '!'")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
         violations = len(structure.lines) - exclamations
@@ -1428,9 +1429,9 @@ class ConsonantCascade(Constraint):
 
             if prev is not None and curr is not None and prev == curr:
                 violations += 1
-                details.append(f"Lines {i}/{i+1}: ✗ both start with '{prev}'")
+                details.append(f"Lines {i}/{i + 1}: ✗ both start with '{prev}'")
             else:
-                details.append(f"Lines {i}/{i+1}: ✓ no consonant repeat")
+                details.append(f"Lines {i}/{i + 1}: ✓ no consonant repeat")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
         if len(first_consonants) <= 1:
@@ -1607,9 +1608,9 @@ class VoidVerse(Constraint):
 
             if found:
                 matches += 1
-                details.append(f"Line {i+1}: ✓ contains '{found}'")
+                details.append(f"Line {i + 1}: ✓ contains '{found}'")
             else:
-                details.append(f"Line {i+1}: ✗ no void word found")
+                details.append(f"Line {i + 1}: ✗ no void word found")
 
         # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
 

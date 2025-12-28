@@ -162,7 +162,7 @@ def make_abide_rubric(
         import verifiers as vf
     except ImportError as e:
         raise ImportError(
-            "verifiers package required for Rubric integration. " "Install with: uv add verifiers"
+            "verifiers package required for Rubric integration. Install with: uv add verifiers"
         ) from e
 
     funcs = [make_reward_func(c) for c in constraints]

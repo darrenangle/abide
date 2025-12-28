@@ -73,9 +73,7 @@ class Couplet(Constraint):
 
         self._constraint: Constraint
         if strict:
-            self._constraint = And(
-                [self._line_count, self._syllables, self._rhyme_scheme]
-            )
+            self._constraint = And([self._line_count, self._syllables, self._rhyme_scheme])
         else:
             self._constraint = WeightedSum(
                 [
@@ -208,9 +206,7 @@ class Elegiac(Constraint):
 
         self._constraint: Constraint
         if strict:
-            self._constraint = And(
-                [self._line_count, self._syllables, self._rhyme_scheme]
-            )
+            self._constraint = And([self._line_count, self._syllables, self._rhyme_scheme])
         else:
             self._constraint = WeightedSum(
                 [

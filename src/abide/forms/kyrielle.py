@@ -143,8 +143,7 @@ class Kyrielle(Constraint):
 
     def describe(self) -> str:
         return (
-            f"Kyrielle: {self.stanza_count_val} quatrains, 8 syllables, "
-            f"with repeating refrain line"
+            f"Kyrielle: {self.stanza_count_val} quatrains, 8 syllables, with repeating refrain line"
         )
 
 
