@@ -39,8 +39,6 @@ for item in result.rubric:
 # Rhyme scheme: 67%
 ```
 
-**One specification. Three outputs. Perfect alignment.**
-
 ---
 
 ## Key Capabilities
@@ -339,7 +337,3 @@ We're actively running GRPO (Group Relative Policy Optimization) experiments to 
 ## License
 
 MIT
-
----
-
-**Abide**: Because poetry has rules, and rules can be rewards.
