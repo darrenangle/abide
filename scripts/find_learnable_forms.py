@@ -149,6 +149,68 @@ def generate_prompts_for_form(form_name: str, form_instance, num_prompts: int = 
     return prompts
 
 
+def get_model_format(model_name: str) -> dict:
+    """Get prompt format and stop tokens for a model.
+
+    Returns dict with:
+    - prompt_template: format string with {prompt} placeholder
+    - stop: list of stop tokens
+    - strip_tokens: list of tokens to strip from output
+    """
+    model_lower = model_name.lower()
+
+    # Gemma models
+    if "gemma" in model_lower:
+        return {
+            "prompt_template": "<start_of_turn>user\n{prompt}<end_of_turn>\n<start_of_turn>model\n",
+            "stop": ["<end_of_turn>", "<eos>"],
+            "strip_tokens": ["<start_of_turn>", "<end_of_turn>", "<bos>", "<eos>"],
+        }
+
+    # ChatML models (Baguettotron, Qwen, etc.)
+    if (
+        "baguettotron" in model_lower
+        or "qwen" in model_lower
+        or any(x in model_lower for x in ["chatml", "im_start"])
+    ):
+        # NOTE: Don't stop at </think> - Baguettotron outputs <think>...</think>POEM
+        # We need the full response to extract the poem after </think>
+        return {
+            "prompt_template": "<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n",
+            "stop": ["<|im_end|>"],
+            "strip_tokens": ["<|im_start|>", "<|im_end|>", "<think>", "</think>"],
+        }
+
+    # Llama/Mistral instruct
+    if "llama" in model_lower or "mistral" in model_lower:
+        return {
+            "prompt_template": "[INST] {prompt} [/INST]",
+            "stop": ["</s>", "[INST]"],
+            "strip_tokens": ["</s>", "[INST]", "[/INST]"],
+        }
+
+    # Default: try ChatML-style (most common)
+    return {
+        "prompt_template": "<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n",
+        "stop": ["<|im_end|>", "<|endoftext|>"],
+        "strip_tokens": ["<|im_start|>", "<|im_end|>", "<|endoftext|>"],
+    }
+
+
+def strip_model_tokens(text: str, tokens: list[str]) -> str:
+    """Strip model-specific tokens from output.
+
+    For reasoning models (Baguettotron), also extracts text after </think>.
+    """
+    # Handle reasoning traces first - poem comes after </think>
+    if "</think>" in text:
+        text = text.split("</think>", 1)[-1]
+
+    for token in tokens:
+        text = text.replace(token, "")
+    return text.strip()
+
+
 def analyze_form_with_model(
     form_name: str,
     form_instance,
@@ -160,24 +222,29 @@ def analyze_form_with_model(
     """Analyze a form's variance using vLLM for generation."""
     import requests
 
+    # Get model-specific format
+    model_format = get_model_format(model_name)
+
     prompts = generate_prompts_for_form(form_name, form_instance, num_prompts)
 
     all_prompt_rewards = []
 
     for prompt in prompts:
         # Generate multiple rollouts for this prompt
+        formatted_prompt = model_format["prompt_template"].format(prompt=prompt)
         try:
             response = requests.post(
                 f"{vllm_url}/v1/completions",
                 json={
                     "model": model_name,
-                    "prompt": f"<start_of_turn>user\n{prompt}<end_of_turn>\n<start_of_turn>model\n",
-                    "max_tokens": 1024,
+                    "prompt": formatted_prompt,
+                    "max_tokens": 2048,  # Baguettotron needs space for <think>...</think> + poem
                     "temperature": 0.7,
+                    "repetition_penalty": 1.2,  # Prevent loops in reasoning
                     "n": num_rollouts,
-                    "stop": ["<end_of_turn>", "<eos>"],
+                    "stop": model_format["stop"],
                 },
-                timeout=120,
+                timeout=180,
             )
             response.raise_for_status()
             data = response.json()
@@ -189,6 +256,8 @@ def analyze_form_with_model(
         rollout_rewards = []
         for choice in data.get("choices", []):
             text = choice.get("text", "").strip()
+            # Strip model-specific tokens
+            text = strip_model_tokens(text, model_format["strip_tokens"])
             try:
                 result = form_instance.verify(text)
                 rollout_rewards.append(result.score)

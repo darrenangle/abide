@@ -1,0 +1,61 @@
+# SFT Data Generation Configuration
+# Usage: python scripts/sft_orchestrator.py --config config/sft_generation.yaml
+
+pipeline:
+  # Poetry forms to generate (top 10 learnable from GRPO signal analysis)
+  forms:
+    - IrregularOde
+    - ConsonantCascade
+    - Sonnet
+    - CoprimeVerse
+    - Anaphora
+    - Mesostic
+    - Rubaiyat
+    - PetrarchanSonnet
+    - Etheree
+    - BroadBallad
+
+  # Number of verified examples per form
+  num_per_form: 100
+
+  # Minimum abide score to accept a poem
+  min_score: 0.8
+
+  # Maximum retry attempts per poem
+  max_retries: 5
+
+model_mix:
+  # Ratio of Claude Code agents vs OpenRouter workers
+  # 0.0 = all OpenRouter, 1.0 = all Claude, 0.5 = 50/50 mix
+  claude_ratio: 0.5
+
+  claude:
+    # Model for Claude Code agents: haiku or sonnet
+    model: haiku
+    # Number of parallel agents
+    parallel_agents: 4
+
+  openrouter:
+    # OpenRouter API key from environment
+    api_key_env: OPENROUTER_API_KEY
+
+    # Models to use (randomly selected per task)
+    models:
+      - moonshotai/kimi-k2
+      # - deepseek/deepseek-r1
+      # - anthropic/claude-sonnet-4
+
+    # Number of parallel workers
+    parallel_workers: 4
+
+output:
+  # Output JSONL file (append-only)
+  file: data/sft_dataset.jsonl
+
+  # Print progress checkpoint every N examples
+  checkpoint_every: 10
+
+# Topics and tones are loaded from:
+# - data/topics.txt (one per line)
+# - data/tones.txt (one per line)
+# If files don't exist, defaults are used.

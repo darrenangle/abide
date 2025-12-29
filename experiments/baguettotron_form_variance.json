@@ -1,0 +1,1443 @@
+{
+  "model": "/home/darren/10k-poems/models/baguettotron_sft/final",
+  "prompts_per_form": 5,
+  "rollouts_per_prompt": 8,
+  "results": [
+    {
+      "form_name": "IrregularOde",
+      "mean_reward": 0.6481499494329359,
+      "within_prompt_std": 0.4285923387389932,
+      "between_prompt_std": 0.10397722403436804,
+      "grpo_signal": 0.3909646615017949,
+      "is_learnable": true,
+      "min_reward": 3.726653172078671e-06,
+      "max_reward": 1.0
+    },
+    {
+      "form_name": "ConsonantCascade",
+      "mean_reward": 0.5883654423306004,
+      "within_prompt_std": 0.2955869348781329,
+      "between_prompt_std": 0.09583517041867035,
+      "grpo_signal": 0.28635463001828,
+      "is_learnable": true,
+      "min_reward": 0.14500000000000002,
+      "max_reward": 1.0
+    },
+    {
+      "form_name": "Sonnet",
+      "mean_reward": 0.4060067545644984,
+      "within_prompt_std": 0.245775037433072,
+      "between_prompt_std": 0.053415160574800204,
+      "grpo_signal": 0.2370896128628979,
+      "is_learnable": true,
+      "min_reward": 0.019267947200530936,
+      "max_reward": 0.9267305303993664
+    },
+    {
+      "form_name": "CoprimeVerse",
+      "mean_reward": 0.35374999999999995,
+      "within_prompt_std": 0.23806517558031723,
+      "between_prompt_std": 0.0609302880347697,
+      "grpo_signal": 0.2176972119020737,
+      "is_learnable": true,
+      "min_reward": 0.0,
+      "max_reward": 1.0
+    },
+    {
+      "form_name": "Anaphora",
+      "mean_reward": 0.7515163266492816,
+      "within_prompt_std": 0.282943899876415,
+      "between_prompt_std": 0.09125959488255904,
+      "grpo_signal": 0.21134725192494846,
+      "is_learnable": true,
+      "min_reward": 0.28565306597126333,
+      "max_reward": 1.0
+    },
+    {
+      "form_name": "Mesostic",
+      "mean_reward": 0.7182088526858129,
+      "within_prompt_std": 0.22656482775113007,
+      "between_prompt_std": 0.04154158630394674,
+      "grpo_signal": 0.1834131969590839,
+      "is_learnable": true,
+      "min_reward": 0.225,
+      "max_reward": 0.9882496902584595
+    },
+    {
+      "form_name": "Rubaiyat",
+      "mean_reward": 0.4068164685610852,
+      "within_prompt_std": 0.1618588373564987,
+      "between_prompt_std": 0.06441785116611316,
+      "grpo_signal": 0.1562370458093586,
+      "is_learnable": true,
+      "min_reward": 0.18263101037075172,
+      "max_reward": 0.8001255897563004
+    },
+    {
+      "form_name": "Epigram",
+      "mean_reward": 0.19125,
+      "within_prompt_std": 0.24532590332944806,
+      "between_prompt_std": 0.09475296829123613,
+      "grpo_signal": 0.1517816031030337,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 1.0
+    },
+    {
+      "form_name": "PetrarchanSonnet",
+      "mean_reward": 0.3423826606620077,
+      "within_prompt_std": 0.16235474315801976,
+      "between_prompt_std": 0.06739164346795848,
+      "grpo_signal": 0.14622108107304355,
+      "is_learnable": true,
+      "min_reward": 0.04783739909181961,
+      "max_reward": 0.6019438294170222
+    },
+    {
+      "form_name": "Etheree",
+      "mean_reward": 0.2592532696635435,
+      "within_prompt_std": 0.1754947709873773,
+      "between_prompt_std": 0.059399390958418855,
+      "grpo_signal": 0.1348087735667787,
+      "is_learnable": true,
+      "min_reward": 0.02272727272727283,
+      "max_reward": 0.6404012605641547
+    },
+    {
+      "form_name": "BroadBallad",
+      "mean_reward": 0.28354732609902455,
+      "within_prompt_std": 0.16559475895657888,
+      "between_prompt_std": 0.0627628681473333,
+      "grpo_signal": 0.1345611353152583,
+      "is_learnable": true,
+      "min_reward": 0.061745160969980895,
+      "max_reward": 0.6574848492160906
+    },
+    {
+      "form_name": "HoratianOde",
+      "mean_reward": 0.29197787622448895,
+      "within_prompt_std": 0.14964898479579603,
+      "between_prompt_std": 0.06518416237197308,
+      "grpo_signal": 0.12374582061787812,
+      "is_learnable": true,
+      "min_reward": 0.07040616650403282,
+      "max_reward": 0.6151589971023422
+    },
+    {
+      "form_name": "ShakespeareanSonnet",
+      "mean_reward": 0.27523496566009376,
+      "within_prompt_std": 0.1427603499509994,
+      "between_prompt_std": 0.05055835832929158,
+      "grpo_signal": 0.11391172636312712,
+      "is_learnable": true,
+      "min_reward": 0.06507763092255262,
+      "max_reward": 0.5540168992347471
+    },
+    {
+      "form_name": "Terzanelle",
+      "mean_reward": 0.2075460889154117,
+      "within_prompt_std": 0.17192509034743128,
+      "between_prompt_std": 0.07690045152020378,
+      "grpo_signal": 0.11310656663029071,
+      "is_learnable": true,
+      "min_reward": 0.03571428571428571,
+      "max_reward": 0.5757142857142857
+    },
+    {
+      "form_name": "BlankVerse",
+      "mean_reward": 0.6561262148466549,
+      "within_prompt_std": 0.12523051874151664,
+      "between_prompt_std": 0.05317511036641635,
+      "grpo_signal": 0.11302034531886196,
+      "is_learnable": true,
+      "min_reward": 0.2662897093272671,
+      "max_reward": 0.9043486309515159
+    },
+    {
+      "form_name": "Pantoum",
+      "mean_reward": 0.6111592203889353,
+      "within_prompt_std": 0.11400068263477883,
+      "between_prompt_std": 0.032704049387049926,
+      "grpo_signal": 0.10836614313669199,
+      "is_learnable": true,
+      "min_reward": 0.28125,
+      "max_reward": 0.8125
+    },
+    {
+      "form_name": "CaudateSonnet",
+      "mean_reward": 0.2574072498557611,
+      "within_prompt_std": 0.14060230275041072,
+      "between_prompt_std": 0.05897274300663279,
+      "grpo_signal": 0.1075038219330807,
+      "is_learnable": true,
+      "min_reward": 0.07097314719499924,
+      "max_reward": 0.5740090788329907
+    },
+    {
+      "form_name": "BluesPoem",
+      "mean_reward": 0.20500000000000002,
+      "within_prompt_std": 0.1545815297793464,
+      "between_prompt_std": 0.07589569322431938,
+      "grpo_signal": 0.10077169926315592,
+      "is_learnable": true,
+      "min_reward": 0.0,
+      "max_reward": 0.525
+    },
+    {
+      "form_name": "ReverseEtheree",
+      "mean_reward": 0.21395031255213165,
+      "within_prompt_std": 0.14745271668508847,
+      "between_prompt_std": 0.05670200778294836,
+      "grpo_signal": 0.09919178242853578,
+      "is_learnable": true,
+      "min_reward": 0.022747305375969203,
+      "max_reward": 0.5913199507254043
+    },
+    {
+      "form_name": "SpenserianSonnet",
+      "mean_reward": 0.21074322742638163,
+      "within_prompt_std": 0.14243921869322268,
+      "between_prompt_std": 0.031576953081008156,
+      "grpo_signal": 0.09476795698123401,
+      "is_learnable": true,
+      "min_reward": 0.04999995880702202,
+      "max_reward": 0.6166467011632332
+    },
+    {
+      "form_name": "PindaricOde",
+      "mean_reward": 0.17816959273877922,
+      "within_prompt_std": 0.15859021359058692,
+      "between_prompt_std": 0.040200440743674244,
+      "grpo_signal": 0.09288640797015121,
+      "is_learnable": false,
+      "min_reward": 2.7950242250816877e-07,
+      "max_reward": 0.617612263888488
+    },
+    {
+      "form_name": "Cinquain",
+      "mean_reward": 0.180881672800454,
+      "within_prompt_std": 0.15643499511342984,
+      "between_prompt_std": 0.0448494585065489,
+      "grpo_signal": 0.09271182136730854,
+      "is_learnable": false,
+      "min_reward": 0.041666666666666664,
+      "max_reward": 0.6272569444444445
+    },
+    {
+      "form_name": "Bop",
+      "mean_reward": 0.20706076024346878,
+      "within_prompt_std": 0.13778352495351223,
+      "between_prompt_std": 0.02510785274255707,
+      "grpo_signal": 0.09048883499055907,
+      "is_learnable": true,
+      "min_reward": 0.02900041865230878,
+      "max_reward": 0.5125801893052163
+    },
+    {
+      "form_name": "Ballad",
+      "mean_reward": 0.210664088438415,
+      "within_prompt_std": 0.13445848044160308,
+      "between_prompt_std": 0.02742740640904705,
+      "grpo_signal": 0.0894335686168071,
+      "is_learnable": true,
+      "min_reward": 0.03977561200672948,
+      "max_reward": 0.5479305955652287
+    },
+    {
+      "form_name": "WordCinquain",
+      "mean_reward": 0.18548215926592912,
+      "within_prompt_std": 0.13757005752188878,
+      "between_prompt_std": 0.05652873947282695,
+      "grpo_signal": 0.08313552707207758,
+      "is_learnable": false,
+      "min_reward": 0.041666666666666664,
+      "max_reward": 0.5506944444444445
+    },
+    {
+      "form_name": "Triplet",
+      "mean_reward": 0.17507992254816607,
+      "within_prompt_std": 0.14208892828881345,
+      "between_prompt_std": 0.03090175063799357,
+      "grpo_signal": 0.0820858783403121,
+      "is_learnable": false,
+      "min_reward": 0.08333333333333333,
+      "max_reward": 0.549628253000561
+    },
+    {
+      "form_name": "KyrielleSonnet",
+      "mean_reward": 0.20593583850171865,
+      "within_prompt_std": 0.11797810620503033,
+      "between_prompt_std": 0.04972849469930453,
+      "grpo_signal": 0.07717007808891584,
+      "is_learnable": true,
+      "min_reward": 0.05288654210574132,
+      "max_reward": 0.48445016815024144
+    },
+    {
+      "form_name": "Kyrielle",
+      "mean_reward": 0.2361321148420939,
+      "within_prompt_std": 0.10637522966286757,
+      "between_prompt_std": 0.03842728926567763,
+      "grpo_signal": 0.07674919172266684,
+      "is_learnable": true,
+      "min_reward": 0.0877449273385762,
+      "max_reward": 0.5140919387317822
+    },
+    {
+      "form_name": "ProsePoem",
+      "mean_reward": 0.8718050418050417,
+      "within_prompt_std": 0.15570740127702354,
+      "between_prompt_std": 0.12105061069005353,
+      "grpo_signal": 0.06960806627807319,
+      "is_learnable": false,
+      "min_reward": 0.2702702702702703,
+      "max_reward": 1.0
+    },
+    {
+      "form_name": "CrownOfSonnets",
+      "mean_reward": 0.19861428650079932,
+      "within_prompt_std": 0.10864196693701338,
+      "between_prompt_std": 0.036812079176203424,
+      "grpo_signal": 0.06916871244524801,
+      "is_learnable": false,
+      "min_reward": 0.06874980175879356,
+      "max_reward": 0.45516193528693527
+    },
+    {
+      "form_name": "DramaticVerse",
+      "mean_reward": 0.7880815387689336,
+      "within_prompt_std": 0.10351773106506472,
+      "between_prompt_std": 0.03465345623363434,
+      "grpo_signal": 0.06915358217819467,
+      "is_learnable": true,
+      "min_reward": 0.4567703539662008,
+      "max_reward": 0.9520710835409236
+    },
+    {
+      "form_name": "Rubai",
+      "mean_reward": 0.29011347309939717,
+      "within_prompt_std": 0.08245446395270069,
+      "between_prompt_std": 0.020226321922162636,
+      "grpo_signal": 0.06792521095548285,
+      "is_learnable": false,
+      "min_reward": 0.2,
+      "max_reward": 0.7333252940194699
+    },
+    {
+      "form_name": "Rispetto",
+      "mean_reward": 0.18083900605577397,
+      "within_prompt_std": 0.11210374676666754,
+      "between_prompt_std": 0.01225423862584261,
+      "grpo_signal": 0.06642651908713297,
+      "is_learnable": false,
+      "min_reward": 0.04340268029159028,
+      "max_reward": 0.49363788674893855
+    },
+    {
+      "form_name": "CurtalSonnet",
+      "mean_reward": 0.2119986760978015,
+      "within_prompt_std": 0.0987700854207116,
+      "between_prompt_std": 0.022365899595876863,
+      "grpo_signal": 0.06600024028398295,
+      "is_learnable": false,
+      "min_reward": 0.05869104078457457,
+      "max_reward": 0.5371900826446281
+    },
+    {
+      "form_name": "OttavaRima",
+      "mean_reward": 0.198917626161109,
+      "within_prompt_std": 0.10348664178613112,
+      "between_prompt_std": 0.042306563697597395,
+      "grpo_signal": 0.06596213883002207,
+      "is_learnable": false,
+      "min_reward": 0.07113583649949028,
+      "max_reward": 0.6143124188846018
+    },
+    {
+      "form_name": "Ghazal",
+      "mean_reward": 0.4631666666666668,
+      "within_prompt_std": 0.06319610270537887,
+      "between_prompt_std": 0.03837823457233134,
+      "grpo_signal": 0.06285315149957517,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.5166666666666667
+    },
+    {
+      "form_name": "UniqueUtterance",
+      "mean_reward": 0.7582938657736327,
+      "within_prompt_std": 0.08561783724584768,
+      "between_prompt_std": 0.015942989006644145,
+      "grpo_signal": 0.06276961424360249,
+      "is_learnable": false,
+      "min_reward": 0.5733966033384198,
+      "max_reward": 0.9383044889129261
+    },
+    {
+      "form_name": "ReverseFibonacci",
+      "mean_reward": 0.12517777335556285,
+      "within_prompt_std": 0.13979159677235414,
+      "between_prompt_std": 0.05278536857034996,
+      "grpo_signal": 0.06123335958007812,
+      "is_learnable": false,
+      "min_reward": 1.6960998856776597e-12,
+      "max_reward": 0.4893730555327697
+    },
+    {
+      "form_name": "Tritina",
+      "mean_reward": 0.1268133396917884,
+      "within_prompt_std": 0.13317868736326266,
+      "between_prompt_std": 0.03759536575598315,
+      "grpo_signal": 0.05898841864803019,
+      "is_learnable": false,
+      "min_reward": 0.004760998516389559,
+      "max_reward": 0.49953519673995694
+    },
+    {
+      "form_name": "OneginStanza",
+      "mean_reward": 0.1592948578695425,
+      "within_prompt_std": 0.10902308165478809,
+      "between_prompt_std": 0.03634273316645521,
+      "grpo_signal": 0.058401487052279495,
+      "is_learnable": false,
+      "min_reward": 0.029075083303495414,
+      "max_reward": 0.4613666473057707
+    },
+    {
+      "form_name": "Triolet",
+      "mean_reward": 0.2698256554222652,
+      "within_prompt_std": 0.07206898941252357,
+      "between_prompt_std": 0.024225645467258045,
+      "grpo_signal": 0.05679606318933892,
+      "is_learnable": false,
+      "min_reward": 0.21875,
+      "max_reward": 0.5081242256461489
+    },
+    {
+      "form_name": "Aubade",
+      "mean_reward": 0.14704920261564708,
+      "within_prompt_std": 0.10806041428074878,
+      "between_prompt_std": 0.043608788967317166,
+      "grpo_signal": 0.054214227380502966,
+      "is_learnable": false,
+      "min_reward": 0.035815126181485385,
+      "max_reward": 0.6138386259078014
+    },
+    {
+      "form_name": "EnvelopeQuatrain",
+      "mean_reward": 0.15575672133974477,
+      "within_prompt_std": 0.10239264185381733,
+      "between_prompt_std": 0.04068549911656648,
+      "grpo_signal": 0.053857122780034614,
+      "is_learnable": false,
+      "min_reward": 0.055555762593114975,
+      "max_reward": 0.5925836608677432
+    },
+    {
+      "form_name": "Diamante",
+      "mean_reward": 0.1469779642606665,
+      "within_prompt_std": 0.10688615404101101,
+      "between_prompt_std": 0.029079059080737973,
+      "grpo_signal": 0.05360359534705022,
+      "is_learnable": false,
+      "min_reward": 0.03125,
+      "max_reward": 0.5257936507936508
+    },
+    {
+      "form_name": "Quatrain",
+      "mean_reward": 0.14647415121953777,
+      "within_prompt_std": 0.101927221972773,
+      "between_prompt_std": 0.03353974015581191,
+      "grpo_signal": 0.05097155080877217,
+      "is_learnable": false,
+      "min_reward": 0.05555555585295938,
+      "max_reward": 0.502578861136201
+    },
+    {
+      "form_name": "Limerick",
+      "mean_reward": 0.1612830870489726,
+      "within_prompt_std": 0.08533794366611143,
+      "between_prompt_std": 0.023429062128056306,
+      "grpo_signal": 0.04617494569127729,
+      "is_learnable": false,
+      "min_reward": 0.05555555555555555,
+      "max_reward": 0.46776589418196907
+    },
+    {
+      "form_name": "LiteraryBallad",
+      "mean_reward": 0.9231327134742957,
+      "within_prompt_std": 0.15589247583868887,
+      "between_prompt_std": 0.05393715817255295,
+      "grpo_signal": 0.0442477139338965,
+      "is_learnable": false,
+      "min_reward": 0.28504853051879,
+      "max_reward": 1.0
+    },
+    {
+      "form_name": "RhymeRoyal",
+      "mean_reward": 0.17469821692116572,
+      "within_prompt_std": 0.07502938673793602,
+      "between_prompt_std": 0.022113215773949486,
+      "grpo_signal": 0.04327057275027935,
+      "is_learnable": false,
+      "min_reward": 0.07435855855593886,
+      "max_reward": 0.6030585857300832
+    },
+    {
+      "form_name": "Monostich",
+      "mean_reward": 0.07609546403769114,
+      "within_prompt_std": 0.1526284739001311,
+      "between_prompt_std": 0.05074784924184101,
+      "grpo_signal": 0.04292214547987098,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 1.0
+    },
+    {
+      "form_name": "Villanelle",
+      "mean_reward": 0.16414841087189522,
+      "within_prompt_std": 0.07598319136481553,
+      "between_prompt_std": 0.045056562390048176,
+      "grpo_signal": 0.04170070303592374,
+      "is_learnable": false,
+      "min_reward": 0.04506746519089798,
+      "max_reward": 0.42914719900012255
+    },
+    {
+      "form_name": "Sedoka",
+      "mean_reward": 0.11234708351333955,
+      "within_prompt_std": 0.10221109440510696,
+      "between_prompt_std": 0.025601829474053404,
+      "grpo_signal": 0.040772094007338895,
+      "is_learnable": false,
+      "min_reward": 0.028571428571428574,
+      "max_reward": 0.36736063784026063
+    },
+    {
+      "form_name": "EchoEnd",
+      "mean_reward": 0.17423715789181643,
+      "within_prompt_std": 0.07006131885432128,
+      "between_prompt_std": 0.025660640216429997,
+      "grpo_signal": 0.040321289672914845,
+      "is_learnable": false,
+      "min_reward": 0.13324969025845956,
+      "max_reward": 0.5106530659712634
+    },
+    {
+      "form_name": "SpenserianStanza",
+      "mean_reward": 0.15935954324580687,
+      "within_prompt_std": 0.07483904310460139,
+      "between_prompt_std": 0.03425820037718893,
+      "grpo_signal": 0.040102973997542195,
+      "is_learnable": false,
+      "min_reward": 0.058074182012970516,
+      "max_reward": 0.47813236110762425
+    },
+    {
+      "form_name": "Tercet",
+      "mean_reward": 0.22437362704899572,
+      "within_prompt_std": 0.05716279269541733,
+      "between_prompt_std": 0.03213879705490568,
+      "grpo_signal": 0.03979218669562422,
+      "is_learnable": false,
+      "min_reward": 0.16666666666666666,
+      "max_reward": 0.4362358498893171
+    },
+    {
+      "form_name": "Quatina",
+      "mean_reward": 0.11959310419176941,
+      "within_prompt_std": 0.09311265676098378,
+      "between_prompt_std": 0.027713891513038137,
+      "grpo_signal": 0.03921554761617296,
+      "is_learnable": false,
+      "min_reward": 0.0021159993406212004,
+      "max_reward": 0.3731550225688221
+    },
+    {
+      "form_name": "Seguidilla",
+      "mean_reward": 0.16112892376450053,
+      "within_prompt_std": 0.07136867661953668,
+      "between_prompt_std": 0.03875947618627733,
+      "grpo_signal": 0.038586586564646225,
+      "is_learnable": false,
+      "min_reward": 0.07158644064327527,
+      "max_reward": 0.4678892644191864
+    },
+    {
+      "form_name": "BalladStanza",
+      "mean_reward": 0.25057561205206996,
+      "within_prompt_std": 0.046838750304040805,
+      "between_prompt_std": 0.013919678275163891,
+      "grpo_signal": 0.03518292255019928,
+      "is_learnable": false,
+      "min_reward": 0.20833333333333334,
+      "max_reward": 0.40869614776181296
+    },
+    {
+      "form_name": "MonotoneMountain",
+      "mean_reward": 0.18129991823951655,
+      "within_prompt_std": 0.059151513064661355,
+      "between_prompt_std": 0.018014140064239303,
+      "grpo_signal": 0.035119497354106285,
+      "is_learnable": false,
+      "min_reward": 0.07360138920169246,
+      "max_reward": 0.3121185119180218
+    },
+    {
+      "form_name": "DoubleFibonacci",
+      "mean_reward": 0.08956126875367316,
+      "within_prompt_std": 0.10647811761937478,
+      "between_prompt_std": 0.044369443925313584,
+      "grpo_signal": 0.03472892324092097,
+      "is_learnable": false,
+      "min_reward": 6.768881293668452e-09,
+      "max_reward": 0.4599181301262944
+    },
+    {
+      "form_name": "TerzaRima",
+      "mean_reward": 0.5069984567901236,
+      "within_prompt_std": 0.033441581082695904,
+      "between_prompt_std": 0.020232735079957175,
+      "grpo_signal": 0.03343502942249831,
+      "is_learnable": false,
+      "min_reward": 0.32746913580246917,
+      "max_reward": 0.525
+    },
+    {
+      "form_name": "Distich",
+      "mean_reward": 0.1342500819522255,
+      "within_prompt_std": 0.0706790555708516,
+      "between_prompt_std": 0.023159669611614423,
+      "grpo_signal": 0.032859257645854754,
+      "is_learnable": false,
+      "min_reward": 0.08333333333333333,
+      "max_reward": 0.4444444444444444
+    },
+    {
+      "form_name": "Senryu",
+      "mean_reward": 0.08836135900725486,
+      "within_prompt_std": 0.10153038828765208,
+      "between_prompt_std": 0.026227197764734447,
+      "grpo_signal": 0.032714565019535485,
+      "is_learnable": false,
+      "min_reward": 0.028571428571428574,
+      "max_reward": 0.4235705435955987
+    },
+    {
+      "form_name": "Elegiac",
+      "mean_reward": 0.11745964218294092,
+      "within_prompt_std": 0.07853842710562284,
+      "between_prompt_std": 0.01148632044040111,
+      "grpo_signal": 0.03256607649426769,
+      "is_learnable": false,
+      "min_reward": 0.08333333333333333,
+      "max_reward": 0.4229025154278371
+    },
+    {
+      "form_name": "SapphicOde",
+      "mean_reward": 0.17591284792459855,
+      "within_prompt_std": 0.056112284078869076,
+      "between_prompt_std": 0.025887985075968293,
+      "grpo_signal": 0.03253783417739809,
+      "is_learnable": false,
+      "min_reward": 0.1007346189164371,
+      "max_reward": 0.346606648199446
+    },
+    {
+      "form_name": "SapphicStanza",
+      "mean_reward": 0.08361064110109526,
+      "within_prompt_std": 0.10287504227193205,
+      "between_prompt_std": 0.03983737235503205,
+      "grpo_signal": 0.031529102544439996,
+      "is_learnable": false,
+      "min_reward": 4.580737138548859e-12,
+      "max_reward": 0.48006581768116074
+    },
+    {
+      "form_name": "Skeltonic",
+      "mean_reward": 0.14141255654605722,
+      "within_prompt_std": 0.06131270883271941,
+      "between_prompt_std": 0.02123347561270084,
+      "grpo_signal": 0.029777141305391244,
+      "is_learnable": false,
+      "min_reward": 0.08824969025845955,
+      "max_reward": 0.47190082644628095
+    },
+    {
+      "form_name": "Haiku",
+      "mean_reward": 0.09884755966964295,
+      "within_prompt_std": 0.0829156519336576,
+      "between_prompt_std": 0.07964586171469898,
+      "grpo_signal": 0.029543417116620504,
+      "is_learnable": false,
+      "min_reward": 0.028571428571428574,
+      "max_reward": 0.4571428571428572
+    },
+    {
+      "form_name": "HeroicQuatrain",
+      "mean_reward": 0.1240301454063611,
+      "within_prompt_std": 0.06784730436833153,
+      "between_prompt_std": 0.027080984607263773,
+      "grpo_signal": 0.02948553432815739,
+      "is_learnable": false,
+      "min_reward": 0.055555555558099705,
+      "max_reward": 0.44984554104815544
+    },
+    {
+      "form_name": "Couplet",
+      "mean_reward": 0.12458467584193282,
+      "within_prompt_std": 0.06736974267679742,
+      "between_prompt_std": 0.025300545396999927,
+      "grpo_signal": 0.029390275092581856,
+      "is_learnable": false,
+      "min_reward": 0.08333333333333333,
+      "max_reward": 0.4755541789264869
+    },
+    {
+      "form_name": "Naani",
+      "mean_reward": 0.07607665006318987,
+      "within_prompt_std": 0.10099161001549226,
+      "between_prompt_std": 0.033567898568449744,
+      "grpo_signal": 0.0283943944305925,
+      "is_learnable": false,
+      "min_reward": 0.022222222222222223,
+      "max_reward": 0.4818353633390017
+    },
+    {
+      "form_name": "Tanaga",
+      "mean_reward": 0.10679670449108514,
+      "within_prompt_std": 0.0710940359298198,
+      "between_prompt_std": 0.03371472999936653,
+      "grpo_signal": 0.027126972614732542,
+      "is_learnable": false,
+      "min_reward": 0.05833333333333333,
+      "max_reward": 0.44711024113124953
+    },
+    {
+      "form_name": "QuestionQuest",
+      "mean_reward": 0.16257795781767748,
+      "within_prompt_std": 0.04650690494195821,
+      "between_prompt_std": 0.021557328008406422,
+      "grpo_signal": 0.025326984304614036,
+      "is_learnable": false,
+      "min_reward": 0.14500000000000002,
+      "max_reward": 0.5106530659712634
+    },
+    {
+      "form_name": "ShortCouplet",
+      "mean_reward": 0.12670177664597787,
+      "within_prompt_std": 0.05380443080449014,
+      "between_prompt_std": 0.02487613618476883,
+      "grpo_signal": 0.02381350456840126,
+      "is_learnable": false,
+      "min_reward": 0.08333333333333333,
+      "max_reward": 0.35290251542783707
+    },
+    {
+      "form_name": "SandwichSonnet",
+      "mean_reward": 0.31471333820809155,
+      "within_prompt_std": 0.027215948922419863,
+      "between_prompt_std": 0.015736156541286527,
+      "grpo_signal": 0.023478529945483877,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.325
+    },
+    {
+      "form_name": "BurnsStanza",
+      "mean_reward": 0.11419624932729615,
+      "within_prompt_std": 0.05371500544603053,
+      "between_prompt_std": 0.021914118359062595,
+      "grpo_signal": 0.021734265621225605,
+      "is_learnable": false,
+      "min_reward": 0.05128205128293244,
+      "max_reward": 0.36744563117875073
+    },
+    {
+      "form_name": "TemporalVerse",
+      "mean_reward": 0.15962500000000002,
+      "within_prompt_std": 0.03869411292431964,
+      "between_prompt_std": 0.019998437438960074,
+      "grpo_signal": 0.020762465347492914,
+      "is_learnable": false,
+      "min_reward": 0.14500000000000002,
+      "max_reward": 0.55
+    },
+    {
+      "form_name": "Tanka",
+      "mean_reward": 0.07475019949937192,
+      "within_prompt_std": 0.06647928431670558,
+      "between_prompt_std": 0.03595602764972126,
+      "grpo_signal": 0.018391522505666676,
+      "is_learnable": false,
+      "min_reward": 0.028571428571428574,
+      "max_reward": 0.344723045632181
+    },
+    {
+      "form_name": "OddEvenDance",
+      "mean_reward": 0.14739075796941345,
+      "within_prompt_std": 0.03123289244671828,
+      "between_prompt_std": 0.014177889990329977,
+      "grpo_signal": 0.015699740903727746,
+      "is_learnable": false,
+      "min_reward": 0.07746524673583498,
+      "max_reward": 0.45439369336234076
+    },
+    {
+      "form_name": "FibonacciPoem",
+      "mean_reward": 0.052624165750798146,
+      "within_prompt_std": 0.07715300724201732,
+      "between_prompt_std": 0.04145577855506028,
+      "grpo_signal": 0.015385810402700024,
+      "is_learnable": false,
+      "min_reward": 3.9342221137798496e-28,
+      "max_reward": 0.4444448585170191
+    },
+    {
+      "form_name": "VoidVerse",
+      "mean_reward": 0.1548312422564615,
+      "within_prompt_std": 0.02601102208942659,
+      "between_prompt_std": 0.019662484512922983,
+      "grpo_signal": 0.013615056320110648,
+      "is_learnable": false,
+      "min_reward": 0.14500000000000002,
+      "max_reward": 0.5382496902584596
+    },
+    {
+      "form_name": "WhisperPoem",
+      "mean_reward": 0.15197966485737313,
+      "within_prompt_std": 0.023671567561831468,
+      "between_prompt_std": 0.016528645493977142,
+      "grpo_signal": 0.012203341331312876,
+      "is_learnable": false,
+      "min_reward": 0.10565306597126335,
+      "max_reward": 0.4635335283236613
+    },
+    {
+      "form_name": "Quintina",
+      "mean_reward": 0.05515583343469247,
+      "within_prompt_std": 0.055893627073801175,
+      "between_prompt_std": 0.017756330007723427,
+      "grpo_signal": 0.01165128758069485,
+      "is_learnable": false,
+      "min_reward": 5.4769409278778664e-05,
+      "max_reward": 0.2847117571152321
+    },
+    {
+      "form_name": "HeroicCouplet",
+      "mean_reward": 0.10065571718829913,
+      "within_prompt_std": 0.03086084483459712,
+      "between_prompt_std": 0.0034607235658402034,
+      "grpo_signal": 0.011174606220609664,
+      "is_learnable": false,
+      "min_reward": 0.08333333333333333,
+      "max_reward": 0.1944461024269631
+    },
+    {
+      "form_name": "Sestina",
+      "mean_reward": 0.04888436424760648,
+      "within_prompt_std": 0.056263463261079436,
+      "between_prompt_std": 0.0175533860817903,
+      "grpo_signal": 0.010463807595669424,
+      "is_learnable": false,
+      "min_reward": 3.271049779493647e-12,
+      "max_reward": 0.23269458248826683
+    },
+    {
+      "form_name": "Katauta",
+      "mean_reward": 0.052908295710242415,
+      "within_prompt_std": 0.04915276170530104,
+      "between_prompt_std": 0.012998552747402504,
+      "grpo_signal": 0.009851984509259639,
+      "is_learnable": false,
+      "min_reward": 0.028571428571428574,
+      "max_reward": 0.33361932617665896
+    },
+    {
+      "form_name": "ExclamationEcho",
+      "mean_reward": 0.1514675468037508,
+      "within_prompt_std": 0.01609451080552002,
+      "between_prompt_std": 0.017988443878493514,
+      "grpo_signal": 0.008274196314327785,
+      "is_learnable": false,
+      "min_reward": 0.10565306597126335,
+      "max_reward": 0.257465246735835
+    },
+    {
+      "form_name": "NumberWord",
+      "mean_reward": 0.06830238005210772,
+      "within_prompt_std": 0.030166752575167877,
+      "between_prompt_std": 0.01410654555188704,
+      "grpo_signal": 0.007678906436273744,
+      "is_learnable": false,
+      "min_reward": 0.045000000000000005,
+      "max_reward": 0.14500000000000002
+    },
+    {
+      "form_name": "Ode",
+      "mean_reward": 0.9704940894469306,
+      "within_prompt_std": 0.053506060350643744,
+      "between_prompt_std": 0.033899053477557374,
+      "grpo_signal": 0.006128650884358878,
+      "is_learnable": false,
+      "min_reward": 0.6400000000000001,
+      "max_reward": 1.0
+    },
+    {
+      "form_name": "PrimeVerse",
+      "mean_reward": 0.03145323841281267,
+      "within_prompt_std": 0.03833837624759141,
+      "between_prompt_std": 0.01005123678796955,
+      "grpo_signal": 0.004671750779603432,
+      "is_learnable": false,
+      "min_reward": 1.3863432936411708e-50,
+      "max_reward": 0.13246524673583496
+    },
+    {
+      "form_name": "DescendingStaircase",
+      "mean_reward": 0.03255644296359449,
+      "within_prompt_std": 0.033956239135448235,
+      "between_prompt_std": 0.010920832461461784,
+      "grpo_signal": 0.004278013594026036,
+      "is_learnable": false,
+      "min_reward": 2.526163780925693e-21,
+      "max_reward": 0.11836734693877551
+    },
+    {
+      "form_name": "ColorSpectrum",
+      "mean_reward": 0.05643663824334626,
+      "within_prompt_std": 0.01876022254689181,
+      "between_prompt_std": 0.010595006173893539,
+      "grpo_signal": 0.00399604327366198,
+      "is_learnable": false,
+      "min_reward": 0.045000000000000005,
+      "max_reward": 0.14500000000000002
+    },
+    {
+      "form_name": "Abecedarian",
+      "mean_reward": 0.052532579392684665,
+      "within_prompt_std": 0.015198208113525274,
+      "between_prompt_std": 0.009216951903893827,
+      "grpo_signal": 0.003025836026099193,
+      "is_learnable": false,
+      "min_reward": 0.045000000000000005,
+      "max_reward": 0.14500000000000002
+    },
+    {
+      "form_name": "AlphabeticTerminus",
+      "mean_reward": 0.05399850168534841,
+      "within_prompt_std": 0.014791207799349382,
+      "between_prompt_std": 0.011250157942758856,
+      "grpo_signal": 0.003022297163155203,
+      "is_learnable": false,
+      "min_reward": 0.045000000000000005,
+      "max_reward": 0.14500000000000002
+    },
+    {
+      "form_name": "BinaryBeat",
+      "mean_reward": 0.024556646063736844,
+      "within_prompt_std": 0.029577328558920913,
+      "between_prompt_std": 0.013490719967720331,
+      "grpo_signal": 0.0028339360241401977,
+      "is_learnable": false,
+      "min_reward": 1.3461998461573204e-116,
+      "max_reward": 0.1
+    },
+    {
+      "form_name": "NumericalEcho",
+      "mean_reward": 0.02293852048705692,
+      "within_prompt_std": 0.031374522876935776,
+      "between_prompt_std": 0.005899682030042235,
+      "grpo_signal": 0.0028127064942112417,
+      "is_learnable": false,
+      "min_reward": 6.101936677605324e-14,
+      "max_reward": 0.1
+    },
+    {
+      "form_name": "Rondeau",
+      "mean_reward": 0.05500000000000001,
+      "within_prompt_std": 0.013228756555322952,
+      "between_prompt_std": 0.010000000000000004,
+      "grpo_signal": 0.002750258487851642,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.25
+    },
+    {
+      "form_name": "GoldenRatio",
+      "mean_reward": 0.02393829850192064,
+      "within_prompt_std": 0.02907460091195465,
+      "between_prompt_std": 0.006098858019175189,
+      "grpo_signal": 0.0027173420162754716,
+      "is_learnable": false,
+      "min_reward": 1.1769109439216724e-35,
+      "max_reward": 0.1
+    },
+    {
+      "form_name": "ExactWordPoem",
+      "mean_reward": 0.016000000000000004,
+      "within_prompt_std": 0.04233202097703346,
+      "between_prompt_std": 0.03200000000000001,
+      "grpo_signal": 0.00266590135304966,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.6400000000000001
+    },
+    {
+      "form_name": "SquareStanzas",
+      "mean_reward": 0.04,
+      "within_prompt_std": 0.016808672359434396,
+      "between_prompt_std": 0.006373774391990982,
+      "grpo_signal": 0.002581812074409123,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "SelfReferential",
+      "mean_reward": 0.04,
+      "within_prompt_std": 0.016296836643180018,
+      "between_prompt_std": 0.0075000000000000015,
+      "grpo_signal": 0.0025031941083924506,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "Univocalic",
+      "mean_reward": 0.14358124225646152,
+      "within_prompt_std": 0.0037536801600500575,
+      "between_prompt_std": 0.0028375154870770246,
+      "grpo_signal": 0.0018462951703005143,
+      "is_learnable": false,
+      "min_reward": 0.08824969025845955,
+      "max_reward": 0.14500000000000002
+    },
+    {
+      "form_name": "CharacterBudgetPoem",
+      "mean_reward": 0.009,
+      "within_prompt_std": 0.023811761799581315,
+      "between_prompt_std": 0.018,
+      "grpo_signal": 0.000849508413961863,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.36
+    },
+    {
+      "form_name": "GoldenRatioVerse",
+      "mean_reward": 0.04875,
+      "within_prompt_std": 0.0033071891388307384,
+      "between_prompt_std": 0.0024999999999999996,
+      "grpo_signal": 0.0006134629153209843,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "HourglassVerse",
+      "mean_reward": 0.010482389703081098,
+      "within_prompt_std": 0.014228434064556834,
+      "between_prompt_std": 0.00748336617559314,
+      "grpo_signal": 0.0005903382534680923,
+      "is_learnable": false,
+      "min_reward": 2.1887168970494394e-275,
+      "max_reward": 0.06065306597126335
+    },
+    {
+      "form_name": "MirrorFrame",
+      "mean_reward": 0.09941248451292298,
+      "within_prompt_std": 0.0015544198702047843,
+      "between_prompt_std": 0.000719556579660715,
+      "grpo_signal": 0.0005566666206987127,
+      "is_learnable": false,
+      "min_reward": 0.08824969025845955,
+      "max_reward": 0.1
+    },
+    {
+      "form_name": "VowelPilgrimage",
+      "mean_reward": 0.04630754024846728,
+      "within_prompt_std": 0.0027935778744565894,
+      "between_prompt_std": 0.0017071539031303696,
+      "grpo_signal": 0.0004934928167783256,
+      "is_learnable": false,
+      "min_reward": 0.045000000000000005,
+      "max_reward": 0.07746524673583498
+    },
+    {
+      "form_name": "ElementalVerse",
+      "mean_reward": 0.1447062422564615,
+      "within_prompt_std": 0.0007772099351023922,
+      "between_prompt_std": 0.0005875154870770283,
+      "grpo_signal": 0.0003847697340637787,
+      "is_learnable": false,
+      "min_reward": 0.13324969025845956,
+      "max_reward": 0.14500000000000002
+    },
+    {
+      "form_name": "PositionalPoem",
+      "mean_reward": 0.004100815393714942,
+      "within_prompt_std": 0.006646412185300816,
+      "between_prompt_std": 0.0035202599486550672,
+      "grpo_signal": 0.00010857575507908775,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.03515625
+    },
+    {
+      "form_name": "FibonacciVerse",
+      "mean_reward": 0.00125,
+      "within_prompt_std": 0.0033071891388307384,
+      "between_prompt_std": 0.0025,
+      "grpo_signal": 1.6515275762036e-05,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "PiKu",
+      "mean_reward": 0.00125,
+      "within_prompt_std": 0.0033071891388307384,
+      "between_prompt_std": 0.0025,
+      "grpo_signal": 1.6515275762036e-05,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "CharacterPalindromePoem",
+      "mean_reward": 0.0012046552750233559,
+      "within_prompt_std": 0.0031871978664942805,
+      "between_prompt_std": 0.001503877175389427,
+      "grpo_signal": 1.5339397915751374e-05,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.027777777777777776
+    },
+    {
+      "form_name": "ArithmeticVerse",
+      "mean_reward": 0.000925367464351621,
+      "within_prompt_std": 0.0022873390783881464,
+      "between_prompt_std": 0.0010402966209031952,
+      "grpo_signal": 8.458682013275202e-06,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.02040816326530612
+    },
+    {
+      "form_name": "PrecisionVerse",
+      "mean_reward": 0.00025018633265860396,
+      "within_prompt_std": 0.0006616491541365916,
+      "between_prompt_std": 0.0005001397820347253,
+      "grpo_signal": 6.619766425662894e-07,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.010000000000000002
+    },
+    {
+      "form_name": "IsolatedCouplet",
+      "mean_reward": 3.80764753576939e-10,
+      "within_prompt_std": 1.0074088459833722e-09,
+      "between_prompt_std": 7.614913578289379e-10,
+      "grpo_signal": 1.534343123384125e-18,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 1.522997974471263e-08
+    },
+    {
+      "form_name": "AlternatingIsolation",
+      "mean_reward": 1.6744220069925967e-11,
+      "within_prompt_std": 4.4301042202760656e-11,
+      "between_prompt_std": 3.3450316079789635e-11,
+      "grpo_signal": 2.9671455998307264e-21,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 6.691586091292782e-10
+    },
+    {
+      "form_name": "PrecisionHaiku",
+      "mean_reward": 2.1472975909625292e-20,
+      "within_prompt_std": 5.68121541653495e-20,
+      "between_prompt_std": 4.294595181925059e-20,
+      "grpo_signal": 4.879704071065872e-39,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 8.589190363850117e-19
+    },
+    {
+      "form_name": "Ballade",
+      "mean_reward": 0.05,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "Canzone",
+      "mean_reward": 0.05,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "ChantRoyal",
+      "mean_reward": 0.05,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "Clerihew",
+      "mean_reward": 0.05,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "CombinedChallenge",
+      "mean_reward": 0.0,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.0
+    },
+    {
+      "form_name": "DescendingStaircasePoem",
+      "mean_reward": 0.0,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.0
+    },
+    {
+      "form_name": "DoubleAcrosticPoem",
+      "mean_reward": 0.0,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.0
+    },
+    {
+      "form_name": "DoubleBallade",
+      "mean_reward": 0.05,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "FreeVerse",
+      "mean_reward": 1.0,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 1.0,
+      "max_reward": 1.0
+    },
+    {
+      "form_name": "Lai",
+      "mean_reward": 0.05,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "Lipogram",
+      "mean_reward": 0.14500000000000002,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.14500000000000002,
+      "max_reward": 0.14500000000000002
+    },
+    {
+      "form_name": "ModularVerse",
+      "mean_reward": 0.05,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "PalindromePoem",
+      "mean_reward": 0.14500000000000002,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.14500000000000002,
+      "max_reward": 0.14500000000000002
+    },
+    {
+      "form_name": "PythagoreanTercet",
+      "mean_reward": 0.5,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.5,
+      "max_reward": 0.5
+    },
+    {
+      "form_name": "RondeauRedouble",
+      "mean_reward": 0.05,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "Rondel",
+      "mean_reward": 0.05,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "Rondelet",
+      "mean_reward": 0.05,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "Rondine",
+      "mean_reward": 0.05,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "Roundel",
+      "mean_reward": 0.05,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "StaircasePoem",
+      "mean_reward": 0.0,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.0
+    },
+    {
+      "form_name": "ThunderVerse",
+      "mean_reward": 0.14500000000000002,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.14500000000000002,
+      "max_reward": 0.14500000000000002
+    },
+    {
+      "form_name": "TotalCharacterPoem",
+      "mean_reward": 0.0,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.0
+    },
+    {
+      "form_name": "TriangularVerse",
+      "mean_reward": 0.0,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.0
+    },
+    {
+      "form_name": "Virelai",
+      "mean_reward": 0.05,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.05,
+      "max_reward": 0.05
+    },
+    {
+      "form_name": "VowelBudgetPoem",
+      "mean_reward": 0.0,
+      "within_prompt_std": 0.0,
+      "between_prompt_std": 0.0,
+      "grpo_signal": 0.0,
+      "is_learnable": false,
+      "min_reward": 0.0,
+      "max_reward": 0.0
+    }
+  ],
+  "learnable_forms": [
+    "IrregularOde",
+    "ConsonantCascade",
+    "Sonnet",
+    "CoprimeVerse",
+    "Anaphora",
+    "Mesostic",
+    "Rubaiyat",
+    "PetrarchanSonnet",
+    "Etheree",
+    "BroadBallad",
+    "HoratianOde",
+    "ShakespeareanSonnet",
+    "Terzanelle",
+    "BlankVerse",
+    "Pantoum",
+    "CaudateSonnet",
+    "BluesPoem",
+    "ReverseEtheree",
+    "SpenserianSonnet",
+    "Bop",
+    "Ballad",
+    "KyrielleSonnet",
+    "Kyrielle",
+    "DramaticVerse"
+  ]
+}
