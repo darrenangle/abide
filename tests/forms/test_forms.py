@@ -5,18 +5,22 @@ import pytest
 from abide import verify
 from abide.forms import (
     BlankVerse,
+    Bop,
     Couplet,
     Haiku,
+    Kyrielle,
     Limerick,
     OttavaRima,
     PetrarchanSonnet,
     Quatrain,
     RhymeRoyal,
+    Rondelet,
     Sestina,
     ShakespeareanSonnet,
     Sonnet,
     SpenserianSonnet,
     Tanka,
+    Triolet,
     Villanelle,
 )
 
@@ -75,6 +79,98 @@ TEN_SYLLABLE_LINE_A = "The winter sunlight settles on the bay"
 TEN_SYLLABLE_LINE_B = "A silver morning wanders through the rain"
 TEN_SYLLABLE_LINE_C = "A shadow drifts unnoticed through the storm"
 SHORT_LIMERICK_LINE = "Cold sparrows drift through reeds"
+
+
+def _triolet_near_miss() -> str:
+    return "\n".join(
+        [
+            "Moonlight settles softly on the bay",
+            "A silver heron circles through the rain",
+            "Winter branches listen by the bay",
+            "Moonlight settles softly on the bay",
+            "Small lanterns shimmer near the bay",
+            "The river answers slowly through the rain",
+            "Moonlight settles softly on the bay",
+            "A patient evening wanders through the rain",
+        ]
+    )
+
+
+def _bop_near_miss() -> str:
+    return "\n".join(
+        [
+            "Stanza one line one",
+            "Stanza one line two",
+            "Stanza one line three",
+            "Stanza one line four",
+            "Stanza one line five",
+            "Stanza one line six",
+            "The doorway keeps its answer",
+            "",
+            "Stanza two line one",
+            "Stanza two line two",
+            "Stanza two line three",
+            "Stanza two line four",
+            "Stanza two line five",
+            "Stanza two line six",
+            "Stanza two line seven",
+            "Stanza two line eight",
+            "The doorway keeps its answer",
+            "",
+            "Stanza three line one",
+            "Stanza three line two",
+            "Stanza three line three",
+            "Stanza three line four",
+            "Stanza three line five",
+            "Stanza three line six",
+            "The doorway keeps a lantern",
+        ]
+    )
+
+
+def _kyrielle_near_miss() -> str:
+    return "\n\n".join(
+        [
+            "\n".join(
+                [
+                    "Morning gathers over the bay",
+                    "Thin branches hover near the bay",
+                    "Cold swallows wander by the bay",
+                    "The chapel bells remember storm",
+                ]
+            ),
+            "\n".join(
+                [
+                    "Late sparrows settle in the rain",
+                    "Small windows silver in the rain",
+                    "Still rooftops darken with the rain",
+                    "The chapel bells remember storm",
+                ]
+            ),
+            "\n".join(
+                [
+                    "Young shadows lengthen toward the light",
+                    "Pale shutters soften in the light",
+                    "Distant orchards blur into the light",
+                    "The chapel doors remember storm",
+                ]
+            ),
+        ]
+    )
+
+
+def _rondelet_near_miss() -> str:
+    return "\n".join(
+        [
+            "Soft rain returns to stone",
+            "Quiet swallows cross the night",
+            "Soft rain returns to stone",
+            "Small lanterns gather by the stone",
+            "Still rivers answer through the night",
+            "Pale windows hover in the night",
+            "Soft clouds return to stone",
+        ]
+    )
 
 
 class TestHaiku:
@@ -390,6 +486,29 @@ def test_rhyme_driven_forms_reject_repeated_line_false_positives(form, poem) -> 
     """Lenient rhyme forms should not canonically pass repeated-line near misses."""
     result = verify(poem, form)
     assert result.score > 0.7
+    assert result.passed is False
+
+
+@pytest.mark.parametrize(
+    ("form", "poem"),
+    [
+        (Triolet(strict=False), _triolet_near_miss()),
+        (Bop(strict=False), _bop_near_miss()),
+        (Kyrielle(strict=False), _kyrielle_near_miss()),
+    ],
+    ids=["triolet", "bop", "kyrielle"],
+)
+def test_refrain_driven_forms_reject_missing_refrain_near_misses(form, poem) -> None:
+    """Lenient refrain forms should not canonically pass when a refrain is missing."""
+    result = verify(poem, form)
+    assert result.score > 0.7
+    assert result.passed is False
+
+
+def test_rondelet_does_not_report_pass_when_penalty_score_is_low() -> None:
+    """Custom score overrides should not hide a failed refrain behind passed=True."""
+    result = verify(_rondelet_near_miss(), Rondelet(strict=False))
+    assert result.score == 0.05
     assert result.passed is False
 
 

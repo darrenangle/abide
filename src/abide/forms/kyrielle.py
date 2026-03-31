@@ -110,7 +110,11 @@ class Kyrielle(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def _build_rhyme_scheme(self) -> str:
         """Build full rhyme scheme for all stanzas."""

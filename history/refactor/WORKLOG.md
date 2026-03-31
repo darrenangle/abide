@@ -24,3 +24,6 @@
 - Added a rhyme-driven false-positive matrix for `Couplet`, `Quatrain`, `Limerick`, `OttavaRima`, and `RhymeRoyal`.
 - Gated those forms so repeated-line non-rhyming near misses keep partial score but can no longer report `passed=True`.
 - Reproduced pre-fix failures at scores around `0.77` to `0.83`, then verified the full repo after the gating change.
+- Added a refrain-driven matrix for `Triolet`, `Bop`, and `Kyrielle`, plus a dedicated `Rondelet` regression for score/pass disagreement.
+- Gated the triolet, kyrielle, bop, and rondel families so missing or degraded refrains cannot slip through lenient `passed=True`.
+- Verified the expanded matrix and the full repository after the second RF-002 sweep.
