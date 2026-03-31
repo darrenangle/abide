@@ -211,6 +211,16 @@ class TestSonnet:
         sonnet = ShakespeareanSonnet()
         assert sonnet.RHYME_SCHEME == "ABABCDCDEFEFGG"
 
+    def test_shakespearean_sonnet_missing_real_rhyme_fails_even_in_lenient_mode(self) -> None:
+        """A high-scoring near miss should not pass without the defining rhyme scheme."""
+        sonnet = ShakespeareanSonnet(strict=False)
+        line_a = "The winter sunlight settles on the bay"
+        line_b = "A silver morning wanders through the rain"
+        poem = "\n".join([line_a, line_b] * 7)
+        result = verify(poem, sonnet)
+        assert result.score > 0.7
+        assert result.passed is False
+
     def test_petrarchan_sonnet_scheme(self) -> None:
         """Petrarchan sonnet has ABBAABBA + sestet."""
         sonnet = PetrarchanSonnet()

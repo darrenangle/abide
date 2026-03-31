@@ -31,11 +31,14 @@ all = [
     { name = "mypy" },
     { name = "nltk" },
     { name = "openai" },
+    { name = "peft" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
     { name = "torch" },
+    { name = "transformers" },
+    { name = "trl" },
     { name = "verifiers", extra = ["rl"] },
     { name = "wandb" },
 ]
@@ -60,6 +63,11 @@ nn = [
     { name = "torch" },
 ]
 training = [
+    { name = "datasets" },
+    { name = "peft" },
+    { name = "torch" },
+    { name = "transformers" },
+    { name = "trl" },
     { name = "verifiers", extra = ["rl"] },
     { name = "wandb" },
 ]
@@ -78,6 +86,7 @@ dev = [
 requires-dist = [
     { name = "abide", extras = ["nn", "nlp", "evals", "dev", "training"], marker = "extra == 'all'" },
     { name = "datasets", marker = "extra == 'evals'", specifier = ">=2.0.0" },
+    { name = "datasets", marker = "extra == 'training'", specifier = ">=2.0.0" },
     { name = "flashinfer-python", specifier = ">=0.5.3" },
     { name = "httpx", marker = "extra == 'evals'", specifier = ">=0.27.0" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.100.0" },
@@ -86,6 +95,7 @@ requires-dist = [
     { name = "nltk", marker = "extra == 'nlp'", specifier = ">=3.8.0" },
     { name = "numpy", specifier = ">=1.24.0" },
     { name = "openai", marker = "extra == 'evals'", specifier = ">=1.0.0" },
+    { name = "peft", marker = "extra == 'training'", specifier = ">=0.13.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.6.0" },
     { name = "pronouncing", specifier = ">=0.2.0" },
     { name = "pyphen", specifier = ">=0.14.0" },
@@ -94,6 +104,9 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3.0" },
     { name = "setuptools" },
     { name = "torch", marker = "extra == 'nn'", specifier = ">=2.0.0" },
+    { name = "torch", marker = "extra == 'training'", specifier = ">=2.0.0" },
+    { name = "transformers", marker = "extra == 'training'", specifier = ">=4.45.0" },
+    { name = "trl", marker = "extra == 'training'", specifier = ">=0.11.0" },
     { name = "verifiers", marker = "extra == 'evals'", specifier = ">=0.1.0" },
     { name = "verifiers", extras = ["rl"], marker = "extra == 'training'", specifier = ">=0.1.0" },
     { name = "wandb", marker = "extra == 'training'", specifier = ">=0.16.0" },
@@ -5692,6 +5705,21 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ff/60/1810655d1d856c9a4fcc90ee8966d85f552d98c53a6589f95ab2cbe27bb8/triton-3.5.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:da0fa67ccd76c3dcfb0bffe1b1c57c685136a6bd33d141c24d9655d4185b1289", size = 170487949, upload-time = "2025-10-13T16:38:24.881Z" },
     { url = "https://files.pythonhosted.org/packages/78/59/99edd103958fe6e42b50b9ad8ce4f223ddf4ccf475259cf7d2b53381dc6c/triton-3.5.0-cp314-cp314t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c7ceef21410229ac23173a28eee5cfc0e37c1dfdb8b4bc11ecda2e3ecec7c686", size = 160075629, upload-time = "2025-10-15T19:16:18.746Z" },
     { url = "https://files.pythonhosted.org/packages/fb/b7/1dec8433ac604c061173d0589d99217fe7bf90a70bdc375e745d044b8aad/triton-3.5.0-cp314-cp314t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:317fe477ea8fd4524a6a8c499fb0a36984a56d0b75bf9c9cb6133a1c56d5a6e7", size = 170580176, upload-time = "2025-10-13T16:38:31.14Z" },
+]
+
+[[package]]
+name = "trl"
+version = "0.29.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "accelerate" },
+    { name = "datasets" },
+    { name = "packaging" },
+    { name = "transformers" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3f/01/87b09019a9be4c73f8fb07ac9db1dccbeb78743fc17b6f3175ebe0a31a70/trl-0.29.1.tar.gz", hash = "sha256:12df5aa22d1deb26942cafdf4cfd75f53d7141942e70c4dc0966687a3617813b", size = 453604, upload-time = "2026-03-20T03:43:34.578Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c7/3b/33226ae50a36f718e1107ece0c91b016457bb4b956d1cb5bd7078c04de9c/trl-0.29.1-py3-none-any.whl", hash = "sha256:f9490cd1af93f3dce1cfdfe0fa1de108dbc46a2f6c2f90485cc2b4021c43eef3", size = 530959, upload-time = "2026-03-20T03:43:33.02Z" },
 ]
 
 [[package]]

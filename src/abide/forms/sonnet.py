@@ -152,6 +152,7 @@ class ShakespeareanSonnet(Constraint):
                     (self._rhyme_scheme, 2.0),
                 ],
                 threshold=0.6,
+                required_indices=[0, 1, 2],
             )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -244,6 +245,7 @@ class PetrarchanSonnet(Constraint):
                     (self._rhyme_scheme, 2.0),
                 ],
                 threshold=0.6,
+                required_indices=[0, 1, 2],
             )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -323,6 +325,7 @@ class SpenserianSonnet(Constraint):
                     (self._rhyme_scheme, 2.0),
                 ],
                 threshold=0.6,
+                required_indices=[0, 1, 2],
             )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:

@@ -49,6 +49,11 @@ evals = [
 ]
 # Local GRPO training (uses verifiers[rl] which includes vLLM, torch, etc.)
 training = [
+    "datasets>=2.0.0",
+    "torch>=2.0.0",
+    "transformers>=4.45.0",
+    "peft>=0.13.0",
+    "trl>=0.11.0",
     "verifiers[rl]>=0.1.0",     # Includes vLLM, torch, transformers, accelerate, etc.
     "wandb>=0.16.0",            # Experiment tracking
 ]

@@ -30,17 +30,14 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-
-import torch
-from datasets import Dataset
-from peft import LoraConfig
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from typing import TYPE_CHECKING, Any
 
 # Add src and scripts to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent))
 
-from trl import GRPOConfig, GRPOTrainer
+if TYPE_CHECKING:
+    from datasets import Dataset
 
 
 @dataclass
@@ -262,9 +259,35 @@ def create_reward_function(forms: dict[str, object]):
     _call_count = [0]
     _debug_printed = [False]
 
-    def reward_fn(completions: list, prompts: list, **kwargs) -> list[float]:
+    def extract_form_names(metadata: dict[str, Any], expected_count: int) -> list[str | None]:
+        """Extract exact form names from TRL dataset metadata."""
+
+        def normalize_name(value: Any) -> str | None:
+            if isinstance(value, str) and value:
+                return value
+            if isinstance(value, dict):
+                form_name = value.get("form_name")
+                if isinstance(form_name, str) and form_name:
+                    return form_name
+            return None
+
+        for key in ("form_name", "info"):
+            values = metadata.get(key)
+            if isinstance(values, list):
+                names = [normalize_name(value) for value in values[:expected_count]]
+                if len(names) < expected_count:
+                    names.extend([None] * (expected_count - len(names)))
+                return names
+            normalized = normalize_name(values)
+            if normalized is not None:
+                return [normalized] + [None] * (expected_count - 1)
+
+        return [None] * expected_count
+
+    def reward_fn(completions: list, prompts: list, **kwargs: Any) -> list[float]:
         """Score completions against their target forms."""
         rewards = []
+        form_names = extract_form_names(kwargs, len(completions))
 
         # Debug: print structure once when it changes
         if not _debug_printed[0] and _call_count[0] > 100:
@@ -279,33 +302,26 @@ def create_reward_function(forms: dict[str, object]):
                 if isinstance(prompts[0], list) and prompts[0]:
                     print(f"[DEBUG] prompt[0][0] type: {type(prompts[0][0])}")
 
-        for _i, (completion, prompt) in enumerate(zip(completions, prompts)):
+        for _i, (completion, prompt, form_name) in enumerate(zip(completions, prompts, form_names)):
             _call_count[0] += 1
             try:
                 poem = get_completion_text(completion)
-                prompt_text = extract_prompt_text(prompt)
 
                 # Ensure these are strings
                 if not isinstance(poem, str):
                     poem = str(poem) if poem else ""
-                if not isinstance(prompt_text, str):
-                    prompt_text = str(prompt_text) if prompt_text else ""
 
                 if not poem or len(poem.strip()) < 10:
                     rewards.append(0.0)
                     continue
 
-                # Extract form name from prompt
-                # Prompts look like: "Write a [FormName] about..."
-                form_name = None
-                for name in forms:
-                    if name.lower() in prompt_text.lower() or name in prompt_text:
-                        form_name = name
-                        break
-
                 if not form_name:
                     if _call_count[0] <= 3:
-                        print(f"[DEBUG] Could not extract form from prompt: {prompt_text[:100]}...")
+                        prompt_text = extract_prompt_text(prompt)
+                        print(
+                            "[DEBUG] Missing form_name metadata for prompt: "
+                            f"{prompt_text[:100]}..."
+                        )
                     rewards.append(0.0)
                     continue
 
@@ -335,6 +351,7 @@ def create_reward_function(forms: dict[str, object]):
 
 def create_dataset(args: TrainingArgs, forms: dict[str, object]) -> Dataset:
     """Create training dataset using prompt generator."""
+    from datasets import Dataset
     from prompt_generator import generate_learnable_forms_verifiers_dataset
 
     use_learnable = os.environ.get("ABIDE_LEARNABLE", "").lower() in ("1", "true", "yes")
@@ -357,11 +374,18 @@ def create_dataset(args: TrainingArgs, forms: dict[str, object]) -> Dataset:
     # TRL expects a "prompt" column with chat messages
     # For vLLM multimodal, content must be list of {"type": "text", "text": "..."} dicts
     prompts = []
+    form_names = []
     for item in raw_dataset:
-        # TRL with vLLM expects content as list of typed parts
-        prompts.append([{"role": "user", "content": [{"type": "text", "text": item["prompt"]}]}])
+        prompt_text = extract_prompt_text(item["prompt"])
+        form_info = item.get("info", {})
+        form_name = form_info.get("form_name") if isinstance(form_info, dict) else None
+        if not isinstance(form_name, str) or not form_name:
+            raise ValueError(f"Dataset item is missing info.form_name: {item}")
 
-    dataset = Dataset.from_dict({"prompt": prompts})
+        prompts.append([{"role": "user", "content": [{"type": "text", "text": prompt_text}]}])
+        form_names.append(form_name)
+
+    dataset = Dataset.from_dict({"prompt": prompts, "form_name": form_names})
     print(f"Created dataset with {len(dataset)} prompts")
 
     return dataset
@@ -369,6 +393,11 @@ def create_dataset(args: TrainingArgs, forms: dict[str, object]) -> Dataset:
 
 def main():
     import argparse
+
+    import torch
+    from peft import LoraConfig
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from trl import GRPOConfig, GRPOTrainer
 
     parser = argparse.ArgumentParser(
         description="GRPO training with TRL (includes KL regularization)"

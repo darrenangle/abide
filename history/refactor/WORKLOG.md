@@ -12,3 +12,8 @@
 - Fixed `Ghazal.verify()` so odd dangling lines fail, lower score sharply, and appear in the rubric.
 - Added a ghazal regression test for the dangling-line case.
 - Verified the repo with `uv run pytest`, `uv run ruff check src/abide tests`, and `uv run mypy src/abide`.
+- Refactored `scripts/train_grpo_trl.py` so helper imports no longer require TRL, Transformers, PEFT, or Torch at module import time.
+- Preserved exact `form_name` metadata in the TRL dataset and routed reward scoring through that metadata only.
+- Added integration coverage for TRL helper importability, dataset metadata preservation, and exact form routing.
+- Tightened Shakespearean, Petrarchan, and Spenserian sonnet pass/fail to require their defining child constraints.
+- Added a regression test for the repeated-line Shakespearean sonnet false positive from the audit.
