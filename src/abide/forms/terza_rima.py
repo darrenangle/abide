@@ -6,15 +6,18 @@ A poem with interlocking tercets in ABA BCB CDC pattern.
 
 from __future__ import annotations
 
+from itertools import pairwise
 from typing import TYPE_CHECKING
 
 from abide.constraints import (
+    And,
     Constraint,
     ConstraintType,
-    RubricItem,
+    EndRhymePairs,
+    GroupedStanzas,
     VerificationResult,
+    WeightedSum,
 )
-from abide.primitives import extract_end_words, rhyme_score
 
 if TYPE_CHECKING:
     from abide.primitives import PoemStructure
@@ -64,130 +67,94 @@ class TerzaRima(Constraint):
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
-        end_words = extract_end_words(structure)
+        group_sizes = self._infer_group_sizes(structure)
+        offsets = self._group_offsets(group_sizes)
+        full_tercets = [index for index, size in enumerate(group_sizes) if size == 3]
 
-        rubric: list[RubricItem] = []
-        scores: list[float] = []
+        rhyme_pairs: list[tuple[int, int]] = []
+        for group_index in full_tercets:
+            base = offsets[group_index]
+            rhyme_pairs.append((base, base + 2))
 
-        # Check we have enough lines for tercets
-        # Minimum: min_tercets * 3 lines, possibly +1 or +2 for ending
-        min_lines = self.min_tercets * 3
-        if structure.line_count < min_lines:
-            rubric.append(
-                RubricItem(
-                    criterion="Minimum lines",
-                    expected=f"at least {min_lines}",
-                    actual=str(structure.line_count),
-                    score=(structure.line_count / min_lines) ** 2,  # Quadratic
-                    passed=False,
-                )
+        for current_group, next_group in pairwise(full_tercets):
+            base_current = offsets[current_group]
+            base_next = offsets[next_group]
+            rhyme_pairs.extend(
+                [
+                    (base_current + 1, base_next),
+                    (base_current + 1, base_next + 2),
+                ]
             )
-            scores.append((structure.line_count / min_lines) ** 2)
+
+        if group_sizes and group_sizes[-1] in {1, 2} and full_tercets:
+            tail_offset = offsets[-1]
+            previous_middle = offsets[full_tercets[-1]] + 1
+            rhyme_pairs.append((previous_middle, tail_offset))
+            if group_sizes[-1] == 2:
+                rhyme_pairs.append((previous_middle, tail_offset + 1))
+
+        constraints = [
+            (
+                GroupedStanzas(
+                    3,
+                    self.min_tercets,
+                    allow_single_block_chunking=True,
+                    allowed_tail_sizes=(1, 2),
+                    weight=1.5,
+                ),
+                1.5,
+            ),
+            (
+                EndRhymePairs(
+                    rhyme_pairs,
+                    threshold=self.rhyme_threshold,
+                    weight=2.0,
+                ),
+                2.0,
+            ),
+        ]
+
+        constraint: Constraint
+        if self.strict:
+            constraint = And([item for item, _ in constraints])
         else:
-            rubric.append(
-                RubricItem(
-                    criterion="Minimum lines",
-                    expected=f"at least {min_lines}",
-                    actual=str(structure.line_count),
-                    score=1.0,
-                    passed=True,
-                )
+            constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
             )
-            scores.append(1.0)
 
-        # Check ABA pattern within each tercet
-        num_tercets = structure.line_count // 3
-        tercet_scores = []
-
-        for i in range(num_tercets):
-            base = i * 3
-            if base + 2 < len(end_words):
-                word_a1 = end_words[base]  # Line 1
-                word_b = end_words[base + 1]  # Line 2 (middle)
-                word_a2 = end_words[base + 2]  # Line 3
-
-                # Lines 1 and 3 should rhyme (A...A)
-                score_aa = rhyme_score(word_a1, word_a2)
-                passed_aa = score_aa >= self.rhyme_threshold
-
-                rubric.append(
-                    RubricItem(
-                        criterion=f"Tercet {i + 1}: L1 rhymes with L3",
-                        expected=f"rhyme >= {self.rhyme_threshold}",
-                        actual=f"'{word_a1}' / '{word_a2}' = {score_aa:.2f}",
-                        score=score_aa,
-                        passed=passed_aa,
-                    )
-                )
-                tercet_scores.append(score_aa)
-
-        # Count rhyme violations for steep penalty
-        violations = 0
-        total_checks = 0
-
-        if tercet_scores:
-            for score in tercet_scores:
-                total_checks += 1
-                if score < self.rhyme_threshold:
-                    violations += 1
-
-        # Check chain rhyme (middle of tercet N rhymes with outer of tercet N+1)
-        chain_scores = []
-        for i in range(num_tercets - 1):
-            base_current = i * 3
-            base_next = (i + 1) * 3
-
-            if base_current + 1 < len(end_words) and base_next < len(end_words):
-                word_b = end_words[base_current + 1]  # Middle of current
-                word_c1 = end_words[base_next]  # First of next
-                word_c2 = end_words[base_next + 2] if base_next + 2 < len(end_words) else ""
-
-                # B should rhyme with C (outer lines of next tercet)
-                if word_c2:
-                    score_bc1 = rhyme_score(word_b, word_c1)
-                    score_bc2 = rhyme_score(word_b, word_c2)
-                    avg_score = (score_bc1 + score_bc2) / 2
-
-                    rubric.append(
-                        RubricItem(
-                            criterion=f"Chain: Tercet {i + 1} middle -> Tercet {i + 2} outer",
-                            expected=f"'{word_b}' rhymes with '{word_c1}'/'{word_c2}'",
-                            actual=f"scores: {score_bc1:.2f}, {score_bc2:.2f}",
-                            score=avg_score,
-                            passed=avg_score >= self.rhyme_threshold,
-                        )
-                    )
-                    chain_scores.append(avg_score)
-                    total_checks += 1
-                    if avg_score < self.rhyme_threshold:
-                        violations += 1
-
-        # Steep penalty: 0 violations = 1.0, 1 = 0.5, 2 = 0.25, 3+ = 0.05
-        if violations == 0:
-            rhyme_score_final = 1.0
-        elif violations == 1:
-            rhyme_score_final = 0.5
-        elif violations == 2:
-            rhyme_score_final = 0.25
-        else:
-            rhyme_score_final = 0.05
-
-        scores.append(rhyme_score_final)
-
-        overall_score = sum(scores) / len(scores) if scores else 0.0
-        overall_passed = all(r.passed for r in rubric) if self.strict else overall_score >= 0.6
-
+        result = constraint.verify(poem)
         return VerificationResult(
-            score=overall_score,
-            passed=overall_passed,
-            rubric=rubric,
+            score=result.score,
+            passed=result.passed,
+            rubric=result.rubric,
             constraint_name=self.name,
             constraint_type=self.constraint_type,
             details={
-                "line_count": structure.line_count,
-                "tercet_count": num_tercets,
+                **result.details,
+                "group_sizes": group_sizes,
+                "tercet_count": len(full_tercets),
             },
         )
+
+    def _infer_group_sizes(self, structure: PoemStructure) -> list[int]:
+        if structure.stanza_count > 1:
+            return list(structure.stanza_sizes)
+
+        full_groups, remainder = divmod(structure.line_count, 3)
+        sizes = [3] * full_groups
+        if remainder:
+            sizes.append(remainder)
+        return sizes
+
+    def _group_offsets(self, group_sizes: list[int]) -> list[int]:
+        offsets: list[int] = []
+        current = 0
+        for size in group_sizes:
+            offsets.append(current)
+            current += size
+        return offsets
 
     def describe(self) -> str:
         return f"Terza Rima: {self.min_tercets}+ tercets with ABA BCB chain rhyme"

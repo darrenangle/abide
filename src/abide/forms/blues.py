@@ -9,15 +9,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from abide.constraints import (
+    And,
     Constraint,
     ConstraintType,
-    RubricItem,
+    EndRhymePairs,
+    GroupedStanzas,
+    LinePairSimilarity,
     VerificationResult,
-)
-from abide.primitives import (
-    jaro_winkler_similarity,
-    normalized_levenshtein,
-    rhyme_score,
+    WeightedSum,
 )
 
 if TYPE_CHECKING:
@@ -72,165 +71,90 @@ class BluesPoem(Constraint):
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
+        group_sizes = self._infer_group_sizes(structure)
+        offsets = self._group_offsets(group_sizes)
 
-        rubric: list[RubricItem] = []
-        scores: list[float] = []
-
-        # Check stanza structure - should be tercets
-        num_tercets = 0
-        for stanza in structure.stanzas:
-            if len(stanza) == 3:
-                num_tercets += 1
-
-        # Also check if poem is flat (no stanza breaks) - count by lines
-        if structure.stanza_count == 1:
-            num_tercets = structure.line_count // 3
-
-        if num_tercets >= self.min_stanzas:
-            rubric.append(
-                RubricItem(
-                    criterion="Minimum tercets",
-                    expected=f"at least {self.min_stanzas}",
-                    actual=str(num_tercets),
-                    score=1.0,
-                    passed=True,
+        repetition_pairs: list[tuple[int, int]] = []
+        rhyme_pairs: list[tuple[int, int]] = []
+        for index, size in enumerate(group_sizes):
+            if size >= 3:
+                base = offsets[index]
+                repetition_pairs.append((base, base + 1))
+                rhyme_pairs.extend(
+                    [
+                        (base, base + 2),
+                        (base + 1, base + 2),
+                    ]
                 )
+
+        constraints = [
+            (
+                GroupedStanzas(
+                    3,
+                    self.min_stanzas,
+                    allow_single_block_chunking=True,
+                    weight=1.5,
+                ),
+                1.5,
+            ),
+            (
+                LinePairSimilarity(
+                    repetition_pairs,
+                    threshold=self.repetition_threshold,
+                    weight=2.0,
+                ),
+                2.0,
+            ),
+            (
+                EndRhymePairs(
+                    rhyme_pairs,
+                    threshold=self.rhyme_threshold,
+                    weight=2.0,
+                ),
+                2.0,
+            ),
+        ]
+
+        constraint: Constraint
+        if self.strict:
+            constraint = And([item for item, _ in constraints])
+        else:
+            constraint = WeightedSum(
+                constraints,
+                threshold=0.5,
+                required_indices=list(range(len(constraints))),
             )
-            scores.append(1.0)
-        else:
-            # Quadratic penalty for stricter GRPO training
-            linear_score = num_tercets / self.min_stanzas if self.min_stanzas > 0 else 0
-            rubric.append(
-                RubricItem(
-                    criterion="Minimum tercets",
-                    expected=f"at least {self.min_stanzas}",
-                    actual=str(num_tercets),
-                    score=linear_score**2,
-                    passed=False,
-                )
-            )
-            scores.append(linear_score**2)
 
-        # Check AAB pattern in each tercet
-        # If stanzas are defined, use them; otherwise chunk by 3 lines
-        tercets = []
-        if structure.stanza_count > 1:
-            tercets = [s for s in structure.stanzas if len(s) >= 3]
-        else:
-            # Chunk lines into groups of 3
-            for i in range(0, len(structure.lines) - 2, 3):
-                tercets.append((structure.lines[i], structure.lines[i + 1], structure.lines[i + 2]))
-
-        repetition_scores = []
-        rhyme_scores = []
-
-        for i, tercet in enumerate(tercets):
-            if len(tercet) >= 3:
-                line1, line2, line3 = tercet[0], tercet[1], tercet[2]
-
-                # Check L1-L2 repetition/variation
-                rep_score = self._line_similarity(line1, line2)
-                rep_passed = rep_score >= self.repetition_threshold
-
-                rubric.append(
-                    RubricItem(
-                        criterion=f"Stanza {i + 1}: L1-L2 repetition",
-                        expected=f"similarity >= {self.repetition_threshold}",
-                        actual=f"{rep_score:.2f}",
-                        score=rep_score,
-                        passed=rep_passed,
-                        explanation=f"'{line1[:30]}...' vs '{line2[:30]}...'",
-                    )
-                )
-                repetition_scores.append(rep_score)
-
-                # Check that L3 rhymes with L1 and L2
-                end1 = self._get_end_word(line1)
-                end2 = self._get_end_word(line2)
-                end3 = self._get_end_word(line3)
-
-                rhyme_1_3 = rhyme_score(end1, end3) if end1 and end3 else 0.0
-                rhyme_2_3 = rhyme_score(end2, end3) if end2 and end3 else 0.0
-                avg_rhyme = (rhyme_1_3 + rhyme_2_3) / 2
-
-                rubric.append(
-                    RubricItem(
-                        criterion=f"Stanza {i + 1}: L3 rhymes with L1/L2",
-                        expected=f"rhyme >= {self.rhyme_threshold}",
-                        actual=f"'{end1}'/'{end2}' vs '{end3}' = {avg_rhyme:.2f}",
-                        score=avg_rhyme,
-                        passed=avg_rhyme >= self.rhyme_threshold,
-                    )
-                )
-                rhyme_scores.append(avg_rhyme)
-
-        # Apply steep penalty based on violation count
-        # Count violations in repetition and rhyme
-        repetition_violations = sum(
-            1 for score in repetition_scores if score < self.repetition_threshold
-        )
-        rhyme_violations = sum(1 for score in rhyme_scores if score < self.rhyme_threshold)
-        total_violations = repetition_violations + rhyme_violations
-
-        # Steep penalty: 0=1.0, 1=0.5, 2=0.25, 3+=0.05
-        if total_violations == 0:
-            pattern_score = 1.0
-        elif total_violations == 1:
-            pattern_score = 0.5
-        elif total_violations == 2:
-            pattern_score = 0.25
-        else:
-            pattern_score = 0.05
-
-        # Add pattern score to overall scores
-        if repetition_scores or rhyme_scores:
-            scores.append(pattern_score)
-
-        overall_score = sum(scores) / len(scores) if scores else 0.0
-        overall_passed = all(r.passed for r in rubric) if self.strict else overall_score >= 0.5
-
+        result = constraint.verify(poem)
         return VerificationResult(
-            score=overall_score,
-            passed=overall_passed,
-            rubric=rubric,
+            score=result.score,
+            passed=result.passed,
+            rubric=result.rubric,
             constraint_name=self.name,
             constraint_type=self.constraint_type,
-            details={"tercet_count": len(tercets)},
+            details={
+                **result.details,
+                "group_sizes": group_sizes,
+            },
         )
 
-    def _line_similarity(self, line1: str, line2: str) -> float:
-        """Compute similarity between two lines."""
-        l1 = self._normalize_line(line1)
-        l2 = self._normalize_line(line2)
+    def _infer_group_sizes(self, structure: PoemStructure) -> list[int]:
+        if structure.stanza_count > 1:
+            return list(structure.stanza_sizes)
 
-        if l1 == l2:
-            return 1.0
+        full_groups, remainder = divmod(structure.line_count, 3)
+        sizes = [3] * full_groups
+        if remainder:
+            sizes.append(remainder)
+        return sizes
 
-        # For blues, we expect variation so use a more lenient metric
-        lev = normalized_levenshtein(l1, l2)
-        jw = jaro_winkler_similarity(l1, l2)
-
-        # Also check if one line contains most of the other
-        words1 = set(l1.split())
-        words2 = set(l2.split())
-        overlap = len(words1 & words2) / max(len(words1), len(words2)) if words1 and words2 else 0.0
-
-        return max(lev, jw, overlap)
-
-    def _normalize_line(self, line: str) -> str:
-        """Normalize line for comparison."""
-        import re
-
-        line = line.lower().strip()
-        line = re.sub(r"[^\w\s']", "", line)
-        return " ".join(line.split())
-
-    def _get_end_word(self, line: str) -> str:
-        """Get last word of line."""
-        import re
-
-        words = re.findall(r"\b\w+\b", line)
-        return words[-1].lower() if words else ""
+    def _group_offsets(self, group_sizes: list[int]) -> list[int]:
+        offsets: list[int] = []
+        current = 0
+        for size in group_sizes:
+            offsets.append(current)
+            current += size
+        return offsets
 
     def describe(self) -> str:
         return f"Blues Poem: {self.min_stanzas}+ AAB tercets with line repetition"

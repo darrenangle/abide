@@ -39,3 +39,8 @@
 - Re-ran the ungated-form search after the `sapphic` fix; it now returns no remaining high-risk `WeightedSum` forms without `required_indices`.
 - Finished the remaining claim audit: the only surviving meter-related search hits are intentional caveats (`BlankVerse` strict mode, a narrowed `Quatrain` note, and an internal sonnet comment).
 - Closed `RF-001` and `RF-008` and released their locks.
+- Opened `RF-009` for the remaining manual fixed-form verifiers that still carried bespoke score/pass logic.
+- Migrated `Ballade`, `Rondeau`, `Pantoum`, `TerzaRima`, `BluesPoem`, and `Clerihew` onto shared structural and relational constraints.
+- Added `GroupedStanzas`, `LinePairSimilarity`, `OpeningPhraseRefrain`, and `EndRhymePairs` coverage plus new high-score near-miss regressions for the migrated form families.
+- Verified the RF-009 sweep with `uv run pytest` -> `508 passed, 1 skipped`, `uv run ruff check src/abide tests/...` -> clean, and `uv run mypy src/abide` -> clean.
+- Closed `RF-009` and released its lock.

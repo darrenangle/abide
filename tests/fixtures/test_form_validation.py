@@ -322,7 +322,14 @@ class TestBalladeValidation:
         ballade = Ballade(strict=False, rhyme_threshold=0.5, refrain_threshold=0.8)
         result = ballade.verify(BALLADE_VILLON_LADIES_ROSSETTI)
         # Check structural elements work - line count and refrains pass
-        line_count_item = next((r for r in result.rubric if "Line count" in r.criterion), None)
+        line_count_item = next(
+            (
+                r
+                for r in result.rubric
+                if "lines" in r.criterion.lower() and r.actual == str(Ballade.LINE_COUNT)
+            ),
+            None,
+        )
         assert line_count_item is not None and line_count_item.passed
 
 

@@ -12,3 +12,4 @@ Updated: 2026-03-31
 | RF-006 | P1 | done | | Carry exact `form_name` metadata through the TRL reward path | |
 | RF-007 | P2 | done | | Declare and isolate TRL training dependencies | RF-006 |
 | RF-008 | P2 | done | | Audit remaining form descriptions for verifier/claim mismatch after core fixes land | RF-003, RF-004 |
+| RF-009 | P1 | done | | Refactor remaining manual fixed-form verifiers onto shared constraints | RF-001, RF-002 |

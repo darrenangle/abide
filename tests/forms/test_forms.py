@@ -6,13 +6,16 @@ from abide import verify
 from abide.forms import (
     Aubade,
     Ballad,
+    Ballade,
     BlankVerse,
+    BluesPoem,
     Bop,
     BroadBallad,
     BurnsStanza,
     Canzone,
     CaudateSonnet,
     ChantRoyal,
+    Clerihew,
     Couplet,
     CrownOfSonnets,
     CurtalSonnet,
@@ -26,6 +29,7 @@ from abide.forms import (
     Limerick,
     OneginStanza,
     OttavaRima,
+    Pantoum,
     PetrarchanSonnet,
     PindaricOde,
     Quatina,
@@ -33,6 +37,7 @@ from abide.forms import (
     Quintina,
     RhymeRoyal,
     Rispetto,
+    Rondeau,
     Rondelet,
     Rubai,
     Rubaiyat,
@@ -47,12 +52,14 @@ from abide.forms import (
     Tanka,
     Tercet,
     Terzanelle,
+    TerzaRima,
     Triolet,
     Triplet,
     Tritina,
     Villanelle,
     Virelai,
 )
+from tests.fixtures.poems import RONDEAU_MCCRAE_FLANDERS
 
 # Ground truth poems for testing
 BASHO_HAIKU = """An old silent pond
@@ -539,6 +546,191 @@ def _sapphic_ode_near_miss() -> str:
     return "\n\n".join([_sapphic_stanza_near_miss()] * 3)
 
 
+def _pantoum_near_miss() -> str:
+    return "\n\n".join(
+        [
+            "\n".join(
+                [
+                    "The rain falls soft upon the roof tonight",
+                    "And shadows dance upon the window pane",
+                    "I sit alone and read by candlelight",
+                    "While thunder rumbles distantly again",
+                ]
+            ),
+            "\n".join(
+                [
+                    "And shadows dance upon the window pane",
+                    "The storm moves slowly over hills afar",
+                    "While thunder rumbles distantly again",
+                    "I watch and wait beneath the evening star",
+                ]
+            ),
+            "\n".join(
+                [
+                    "The storm moves slowly over hills afar",
+                    "The wind begins to whisper through the eaves",
+                    "I watch and wait beneath the evening star",
+                    "And listen to the rustling of the leaves",
+                ]
+            ),
+            "\n".join(
+                [
+                    "The wind begins to whisper through the eaves",
+                    "A stranger lingers near the shuttered door",
+                    "And listen to the rustling of the leaves",
+                    "The lantern gutters on the attic floor",
+                ]
+            ),
+        ]
+    )
+
+
+def _terza_rima_near_miss() -> str:
+    return "\n\n".join(
+        [
+            "\n".join(
+                [
+                    "Soft bells drift over the hill",
+                    "A quiet swallow circles below",
+                    "The bright wind lingers, breathing still",
+                ]
+            ),
+            "\n".join(
+                [
+                    "The orchard opens into glow",
+                    "A silver branch keeps time with the breeze",
+                    "The low road fades beneath the snow",
+                ]
+            ),
+            "\n".join(
+                [
+                    "Tall reeds begin to lean through trees",
+                    "A patient river gathers rain",
+                    "The harbor darkens over seas",
+                ]
+            ),
+            "Stone doors remember every stone",
+        ]
+    )
+
+
+def _clerihew_near_miss() -> str:
+    return "\n".join(
+        [
+            "the kettle watched the window glow",
+            "it muttered at the drifting snow",
+            "small lanterns teased the night",
+            "and every chimney answered bright",
+        ]
+    )
+
+
+def _blues_near_miss() -> str:
+    return "\n\n".join(
+        [
+            "\n".join(
+                [
+                    "I woke to thunder rolling through the night",
+                    "My suitcase waited cold beside the light",
+                    "And all the broken windows burned too bright",
+                ]
+            ),
+            "\n".join(
+                [
+                    "The landlord nailed another warning on the door",
+                    "A stray dog circled twice and slept upon the floor",
+                    "I kept on counting debts and asking for no more",
+                ]
+            ),
+        ]
+    )
+
+
+def _rondeau_near_miss() -> str:
+    return "\n\n".join(
+        [
+            "\n".join(
+                [
+                    "Soft rain returns to fields of glow",
+                    "Thin branches lean through falling snow",
+                    "The harbor closes into night",
+                    "Small windows answer back with light",
+                    "The empty road remembers show",
+                ]
+            ),
+            "\n".join(
+                [
+                    "We hear the distant engines go",
+                    "Cold rooftops silver row by row",
+                    "The orchard shutters out the bright",
+                    "A different bell forgets the shore",
+                ]
+            ),
+            "\n".join(
+                [
+                    "Young sparrows lift from drifts of throw",
+                    "The chapel keeps a patient low",
+                    "Dark water folds itself in white",
+                    "The last carts vanish from the sight",
+                    "Still every lane runs out below",
+                    "Another season passes west",
+                ]
+            ),
+        ]
+    )
+
+
+def _ballade_near_miss() -> str:
+    return "\n\n".join(
+        [
+            "\n".join(
+                [
+                    "Morning keeps drifting toward the day",
+                    "Small lanterns gather in the light",
+                    "The harbor leans its weight to may",
+                    "Dark windows soften through the night",
+                    "Old roofs remember one more bright",
+                    "The alleys empty out alone",
+                    "Late swallows bend around the white",
+                    "But winter keeps no answer alone",
+                ]
+            ),
+            "\n".join(
+                [
+                    "Cold ash keeps blowing toward the gray",
+                    "Young bells are fading from the sight",
+                    "The market folds itself to play",
+                    "And shutters close before the bright",
+                    "The road turns silver in the right",
+                    "A chapel waits above the stone",
+                    "Thin rain keeps pressing through the white",
+                    "But winter keeps no answer alone",
+                ]
+            ),
+            "\n".join(
+                [
+                    "The river learns another way",
+                    "A cart goes rattling past the might",
+                    "Soft fields return the sound of stay",
+                    "The orchard dims before the light",
+                    "The hillside answers with a fight",
+                    "One doorway listens all alone",
+                    "Still fences lean across the white",
+                    "But winter keeps no answer alone",
+                ]
+            ),
+            "\n".join(
+                [
+                    "Speak low before the paling night",
+                    "And leave the final road your own",
+                    "Hold fast against the failing light",
+                    "But winter leaves one lantern stone",
+                ]
+            ),
+        ]
+    )
+
+
 class TestHaiku:
     """Tests for Haiku form template."""
 
@@ -876,6 +1068,34 @@ def test_rondelet_does_not_report_pass_when_penalty_score_is_low() -> None:
     result = verify(_rondelet_near_miss(), Rondelet(strict=False))
     assert result.score == 0.05
     assert result.passed is False
+
+
+@pytest.mark.parametrize(
+    ("form", "poem", "min_score"),
+    [
+        (Ballade(strict=False), _ballade_near_miss(), 0.7),
+        (Pantoum(strict=False), _pantoum_near_miss(), 0.7),
+        (TerzaRima(strict=False), _terza_rima_near_miss(), 0.8),
+        (Clerihew(strict=False), _clerihew_near_miss(), 0.6),
+        (BluesPoem(strict=False), _blues_near_miss(), 0.6),
+        (Rondeau(strict=False), _rondeau_near_miss(), 0.7),
+    ],
+    ids=["ballade", "pantoum", "terza-rima", "clerihew", "blues-poem", "rondeau"],
+)
+def test_recently_migrated_manual_forms_reject_high_scoring_near_misses(
+    form, poem, min_score
+) -> None:
+    """Lenient migrated forms should keep partial credit without reporting a canonical pass."""
+    result = verify(poem, form)
+    assert result.score >= min_score
+    assert result.passed is False
+
+
+def test_rondeau_single_block_layout_is_still_accepted() -> None:
+    """Rondeau should still allow the common single-block presentation."""
+    poem = RONDEAU_MCCRAE_FLANDERS.replace("\n\n", "\n")
+    result = verify(poem, Rondeau(strict=False, rhyme_threshold=0.5, refrain_threshold=0.7))
+    assert result.score >= 0.5
 
 
 @pytest.mark.parametrize(

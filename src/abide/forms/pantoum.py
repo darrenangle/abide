@@ -9,14 +9,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from abide.constraints import (
+    And,
     Constraint,
     ConstraintType,
-    RubricItem,
+    GroupedStanzas,
+    LinePairSimilarity,
     VerificationResult,
-)
-from abide.primitives import (
-    jaro_winkler_similarity,
-    normalized_levenshtein,
+    WeightedSum,
 )
 
 if TYPE_CHECKING:
@@ -68,180 +67,102 @@ class Pantoum(Constraint):
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
+        group_sizes = self._infer_group_sizes(structure)
+        offsets = self._group_offsets(group_sizes)
 
-        rubric: list[RubricItem] = []
-        scores: list[float] = []
-
-        # Check minimum stanza count
-        if structure.stanza_count < self.min_stanzas:
-            # Quadratic penalty for stricter GRPO training
-            linear_score = structure.stanza_count / self.min_stanzas
-            rubric.append(
-                RubricItem(
-                    criterion="Minimum stanzas",
-                    expected=f"at least {self.min_stanzas}",
-                    actual=str(structure.stanza_count),
-                    score=linear_score**2,
-                    passed=False,
-                )
-            )
-            scores.append(linear_score**2)
-        else:
-            rubric.append(
-                RubricItem(
-                    criterion="Minimum stanzas",
-                    expected=f"at least {self.min_stanzas}",
-                    actual=str(structure.stanza_count),
-                    score=1.0,
-                    passed=True,
-                )
-            )
-            scores.append(1.0)
-
-        # Check all stanzas are quatrains
-        quatrain_scores = []
-        for i, stanza in enumerate(structure.stanzas):
-            if len(stanza) == 4:
-                quatrain_scores.append(1.0)
-            else:
-                quatrain_scores.append(0.5)
-                rubric.append(
-                    RubricItem(
-                        criterion=f"Stanza {i + 1} is quatrain",
-                        expected="4 lines",
-                        actual=f"{len(stanza)} lines",
-                        score=0.5,
-                        passed=False,
-                    )
-                )
-        if quatrain_scores:
-            avg_quatrain = sum(quatrain_scores) / len(quatrain_scores)
-            scores.append(avg_quatrain)
-
-        # Check line repetitions between stanzas
-        repetition_scores = []
-        for i in range(len(structure.stanzas) - 1):
-            current = structure.stanzas[i]
-            next_stanza = structure.stanzas[i + 1]
-
-            if len(current) >= 4 and len(next_stanza) >= 4:
-                # Line 2 of current -> Line 1 of next
-                score_2_to_1 = self._line_similarity(current[1], next_stanza[0])
-                passed_2_to_1 = score_2_to_1 >= self.refrain_threshold
-                rubric.append(
-                    RubricItem(
-                        criterion=f"Stanza {i + 1} L2 -> Stanza {i + 2} L1",
-                        expected=current[1][:40],
-                        actual=next_stanza[0][:40],
-                        score=score_2_to_1,
-                        passed=passed_2_to_1,
-                    )
-                )
-                repetition_scores.append(score_2_to_1)
-
-                # Line 4 of current -> Line 3 of next
-                score_4_to_3 = self._line_similarity(current[3], next_stanza[2])
-                passed_4_to_3 = score_4_to_3 >= self.refrain_threshold
-                rubric.append(
-                    RubricItem(
-                        criterion=f"Stanza {i + 1} L4 -> Stanza {i + 2} L3",
-                        expected=current[3][:40],
-                        actual=next_stanza[2][:40],
-                        score=score_4_to_3,
-                        passed=passed_4_to_3,
-                    )
-                )
-                repetition_scores.append(score_4_to_3)
-
-        # For repetition checks, use steep penalty for violations
-        # Count how many repetition checks failed (score < threshold)
-        if repetition_scores:
-            num_rep_violations = sum(1 for s in repetition_scores if s < self.refrain_threshold)
-            if num_rep_violations == 0:
-                rep_score = 1.0
-            elif num_rep_violations == 1:
-                rep_score = 0.5
-            elif num_rep_violations == 2:
-                rep_score = 0.25
-            else:
-                rep_score = 0.05
-            scores.append(rep_score)
-
-        # Check circular closing (optional)
-        if self.check_circular and len(structure.stanzas) >= 2:
-            first = structure.stanzas[0]
-            last = structure.stanzas[-1]
-
-            if len(first) >= 4 and len(last) >= 4:
-                # Last stanza L2 should match first stanza L1
-                score_close_1 = self._line_similarity(last[1], first[0])
-                # Last stanza L4 should match first stanza L3
-                score_close_3 = self._line_similarity(last[3], first[2])
-
-                rubric.append(
-                    RubricItem(
-                        criterion="Circular close: last L2 = first L1",
-                        expected=first[0][:40],
-                        actual=last[1][:40],
-                        score=score_close_1,
-                        passed=score_close_1 >= self.refrain_threshold,
-                    )
-                )
-                rubric.append(
-                    RubricItem(
-                        criterion="Circular close: last L4 = first L3",
-                        expected=first[2][:40],
-                        actual=last[3][:40],
-                        score=score_close_3,
-                        passed=score_close_3 >= self.refrain_threshold,
-                    )
-                )
-                # Apply steep penalty for circular closing violations
-                num_close_violations = sum(
+        interlock_pairs: list[tuple[int, int]] = []
+        for index in range(len(group_sizes) - 1):
+            if group_sizes[index] >= 4 and group_sizes[index + 1] >= 4:
+                interlock_pairs.extend(
                     [
-                        1 if score_close_1 < self.refrain_threshold else 0,
-                        1 if score_close_3 < self.refrain_threshold else 0,
+                        (offsets[index] + 1, offsets[index + 1]),
+                        (offsets[index] + 3, offsets[index + 1] + 2),
                     ]
                 )
-                if num_close_violations == 0:
-                    close_score = 1.0
-                elif num_close_violations == 1:
-                    close_score = 0.5
-                else:
-                    close_score = 0.25
-                scores.append(close_score)
 
-        overall_score = sum(scores) / len(scores) if scores else 0.0
-        overall_passed = all(r.passed for r in rubric) if self.strict else overall_score >= 0.6
+        circular_pairs: list[tuple[int, int]] = []
+        if (
+            self.check_circular
+            and len(group_sizes) >= 2
+            and group_sizes[0] >= 4
+            and group_sizes[-1] >= 4
+        ):
+            circular_pairs = [
+                (0, offsets[-1] + 1),
+                (2, offsets[-1] + 3),
+            ]
 
+        constraints: list[tuple[Constraint, float]] = [
+            (
+                GroupedStanzas(
+                    4,
+                    self.min_stanzas,
+                    allow_single_block_chunking=True,
+                    weight=2.0,
+                ),
+                2.0,
+            ),
+            (
+                LinePairSimilarity(
+                    interlock_pairs,
+                    threshold=self.refrain_threshold,
+                    weight=2.0,
+                ),
+                2.0,
+            ),
+        ]
+        if self.check_circular:
+            constraints.append(
+                (
+                    LinePairSimilarity(
+                        circular_pairs,
+                        threshold=self.refrain_threshold,
+                        weight=1.5,
+                    ),
+                    1.5,
+                )
+            )
+
+        constraint: Constraint
+        if self.strict:
+            constraint = And([item for item, _ in constraints])
+        else:
+            constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
+
+        result = constraint.verify(poem)
         return VerificationResult(
-            score=overall_score,
-            passed=overall_passed,
-            rubric=rubric,
+            score=result.score,
+            passed=result.passed,
+            rubric=result.rubric,
             constraint_name=self.name,
             constraint_type=self.constraint_type,
-            details={"stanza_count": structure.stanza_count},
+            details={
+                **result.details,
+                "group_sizes": group_sizes,
+            },
         )
 
-    def _line_similarity(self, line1: str, line2: str) -> float:
-        """Compute similarity between two lines."""
-        l1 = self._normalize_line(line1)
-        l2 = self._normalize_line(line2)
+    def _infer_group_sizes(self, structure: PoemStructure) -> list[int]:
+        if structure.stanza_count > 1:
+            return list(structure.stanza_sizes)
 
-        if l1 == l2:
-            return 1.0
+        full_groups, remainder = divmod(structure.line_count, 4)
+        sizes = [4] * full_groups
+        if remainder:
+            sizes.append(remainder)
+        return sizes
 
-        lev = normalized_levenshtein(l1, l2)
-        jw = jaro_winkler_similarity(l1, l2)
-        return (lev + jw) / 2
-
-    def _normalize_line(self, line: str) -> str:
-        """Normalize line for comparison."""
-        import re
-
-        line = line.lower().strip()
-        line = re.sub(r"[^\w\s']", "", line)
-        return " ".join(line.split())
+    def _group_offsets(self, group_sizes: list[int]) -> list[int]:
+        offsets: list[int] = []
+        current = 0
+        for size in group_sizes:
+            offsets.append(current)
+            current += size
+        return offsets
 
     def describe(self) -> str:
         return f"Pantoum: {self.min_stanzas}+ quatrains with interlocking line repetition"

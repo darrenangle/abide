@@ -198,6 +198,150 @@ class StanzaSizes(Constraint):
         return "Structure the stanzas so that " + ", ".join(parts) + "."
 
 
+class GroupedStanzas(Constraint):
+    """
+    Constraint on repeated stanza/group sizes with an optional final tail.
+
+    This supports forms that are usually written in uniform stanzas but may
+    also appear as a single block of lines or with a short closing tail.
+    """
+
+    name = "Grouped Stanzas"
+    constraint_type = ConstraintType.STRUCTURAL
+
+    def __init__(
+        self,
+        group_size: int,
+        min_groups: int = 1,
+        *,
+        allow_single_block_chunking: bool = True,
+        allowed_tail_sizes: Sequence[int] = (),
+        weight: float = 1.0,
+        sigma: float = 1.0,
+    ) -> None:
+        super().__init__(weight)
+        if group_size <= 0:
+            raise ValueError("group_size must be positive")
+        if min_groups < 0:
+            raise ValueError("min_groups must be non-negative")
+
+        self.group_size = group_size
+        self.min_groups = min_groups
+        self.allow_single_block_chunking = allow_single_block_chunking
+        self.allowed_tail_sizes = tuple(sorted(set(allowed_tail_sizes)))
+        self.sigma = sigma
+
+    def verify(self, poem: str | PoemStructure) -> VerificationResult:
+        structure = self._ensure_structure(poem)
+        actual_sizes, chunked_single_block = self._infer_group_sizes(structure)
+
+        rubric: list[RubricItem] = []
+        scores: list[float] = []
+
+        full_groups = sum(1 for size in actual_sizes if size == self.group_size)
+        count_passed = full_groups >= self.min_groups
+        count_score = 1.0 if count_passed else (full_groups / max(1, self.min_groups)) ** 2
+
+        rubric.append(
+            RubricItem(
+                criterion="Minimum full groups",
+                expected=f"at least {self.min_groups} groups of {self.group_size} lines",
+                actual=f"{full_groups} group(s) of {self.group_size} lines",
+                score=count_score,
+                passed=count_passed,
+            )
+        )
+        scores.append(count_score)
+
+        if not actual_sizes:
+            return VerificationResult(
+                score=count_score,
+                passed=False,
+                rubric=rubric,
+                constraint_name=self.name,
+                constraint_type=self.constraint_type,
+                details={
+                    "group_size": self.group_size,
+                    "min_groups": self.min_groups,
+                    "actual_sizes": [],
+                    "chunked_single_block": chunked_single_block,
+                },
+            )
+
+        tail_sizes = set(self.allowed_tail_sizes)
+        for index, actual in enumerate(actual_sizes):
+            is_last = index == len(actual_sizes) - 1
+            last_group_ok = is_last and actual in tail_sizes
+            passed = actual == self.group_size or last_group_ok
+
+            if passed:
+                score = 1.0
+            else:
+                valid_targets = [self.group_size, *self.allowed_tail_sizes]
+                diff = min(abs(actual - target) for target in valid_targets)
+                score = math.exp(-0.5 * (diff / self.sigma) ** 2)
+
+            if is_last and tail_sizes:
+                expected = f"{self.group_size} or tail {sorted(tail_sizes)}"
+            else:
+                expected = str(self.group_size)
+
+            rubric.append(
+                RubricItem(
+                    criterion=f"Group {index + 1} size",
+                    expected=expected,
+                    actual=str(actual),
+                    score=score,
+                    passed=passed,
+                )
+            )
+            scores.append(score)
+
+        overall_score = sum(scores) / len(scores) if scores else 0.0
+        overall_passed = all(item.passed for item in rubric)
+
+        return VerificationResult(
+            score=overall_score,
+            passed=overall_passed,
+            rubric=rubric,
+            constraint_name=self.name,
+            constraint_type=self.constraint_type,
+            details={
+                "group_size": self.group_size,
+                "min_groups": self.min_groups,
+                "actual_sizes": actual_sizes,
+                "allowed_tail_sizes": list(self.allowed_tail_sizes),
+                "chunked_single_block": chunked_single_block,
+            },
+        )
+
+    def _infer_group_sizes(self, structure: PoemStructure) -> tuple[list[int], bool]:
+        if structure.stanza_count > 1 or not self.allow_single_block_chunking:
+            return list(structure.stanza_sizes), False
+
+        full_groups, remainder = divmod(structure.line_count, self.group_size)
+        sizes = [self.group_size] * full_groups
+        if remainder:
+            sizes.append(remainder)
+        return sizes, True
+
+    def describe(self) -> str:
+        desc = f"Has at least {self.min_groups} groups of {self.group_size} lines"
+        if self.allowed_tail_sizes:
+            tails = ", ".join(str(size) for size in self.allowed_tail_sizes)
+            desc += f", with an optional final tail of {tails} lines"
+        return desc
+
+    def instruction(self) -> str:
+        desc = (
+            f"Organize the poem into at least {self.min_groups} groups of {self.group_size} lines"
+        )
+        if self.allowed_tail_sizes:
+            tails = " or ".join(str(size) for size in self.allowed_tail_sizes)
+            desc += f", optionally ending with a final group of {tails} lines"
+        return desc + "."
+
+
 class SyllablesPerLine(Constraint):
     """
     Constraint on syllable count for each line.

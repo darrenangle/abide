@@ -29,6 +29,26 @@ if TYPE_CHECKING:
     from abide.primitives import PoemStructure
 
 
+def _normalize_similarity_line(line: str) -> str:
+    """Normalize text for fuzzy line comparison."""
+    line = line.lower().strip()
+    line = re.sub(r"[^\w\s']", "", line)
+    return " ".join(line.split())
+
+
+def _line_similarity(line1: str, line2: str) -> float:
+    """Compute similarity between two lines."""
+    normalized_1 = _normalize_similarity_line(line1)
+    normalized_2 = _normalize_similarity_line(line2)
+
+    if normalized_1 == normalized_2:
+        return 1.0
+
+    lev_sim = normalized_levenshtein(normalized_1, normalized_2)
+    jw_sim = jaro_winkler_similarity(normalized_1, normalized_2)
+    return (lev_sim + jw_sim) / 2
+
+
 class RhymeScheme(Constraint):
     """
     Constraint on end-rhyme pattern.
@@ -349,7 +369,7 @@ class Refrain(Constraint):
             )
 
         reference = structure.lines[self.reference_line]
-        reference_normalized = self._normalize_line(reference)
+        reference_normalized = _normalize_similarity_line(reference)
 
         for pos in self.repeat_at:
             if pos >= len(structure.lines):
@@ -366,16 +386,13 @@ class Refrain(Constraint):
                 continue
 
             repeat = structure.lines[pos]
-            repeat_normalized = self._normalize_line(repeat)
+            repeat_normalized = _normalize_similarity_line(repeat)
 
             # Exact match
             if reference_normalized == repeat_normalized:
                 score = 1.0
             else:
-                # Fuzzy match using combination of metrics
-                lev_sim = normalized_levenshtein(reference_normalized, repeat_normalized)
-                jw_sim = jaro_winkler_similarity(reference_normalized, repeat_normalized)
-                score = (lev_sim + jw_sim) / 2
+                score = _line_similarity(reference, repeat)
 
             passed = score >= self.threshold
             rubric.append(
@@ -412,14 +429,6 @@ class Refrain(Constraint):
             constraint_type=self.constraint_type,
         )
 
-    def _normalize_line(self, line: str) -> str:
-        """Normalize line for comparison (lowercase, strip punctuation)."""
-        line = line.lower().strip()
-        # Remove punctuation but keep apostrophes in contractions
-        line = re.sub(r"[^\w\s']", "", line)
-        line = " ".join(line.split())
-        return line
-
     def describe(self) -> str:
         positions = ", ".join(str(p + 1) for p in self.repeat_at)
         return f"Line {self.reference_line + 1} repeats at lines {positions}"
@@ -428,6 +437,293 @@ class Refrain(Constraint):
         """Plain English instruction for LLM prompts."""
         positions = ", ".join(str(p + 1) for p in self.repeat_at)
         return f"Line {self.reference_line + 1} must be repeated exactly (as a refrain) at lines {positions}."
+
+
+class LinePairSimilarity(Constraint):
+    """
+    Constraint that specific line pairs should match closely.
+
+    Useful for interlocking forms where repeated lines appear in different
+    positions across stanzas.
+    """
+
+    name = "Line Pair Similarity"
+    constraint_type = ConstraintType.RELATIONAL
+
+    def __init__(
+        self,
+        line_pairs: Sequence[tuple[int, int]],
+        *,
+        weight: float = 1.0,
+        threshold: float = 0.9,
+    ) -> None:
+        super().__init__(weight)
+        self.line_pairs = tuple(line_pairs)
+        self.threshold = threshold
+
+    def verify(self, poem: str | PoemStructure) -> VerificationResult:
+        structure = self._ensure_structure(poem)
+
+        if not self.line_pairs:
+            return VerificationResult(
+                score=1.0,
+                passed=True,
+                rubric=[],
+                constraint_name=self.name,
+                constraint_type=self.constraint_type,
+                details={"line_pairs": []},
+            )
+
+        rubric: list[RubricItem] = []
+        scores: list[float] = []
+
+        for reference_line, repeat_line in self.line_pairs:
+            if reference_line >= len(structure.lines) or repeat_line >= len(structure.lines):
+                rubric.append(
+                    RubricItem(
+                        criterion=f"Line {reference_line + 1} matches line {repeat_line + 1}",
+                        expected="both lines exist",
+                        actual=f"{len(structure.lines)} total line(s)",
+                        score=0.0,
+                        passed=False,
+                    )
+                )
+                scores.append(0.0)
+                continue
+
+            reference = structure.lines[reference_line]
+            repeat = structure.lines[repeat_line]
+            score = _line_similarity(reference, repeat)
+            passed = score >= self.threshold
+
+            rubric.append(
+                RubricItem(
+                    criterion=f"Line {reference_line + 1} matches line {repeat_line + 1}",
+                    expected=f"similarity >= {self.threshold}",
+                    actual=f"{score:.2f}",
+                    score=score,
+                    passed=passed,
+                )
+            )
+            scores.append(score)
+
+        overall_score = sum(scores) / len(scores) if scores else 0.0
+        overall_passed = all(item.passed for item in rubric)
+
+        return VerificationResult(
+            score=overall_score,
+            passed=overall_passed,
+            rubric=rubric,
+            constraint_name=self.name,
+            constraint_type=self.constraint_type,
+            details={"line_pairs": [list(pair) for pair in self.line_pairs]},
+        )
+
+    def describe(self) -> str:
+        return f"Has {len(self.line_pairs)} required matching line pair(s)"
+
+
+class OpeningPhraseRefrain(Constraint):
+    """
+    Constraint that the opening phrase of a reference line repeats later.
+
+    This models abbreviated refrains like the rondeau's rentrement.
+    """
+
+    name = "Opening Phrase Refrain"
+    constraint_type = ConstraintType.RELATIONAL
+
+    def __init__(
+        self,
+        reference_line: int,
+        repeat_at: Sequence[int],
+        *,
+        num_words: int = 4,
+        min_words: int = 2,
+        weight: float = 1.0,
+        threshold: float = 0.8,
+    ) -> None:
+        super().__init__(weight)
+        self.reference_line = reference_line
+        self.repeat_at = tuple(repeat_at)
+        self.num_words = num_words
+        self.min_words = min_words
+        self.threshold = threshold
+
+    def verify(self, poem: str | PoemStructure) -> VerificationResult:
+        structure = self._ensure_structure(poem)
+
+        if self.reference_line >= len(structure.lines):
+            return VerificationResult(
+                score=0.0,
+                passed=False,
+                rubric=[
+                    RubricItem(
+                        criterion="Reference line exists",
+                        expected=f"line {self.reference_line + 1}",
+                        actual=f"only {len(structure.lines)} lines",
+                        score=0.0,
+                        passed=False,
+                    )
+                ],
+                constraint_name=self.name,
+                constraint_type=self.constraint_type,
+            )
+
+        reference = structure.lines[self.reference_line]
+        phrase = self._extract_opening_phrase(reference)
+        normalized_phrase = _normalize_similarity_line(phrase)
+
+        rubric: list[RubricItem] = []
+        scores: list[float] = []
+
+        for pos in self.repeat_at:
+            if pos >= len(structure.lines):
+                rubric.append(
+                    RubricItem(
+                        criterion=f"Opening phrase returns at line {pos + 1}",
+                        expected=phrase,
+                        actual="(line missing)",
+                        score=0.0,
+                        passed=False,
+                    )
+                )
+                scores.append(0.0)
+                continue
+
+            repeat = structure.lines[pos]
+            normalized_repeat = _normalize_similarity_line(repeat)
+
+            if normalized_phrase and normalized_phrase in normalized_repeat:
+                score = 1.0
+            else:
+                score = _line_similarity(phrase, repeat)
+
+            passed = score >= self.threshold
+            rubric.append(
+                RubricItem(
+                    criterion=f"Opening phrase returns at line {pos + 1}",
+                    expected=phrase,
+                    actual=repeat[:40] + "..." if len(repeat) > 40 else repeat,
+                    score=score,
+                    passed=passed,
+                )
+            )
+            scores.append(score)
+
+        overall_score = sum(scores) / len(scores) if scores else 0.0
+        overall_passed = all(item.passed for item in rubric)
+
+        return VerificationResult(
+            score=overall_score,
+            passed=overall_passed,
+            rubric=rubric,
+            constraint_name=self.name,
+            constraint_type=self.constraint_type,
+            details={"phrase": phrase, "repeat_at": list(self.repeat_at)},
+        )
+
+    def _extract_opening_phrase(self, line: str) -> str:
+        words = line.split()
+        if len(words) >= self.num_words:
+            return " ".join(words[: self.num_words])
+        if len(words) >= self.min_words:
+            return " ".join(words[: self.min_words])
+        return line.strip()
+
+    def describe(self) -> str:
+        positions = ", ".join(str(pos + 1) for pos in self.repeat_at)
+        return (
+            f"The opening phrase from line {self.reference_line + 1} repeats at lines {positions}"
+        )
+
+
+class EndRhymePairs(Constraint):
+    """
+    Constraint that specific line pairs should rhyme by their end words.
+    """
+
+    name = "End Rhyme Pairs"
+    constraint_type = ConstraintType.RELATIONAL
+
+    def __init__(
+        self,
+        line_pairs: Sequence[tuple[int, int]],
+        *,
+        weight: float = 1.0,
+        threshold: float = 0.7,
+        allow_identical: bool = False,
+    ) -> None:
+        super().__init__(weight)
+        self.line_pairs = tuple(line_pairs)
+        self.threshold = threshold
+        self.allow_identical = allow_identical
+
+    def verify(self, poem: str | PoemStructure) -> VerificationResult:
+        structure = self._ensure_structure(poem)
+        end_words = extract_end_words(structure)
+
+        if not self.line_pairs:
+            return VerificationResult(
+                score=1.0,
+                passed=True,
+                rubric=[],
+                constraint_name=self.name,
+                constraint_type=self.constraint_type,
+                details={"line_pairs": []},
+            )
+
+        rubric: list[RubricItem] = []
+        scores: list[float] = []
+
+        for line_a, line_b in self.line_pairs:
+            if line_a >= len(end_words) or line_b >= len(end_words):
+                rubric.append(
+                    RubricItem(
+                        criterion=f"Line {line_a + 1} rhymes with line {line_b + 1}",
+                        expected="both lines exist",
+                        actual=f"{len(end_words)} total line(s)",
+                        score=0.0,
+                        passed=False,
+                    )
+                )
+                scores.append(0.0)
+                continue
+
+            word_a = end_words[line_a]
+            word_b = end_words[line_b]
+            if word_a.lower() == word_b.lower():
+                raw_score = 1.0 if self.allow_identical else 0.5
+                passed = self.allow_identical and raw_score >= self.threshold
+            else:
+                raw_score = rhyme_score(word_a, word_b)
+                passed = raw_score >= self.threshold
+
+            rubric.append(
+                RubricItem(
+                    criterion=f"Line {line_a + 1} rhymes with line {line_b + 1}",
+                    expected=f"rhyme >= {self.threshold}",
+                    actual=f"'{word_a}' / '{word_b}' = {raw_score:.2f}",
+                    score=raw_score,
+                    passed=passed,
+                )
+            )
+            scores.append(raw_score)
+
+        overall_score = sum(scores) / len(scores) if scores else 0.0
+        overall_passed = all(item.passed for item in rubric)
+
+        return VerificationResult(
+            score=overall_score,
+            passed=overall_passed,
+            rubric=rubric,
+            constraint_name=self.name,
+            constraint_type=self.constraint_type,
+            details={"line_pairs": [list(pair) for pair in self.line_pairs]},
+        )
+
+    def describe(self) -> str:
+        return f"Has {len(self.line_pairs)} required end-rhyme pair(s)"
 
 
 class EndWordPattern(Constraint):

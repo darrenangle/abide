@@ -1,6 +1,7 @@
 """Tests for structural constraints."""
 
 from abide.constraints import (
+    GroupedStanzas,
     LineCount,
     NumericBound,
     StanzaCount,
@@ -237,6 +238,32 @@ class TestSyllablesPerLine:
         constraint = SyllablesPerLine([5, 7, 5])
         desc = constraint.describe()
         assert "5" in desc or "syllable" in desc.lower()
+
+
+class TestGroupedStanzas:
+    """Tests for GroupedStanzas constraint."""
+
+    def test_explicit_stanzas_pass(self) -> None:
+        poem = "L1\nL2\nL3\n\nL4\nL5\nL6"
+        constraint = GroupedStanzas(3, min_groups=2, allow_single_block_chunking=False)
+        result = constraint.verify(poem)
+        assert result.passed is True
+        assert result.details["actual_sizes"] == [3, 3]
+
+    def test_single_block_can_be_chunked(self) -> None:
+        poem = "\n".join([f"L{i}" for i in range(1, 11)])
+        constraint = GroupedStanzas(3, min_groups=3, allowed_tail_sizes=(1,))
+        result = constraint.verify(poem)
+        assert result.passed is True
+        assert result.details["actual_sizes"] == [3, 3, 3, 1]
+        assert result.details["chunked_single_block"] is True
+
+    def test_wrong_group_size_fails(self) -> None:
+        poem = "L1\nL2\nL3\n\nL4\nL5"
+        constraint = GroupedStanzas(3, min_groups=2, allow_single_block_chunking=False)
+        result = constraint.verify(poem)
+        assert result.passed is False
+        assert result.score < 1.0
 
 
 class TestTotalSyllables:

@@ -3,7 +3,10 @@
 from abide.constraints import (
     Acrostic,
     EndRhymeDensity,
+    EndRhymePairs,
     EndWordPattern,
+    LinePairSimilarity,
+    OpeningPhraseRefrain,
     Refrain,
     RhymeScheme,
 )
@@ -191,6 +194,60 @@ class TestRefrain:
         desc = constraint.describe()
         assert "1" in desc  # 1-indexed reference
         assert "6" in desc or "12" in desc or "18" in desc
+
+
+class TestLinePairSimilarity:
+    """Tests for LinePairSimilarity constraint."""
+
+    def test_exact_pair_passes(self) -> None:
+        poem = "Soft rain on the roof\nSmall lanterns in the lane\nSoft rain on the roof"
+        constraint = LinePairSimilarity([(0, 2)], threshold=0.9)
+        result = constraint.verify(poem)
+        assert result.passed is True
+        assert result.score == 1.0
+
+    def test_missing_line_fails(self) -> None:
+        poem = "Soft rain on the roof"
+        constraint = LinePairSimilarity([(0, 2)], threshold=0.9)
+        result = constraint.verify(poem)
+        assert result.passed is False
+        assert result.score == 0.0
+
+
+class TestOpeningPhraseRefrain:
+    """Tests for OpeningPhraseRefrain constraint."""
+
+    def test_opening_phrase_can_recur_as_short_refrain(self) -> None:
+        poem = "\n".join(
+            [
+                "In Flanders fields the poppies blow",
+                "Between the crosses row on row",
+                "We remember what the dead all know",
+                "In Flanders fields",
+            ]
+        )
+        constraint = OpeningPhraseRefrain(reference_line=0, repeat_at=[3], threshold=0.8)
+        result = constraint.verify(poem)
+        assert result.passed is True
+        assert result.score >= 0.85
+
+
+class TestEndRhymePairs:
+    """Tests for EndRhymePairs constraint."""
+
+    def test_expected_rhyme_pairs_pass(self) -> None:
+        poem = "The road grows dim at night\nA lantern wakes to light"
+        constraint = EndRhymePairs([(0, 1)], threshold=0.8)
+        result = constraint.verify(poem)
+        assert result.passed is True
+        assert result.score >= 0.8
+
+    def test_identical_words_do_not_pass_without_allow_identical(self) -> None:
+        poem = "The cat\nThe cat"
+        constraint = EndRhymePairs([(0, 1)], threshold=0.5, allow_identical=False)
+        result = constraint.verify(poem)
+        assert result.passed is False
+        assert result.score == 0.5
 
 
 class TestEndRhymeDensity:
