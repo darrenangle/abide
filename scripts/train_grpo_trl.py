@@ -36,6 +36,8 @@ from typing import TYPE_CHECKING, Any
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent))
 
+from abide.forms.catalog import TRAINING_SAFE_FORM_NAMES, load_form_instances
+
 if TYPE_CHECKING:
     from datasets import Dataset
 
@@ -86,75 +88,7 @@ class TrainingArgs:
 
 def get_forms() -> dict[str, object]:
     """Load all training forms from abide.forms."""
-    import abide.forms as forms_module
-
-    all_forms = {}
-    for name in forms_module.__all__:
-        try:
-            form_class = getattr(forms_module, name)
-            try:
-                all_forms[name] = form_class()
-            except TypeError:
-                # Handle forms that need specific params
-                if name == "StaircasePoem" or name == "DescendingStaircasePoem":
-                    all_forms[name] = form_class(num_words=7)
-                elif name == "VowelBudgetPoem":
-                    all_forms[name] = form_class(vowel_count=30)
-                elif name == "PrecisionVerse":
-                    all_forms[name] = form_class(chars_per_line=25)
-                elif name == "ExactWordPoem":
-                    all_forms[name] = form_class(word_count=20)
-                elif name == "CharacterBudgetPoem":
-                    all_forms[name] = form_class(character="e", count=10)
-                elif name == "TotalCharacterPoem":
-                    all_forms[name] = form_class(total_chars=100)
-                elif name == "FibonacciVerse":
-                    all_forms[name] = form_class(num_lines=5)
-                elif name == "TriangularVerse":
-                    all_forms[name] = form_class(num_lines=4)
-                elif name == "PiKu":
-                    all_forms[name] = form_class(num_lines=5)
-                elif name == "PrecisionHaiku":
-                    all_forms[name] = form_class(chars_per_line=17)
-                elif name == "ArithmeticVerse":
-                    all_forms[name] = form_class(start=2, diff=2, num_lines=5)
-                elif name == "PositionalPoem":
-                    all_forms[name] = form_class(positions=[1, 2, 3])
-                elif name == "IsolatedCouplet":
-                    all_forms[name] = form_class(position=3)
-                elif name == "AlternatingIsolation":
-                    all_forms[name] = form_class(num_lines=6)
-                elif name == "DoubleAcrosticPoem":
-                    all_forms[name] = form_class(word="POETRY")
-                elif name == "CombinedChallenge":
-                    all_forms[name] = form_class(num_lines=4)
-                elif name == "Lipogram":
-                    all_forms[name] = form_class(forbidden="e")
-                elif name == "Univocalic":
-                    all_forms[name] = form_class(vowel="a")
-                elif name == "Mesostic":
-                    all_forms[name] = form_class(spine="POEM")
-                elif name == "Anaphora":
-                    all_forms[name] = form_class(phrase="I am", num_lines=4)
-                elif name == "ModularVerse":
-                    all_forms[name] = form_class(modulus=3, num_lines=6)
-                elif name == "CoprimeVerse":
-                    all_forms[name] = form_class(base=6, num_lines=4)
-                elif name == "SquareStanzas":
-                    all_forms[name] = form_class(size=4)
-                elif name == "SelfReferential":
-                    all_forms[name] = form_class(num_lines=4)
-                elif name == "GoldenRatioVerse":
-                    all_forms[name] = form_class(num_lines=6)
-                elif name == "PythagoreanTercet":
-                    all_forms[name] = form_class(scale=2)
-                else:
-                    continue
-        except Exception as e:
-            print(f"  Error loading {name}: {e}")
-            continue
-
-    return all_forms
+    return load_form_instances()
 
 
 def extract_text_recursive(obj) -> str:
@@ -352,20 +286,37 @@ def create_reward_function(forms: dict[str, object]):
 def create_dataset(args: TrainingArgs, forms: dict[str, object]) -> Dataset:
     """Create training dataset using prompt generator."""
     from datasets import Dataset
-    from prompt_generator import generate_learnable_forms_verifiers_dataset
+    from prompt_generator import (
+        generate_learnable_forms_verifiers_dataset,
+        generate_traditional_verifiers_dataset,
+        generate_training_safe_verifiers_dataset,
+        generate_verifiers_dataset,
+        resolve_form_selection_mode,
+    )
 
-    use_learnable = os.environ.get("ABIDE_LEARNABLE", "").lower() in ("1", "true", "yes")
+    form_mode = resolve_form_selection_mode()
 
-    if use_learnable:
+    if form_mode == "learnable":
         print("Using LEARNABLE forms only (top 10 with highest GRPO signal)")
         raw_dataset = generate_learnable_forms_verifiers_dataset(
             num_prompts=args.num_prompts,
             seed=args.seed,
         )
+    elif form_mode == "traditional":
+        print("Using TRADITIONAL forms only")
+        raw_dataset = generate_traditional_verifiers_dataset(
+            num_prompts=args.num_prompts,
+            seed=args.seed,
+        )
+    elif form_mode == "all":
+        print("Using ALL instantiable forms")
+        raw_dataset = generate_verifiers_dataset(
+            num_prompts=args.num_prompts,
+            seed=args.seed,
+        )
     else:
-        # Default to learnable forms for TRL experiments
-        print("Defaulting to LEARNABLE forms for TRL experiment")
-        raw_dataset = generate_learnable_forms_verifiers_dataset(
+        print("Defaulting to TRAINING-SAFE forms for TRL experiment")
+        raw_dataset = generate_training_safe_verifiers_dataset(
             num_prompts=args.num_prompts,
             seed=args.seed,
         )
@@ -453,7 +404,13 @@ def main():
     print("=" * 60)
 
     # Load forms
-    forms = get_forms()
+    from prompt_generator import resolve_form_selection_mode
+
+    form_mode = resolve_form_selection_mode()
+    if form_mode == "training_safe":
+        forms = load_form_instances(list(TRAINING_SAFE_FORM_NAMES), training_profile=True)
+    else:
+        forms = get_forms()
     print(f"Loaded {len(forms)} forms")
 
     # Create dataset

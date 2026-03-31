@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import random
 import sys
 from pathlib import Path
@@ -780,6 +781,8 @@ LEARNABLE_FORMS = [
     "Terzanelle",  # signal=0.191, mean=0.46, within_std=0.19
 ]
 
+SUPPORTED_FORM_SETS = {"all", "traditional", "learnable", "training_safe"}
+
 
 def get_form_tier(form_name: str) -> int:
     """Get the tier of a form (1, 2, 3, or 0 for excluded)."""
@@ -792,6 +795,22 @@ def get_form_tier(form_name: str) -> int:
     return 0
 
 
+def resolve_form_selection_mode() -> str:
+    """Resolve which form set training scripts should use."""
+    explicit = os.environ.get("ABIDE_FORM_SET", "").strip().lower()
+    if explicit:
+        if explicit not in SUPPORTED_FORM_SETS:
+            valid = ", ".join(sorted(SUPPORTED_FORM_SETS))
+            raise ValueError(f"Unsupported ABIDE_FORM_SET={explicit!r}. Expected one of: {valid}")
+        return explicit
+
+    if os.environ.get("ABIDE_LEARNABLE", "").lower() in ("1", "true", "yes"):
+        return "learnable"
+    if os.environ.get("ABIDE_TRADITIONAL", "").lower() in ("1", "true", "yes"):
+        return "traditional"
+    return "training_safe"
+
+
 # =============================================================================
 # FORMS
 # =============================================================================
@@ -801,77 +820,17 @@ def get_forms() -> dict[str, object]:
     """Load ALL training forms from abide.forms."""
     # Add src to path
     sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+    from abide.forms.catalog import load_form_instances
 
-    import abide.forms as forms_module
+    return load_form_instances()
 
-    all_forms = {}
-    for name in forms_module.__all__:
-        try:
-            form_class = getattr(forms_module, name)
-            # Try to instantiate with no args first
-            try:
-                all_forms[name] = form_class()
-            except TypeError:
-                # Some forms need specific params - use sensible defaults
-                if name == "StaircasePoem" or name == "DescendingStaircasePoem":
-                    all_forms[name] = form_class(num_words=7)
-                elif name == "VowelBudgetPoem":
-                    all_forms[name] = form_class(vowel_count=30)
-                elif name == "PrecisionVerse":
-                    all_forms[name] = form_class(chars_per_line=25)
-                elif name == "ExactWordPoem":
-                    all_forms[name] = form_class(word_count=20)
-                elif name == "CharacterBudgetPoem":
-                    all_forms[name] = form_class(character="e", count=10)
-                elif name == "TotalCharacterPoem":
-                    all_forms[name] = form_class(total_chars=100)
-                elif name == "FibonacciVerse":
-                    all_forms[name] = form_class(num_lines=5)
-                elif name == "TriangularVerse":
-                    all_forms[name] = form_class(num_lines=4)
-                elif name == "PiKu":
-                    all_forms[name] = form_class(num_lines=5)
-                elif name == "PrecisionHaiku":
-                    all_forms[name] = form_class(chars_per_line=17)
-                elif name == "ArithmeticVerse":
-                    all_forms[name] = form_class(start=2, diff=2, num_lines=5)
-                elif name == "PositionalPoem":
-                    all_forms[name] = form_class(positions=[1, 2, 3])
-                elif name == "IsolatedCouplet":
-                    all_forms[name] = form_class(position=3)
-                elif name == "AlternatingIsolation":
-                    all_forms[name] = form_class(num_lines=6)
-                elif name == "DoubleAcrosticPoem":
-                    all_forms[name] = form_class(word="POETRY")
-                elif name == "CombinedChallenge":
-                    all_forms[name] = form_class(num_lines=4)
-                elif name == "Lipogram":
-                    all_forms[name] = form_class(forbidden="e")
-                elif name == "Univocalic":
-                    all_forms[name] = form_class(vowel="a")
-                elif name == "Mesostic":
-                    all_forms[name] = form_class(spine="POEM")
-                elif name == "Anaphora":
-                    all_forms[name] = form_class(phrase="I am", num_lines=4)
-                elif name == "ModularVerse":
-                    all_forms[name] = form_class(modulus=3, num_lines=6)
-                elif name == "CoprimeVerse":
-                    all_forms[name] = form_class(base=6, num_lines=4)
-                elif name == "SquareStanzas":
-                    all_forms[name] = form_class(size=4)
-                elif name == "SelfReferential":
-                    all_forms[name] = form_class(num_lines=4)
-                elif name == "GoldenRatioVerse":
-                    all_forms[name] = form_class(num_lines=6)
-                elif name == "PythagoreanTercet":
-                    all_forms[name] = form_class(scale=2)
-                else:
-                    # Skip forms we can't instantiate
-                    continue
-        except Exception:
-            continue
 
-    return all_forms
+def get_training_safe_forms() -> dict[str, object]:
+    """Load only the conservative training-safe subset."""
+    sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+    from abide.forms.catalog import load_training_safe_form_instances
+
+    return load_training_safe_form_instances()
 
 
 # =============================================================================
@@ -1252,28 +1211,23 @@ def get_learnable_forms() -> dict[str, object]:
     return {name: form for name, form in all_forms.items() if name in LEARNABLE_FORMS}
 
 
-def generate_learnable_forms_dataset(
-    num_prompts: int = 10000,
-    seed: int = 42,
+def _generate_balanced_forms_dataset(
+    forms: dict[str, object],
+    *,
+    num_prompts: int,
+    seed: int,
+    label: str,
 ) -> list[dict]:
-    """Generate dataset with only the top 10 learnable forms.
-
-    These forms have high within-rollout variance, making them ideal for GRPO:
-    - within_prompt_std > 0.1 (model shows variance on same prompt)
-    - 0.2 < mean_reward < 0.8 (not too easy or too hard)
-
-    Forms are sampled uniformly (equal weight) to maximize learning signal.
-    """
+    """Generate a balanced dataset across the supplied forms."""
     rng = random.Random(seed)
 
-    forms = get_learnable_forms()
     if not forms:
-        raise ValueError("No learnable forms found. Check LEARNABLE_FORMS list.")
+        raise ValueError(f"No {label.lower()} forms found.")
 
     form_names = list(forms.keys())
     all_topics = get_all_topics(seed)
 
-    print(f"  Learnable forms: {len(forms)}")
+    print(f"  {label}: {len(forms)}")
     for name in form_names:
         print(f"    - {name}")
     print(f"  Topics: {len(all_topics)}")
@@ -1281,9 +1235,8 @@ def generate_learnable_forms_dataset(
 
     dataset = []
     seen_keys = set()
-    form_counts = {name: 0 for name in form_names}
+    form_counts = dict.fromkeys(form_names, 0)
 
-    # Ensure balanced distribution across forms
     prompts_per_form = num_prompts // len(form_names)
     remainder = num_prompts % len(form_names)
 
@@ -1297,14 +1250,10 @@ def generate_learnable_forms_dataset(
         while form_counts[form_name] < target_count and attempts < max_attempts:
             attempts += 1
 
-            # Select topic
             topic = rng.choice(all_topics)
-
-            # Style selection - keep it simple for focused training
             tone = rng.choice(TONES) if rng.random() < 0.6 else None
             perspective = rng.choice(PERSPECTIVES) if rng.random() < 0.25 else None
 
-            # Check uniqueness
             key = generate_unique_prompt_key(form_name, topic, tone, perspective, None, None, None)
 
             if key in seen_keys:
@@ -1334,16 +1283,56 @@ def generate_learnable_forms_dataset(
 
             form_counts[form_name] += 1
 
-    # Log distribution
     print(f"\nForm distribution ({len(dataset)} prompts):")
     for name in form_names:
         pct = 100 * form_counts[name] / len(dataset) if dataset else 0
         print(f"  {name}: {form_counts[name]} ({pct:.1f}%)")
 
-    # Shuffle the dataset
     rng.shuffle(dataset)
-
     return dataset
+
+
+def generate_training_safe_dataset(
+    num_prompts: int = 50000,
+    seed: int = 42,
+) -> list[dict]:
+    """Generate a balanced dataset over the trusted training-safe subset."""
+    forms = get_training_safe_forms()
+    return _generate_balanced_forms_dataset(
+        forms,
+        num_prompts=num_prompts,
+        seed=seed,
+        label="Training-safe forms",
+    )
+
+
+def generate_training_safe_verifiers_dataset(num_prompts: int = 50000, seed: int = 42):
+    """Generate training-safe dataset in verifiers-compatible format."""
+    from datasets import Dataset
+
+    data = generate_training_safe_dataset(num_prompts=num_prompts, seed=seed)
+    return Dataset.from_list(data)
+
+
+def generate_learnable_forms_dataset(
+    num_prompts: int = 10000,
+    seed: int = 42,
+) -> list[dict]:
+    """Generate dataset with only the top 10 learnable forms.
+
+    These forms have high within-rollout variance, making them ideal for GRPO:
+    - within_prompt_std > 0.1 (model shows variance on same prompt)
+    - 0.2 < mean_reward < 0.8 (not too easy or too hard)
+
+    Forms are sampled uniformly (equal weight) to maximize learning signal.
+    """
+    forms = get_learnable_forms()
+    return _generate_balanced_forms_dataset(
+        forms,
+        num_prompts=num_prompts,
+        seed=seed,
+        label="Learnable forms",
+    )
 
 
 def generate_learnable_forms_verifiers_dataset(num_prompts: int = 10000, seed: int = 42):

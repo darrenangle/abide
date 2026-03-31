@@ -44,3 +44,11 @@
 - Added `GroupedStanzas`, `LinePairSimilarity`, `OpeningPhraseRefrain`, and `EndRhymePairs` coverage plus new high-score near-miss regressions for the migrated form families.
 - Verified the RF-009 sweep with `uv run pytest` -> `508 passed, 1 skipped`, `uv run ruff check src/abide tests/...` -> clean, and `uv run mypy src/abide` -> clean.
 - Closed `RF-009` and released its lock.
+- Opened `RF-010` to split the repo into a conservative training-safe subset versus best-effort and experimental forms.
+- Started centralizing form loading/defaults so prompt generation and reward lookup stop maintaining their own parallel instantiation rules.
+- Started a generated adversarial harness keyed off the training-safe subset so trusted forms must keep passing their positive fixtures and failing a canonical single-property mutation.
+- Added `src/abide/forms/catalog.py` as the shared source of truth for support tiers, instantiation defaults, and the conservative training-safe subset used by RL scripts.
+- Switched prompt generation plus both GRPO entrypoints to default to `training_safe` forms while keeping explicit opt-ins for `all`, `traditional`, `learnable`, and single-form runs.
+- Added catalog/integration tests and a mutation-based adversarial harness for the trusted subset; the harness demoted `Ghazal` out of `training_safe` because a broken-radif near miss still reported `passed=True`.
+- Verified the full repository after the RF-010 sweep: `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, `uv run pytest` -> `528 passed, 1 skipped`.
+- Closed `RF-010` and released its lock.

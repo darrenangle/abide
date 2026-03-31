@@ -48,6 +48,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import re
 
+from abide.forms.catalog import TRAINING_SAFE_FORM_NAMES, load_form_instances
+
 # Model paths
 BAGUETTOTRON_PATH = "/home/darren/10k-poems/models/baguettotron_sft/final"
 DEEPSEEK_R1_PATH = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
@@ -159,80 +161,13 @@ class BestModelTracker:
         return None
 
 
-def get_forms() -> dict[str, object]:
-    """Load ALL training forms from abide.forms."""
-    import abide.forms as forms_module
-
-    all_forms = {}
-    for name in forms_module.__all__:
-        try:
-            form_class = getattr(forms_module, name)
-            # Try to instantiate with no args first
-            try:
-                all_forms[name] = form_class()
-            except TypeError:
-                # Some forms need specific params - use sensible defaults
-                if name == "StaircasePoem" or name == "DescendingStaircasePoem":
-                    all_forms[name] = form_class(num_words=7)
-                elif name == "VowelBudgetPoem":
-                    all_forms[name] = form_class(vowel_count=30)
-                elif name == "PrecisionVerse":
-                    all_forms[name] = form_class(chars_per_line=25)
-                elif name == "ExactWordPoem":
-                    all_forms[name] = form_class(word_count=20)
-                elif name == "CharacterBudgetPoem":
-                    all_forms[name] = form_class(character="e", count=10)
-                elif name == "TotalCharacterPoem":
-                    all_forms[name] = form_class(total_chars=100)
-                elif name == "FibonacciVerse":
-                    all_forms[name] = form_class(num_lines=5)
-                elif name == "TriangularVerse":
-                    all_forms[name] = form_class(num_lines=4)
-                elif name == "PiKu":
-                    all_forms[name] = form_class(num_lines=5)
-                elif name == "PrecisionHaiku":
-                    all_forms[name] = form_class(chars_per_line=17)
-                elif name == "ArithmeticVerse":
-                    all_forms[name] = form_class(start=2, diff=2, num_lines=5)
-                elif name == "PositionalPoem":
-                    all_forms[name] = form_class(positions=[1, 2, 3])
-                elif name == "IsolatedCouplet":
-                    all_forms[name] = form_class(position=3)
-                elif name == "AlternatingIsolation":
-                    all_forms[name] = form_class(num_lines=6)
-                elif name == "DoubleAcrosticPoem":
-                    all_forms[name] = form_class(word="POETRY")
-                elif name == "CombinedChallenge":
-                    all_forms[name] = form_class(num_lines=4)
-                elif name == "Lipogram":
-                    all_forms[name] = form_class(forbidden="e")
-                elif name == "Univocalic":
-                    all_forms[name] = form_class(vowel="a")
-                elif name == "Mesostic":
-                    all_forms[name] = form_class(spine="POEM")
-                elif name == "Anaphora":
-                    all_forms[name] = form_class(phrase="I am", num_lines=4)
-                elif name == "ModularVerse":
-                    all_forms[name] = form_class(modulus=3, num_lines=6)
-                elif name == "CoprimeVerse":
-                    all_forms[name] = form_class(base=6, num_lines=4)
-                elif name == "SquareStanzas":
-                    all_forms[name] = form_class(size=4)
-                elif name == "SelfReferential":
-                    all_forms[name] = form_class(num_lines=4)
-                elif name == "GoldenRatioVerse":
-                    all_forms[name] = form_class(num_lines=6)
-                elif name == "PythagoreanTercet":
-                    all_forms[name] = form_class(scale=2)
-                else:
-                    # Skip forms we can't instantiate
-                    print(f"  Skipping {name} (needs params)")
-                    continue
-        except Exception as e:
-            print(f"  Error loading {name}: {e}")
-            continue
-
-    return all_forms
+def get_forms(
+    form_names: list[str] | None = None,
+    *,
+    training_profile: bool = False,
+) -> dict[str, object]:
+    """Load training forms from the shared form catalog."""
+    return load_form_instances(form_names, training_profile=training_profile)
 
 
 def get_completion_text(completion, require_think_close: bool = True) -> str:
@@ -361,7 +296,9 @@ def create_environment(forms: dict[str, object], config: TrainingConfig):
         generate_learnable_forms_verifiers_dataset,
         generate_single_form_verifiers_dataset,
         generate_traditional_verifiers_dataset,
+        generate_training_safe_verifiers_dataset,
         generate_verifiers_dataset,
+        resolve_form_selection_mode,
     )
 
     import verifiers as vf
@@ -381,12 +318,7 @@ def create_environment(forms: dict[str, object], config: TrainingConfig):
 
     # Check for single-form ablation mode
     single_form = os.environ.get("ABIDE_SINGLE_FORM", "")
-
-    # Check if traditional mode requested via env var or config
-    use_traditional = os.environ.get("ABIDE_TRADITIONAL", "").lower() in ("1", "true", "yes")
-
-    # Check if learnable forms mode requested (forms with high within-rollout variance)
-    use_learnable = os.environ.get("ABIDE_LEARNABLE", "").lower() in ("1", "true", "yes")
+    form_mode = resolve_form_selection_mode()
 
     print(f"Generating {config.num_prompts} prompts...")
     if single_form:
@@ -396,20 +328,27 @@ def create_environment(forms: dict[str, object], config: TrainingConfig):
             num_prompts=config.num_prompts,
             seed=config.seed,
         )
-    elif use_learnable:
+    elif form_mode == "learnable":
         print("Using LEARNABLE forms only (top 10 with highest GRPO signal)")
         dataset = generate_learnable_forms_verifiers_dataset(
             num_prompts=config.num_prompts,
             seed=config.seed,
         )
-    elif use_traditional:
+    elif form_mode == "traditional":
         print("Using TRADITIONAL forms only (weighted sampling)")
         dataset = generate_traditional_verifiers_dataset(
             num_prompts=config.num_prompts,
             seed=config.seed,
         )
-    else:
+    elif form_mode == "all":
+        print("Using ALL instantiable forms")
         dataset = generate_verifiers_dataset(
+            num_prompts=config.num_prompts,
+            seed=config.seed,
+        )
+    else:
+        print("Using TRAINING-SAFE forms only (default)")
+        dataset = generate_training_safe_verifiers_dataset(
             num_prompts=config.num_prompts,
             seed=config.seed,
         )
@@ -484,7 +423,20 @@ def train_with_retry(config: TrainingConfig) -> int:
             print("Continuing without wandb logging...")
 
     # Load forms
-    forms = get_forms()
+    single_form = os.environ.get("ABIDE_SINGLE_FORM", "")
+    if single_form:
+        forms = get_forms(
+            [single_form],
+            training_profile=single_form in TRAINING_SAFE_FORM_NAMES,
+        )
+    else:
+        from prompt_generator import resolve_form_selection_mode
+
+        form_mode = resolve_form_selection_mode()
+        if form_mode == "training_safe":
+            forms = get_forms(list(TRAINING_SAFE_FORM_NAMES), training_profile=True)
+        else:
+            forms = get_forms()
     print(f"Forms: {len(forms)} ({', '.join(forms.keys())})")
 
     # Create environment
