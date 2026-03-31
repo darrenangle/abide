@@ -227,7 +227,7 @@ class OneginStanza(Constraint):
     Onegin Stanza: 14-line stanza from Pushkin's Eugene Onegin.
 
     Structure:
-    - 14 lines of iambic tetrameter (8 syllables)
+    - 14 lines of about 8 syllables each
     - Rhyme scheme: AbAbCCddEffEgg
     - Where uppercase = feminine rhyme, lowercase = masculine
     - (For simplicity, we just check the pattern ignoring masc/fem)
@@ -310,7 +310,10 @@ class OneginStanza(Constraint):
         )
 
     def describe(self) -> str:
-        return f"Onegin Stanza: {self.stanza_count_val} stanza(s) of 14 lines, iambic tetrameter"
+        return (
+            f"Onegin Stanza: {self.stanza_count_val} stanza(s) of 14 lines, "
+            "about 8 syllables each"
+        )
 
 
 class CaudateSonnet(Constraint):

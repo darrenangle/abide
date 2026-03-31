@@ -312,7 +312,7 @@ def shakespearean_sonnet_spec(
 
     spec = FormSpec(
         name="Shakespearean Sonnet",
-        description="14-line poem with ABAB CDCD EFEF GG rhyme scheme in iambic pentameter",
+        description="14-line poem with ABAB CDCD EFEF GG rhyme scheme and approximately 10 syllables per line",
     )
     spec.add(
         "line_count",
@@ -322,7 +322,7 @@ def shakespearean_sonnet_spec(
     spec.add(
         "syllables",
         SyllablesPerLine([10] * 14, tolerance=syllable_tolerance),
-        instruction="Write in iambic pentameter (approximately 10 syllables per line).",
+        instruction="Write approximately 10 syllables per line.",
         category="prosodic",
     )
     spec.add(
@@ -346,7 +346,10 @@ def petrarchan_sonnet_spec(
 
     spec = FormSpec(
         name="Petrarchan Sonnet",
-        description=f"14-line poem with ABBAABBA {sestet_scheme} rhyme scheme in iambic pentameter",
+        description=(
+            f"14-line poem with ABBAABBA {sestet_scheme} rhyme scheme "
+            "and approximately 10 syllables per line"
+        ),
     )
     spec.add(
         "line_count",
@@ -356,7 +359,7 @@ def petrarchan_sonnet_spec(
     spec.add(
         "syllables",
         SyllablesPerLine([10] * 14, tolerance=syllable_tolerance),
-        instruction="Write in iambic pentameter (approximately 10 syllables per line).",
+        instruction="Write approximately 10 syllables per line.",
         category="prosodic",
     )
     spec.add(

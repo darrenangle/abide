@@ -160,6 +160,136 @@ class RhymeScheme(Constraint):
         return f"Follow the rhyme scheme {self.scheme}, where lines with the same letter must rhyme (e.g., all A lines rhyme with each other)."
 
 
+class EndRhymeDensity(Constraint):
+    """
+    Constraint on how much end rhyme a poem uses.
+
+    Useful for forms like blank verse that should avoid systematic end rhyme
+    while still tolerating the occasional accidental rhyme.
+    """
+
+    name = "End Rhyme Density"
+    constraint_type = ConstraintType.RELATIONAL
+
+    def __init__(
+        self,
+        max_density: float = 0.25,
+        threshold: float = 0.8,
+        weight: float = 1.0,
+    ) -> None:
+        """
+        Initialize end-rhyme-density constraint.
+
+        Args:
+            max_density: Maximum fraction of lines allowed to participate in end rhyme
+            threshold: Minimum rhyme score to count as a rhyme
+            weight: Relative weight for composition
+        """
+        super().__init__(weight)
+        if not 0.0 <= max_density <= 1.0:
+            raise ValueError("max_density must be between 0 and 1")
+        if not 0.0 <= threshold <= 1.0:
+            raise ValueError("threshold must be between 0 and 1")
+
+        self.max_density = max_density
+        self.threshold = threshold
+
+    def verify(self, poem: str | PoemStructure) -> VerificationResult:
+        structure = self._ensure_structure(poem)
+        end_words = extract_end_words(structure)
+
+        if len(end_words) < 2:
+            return VerificationResult(
+                score=1.0,
+                passed=True,
+                rubric=[
+                    RubricItem(
+                        criterion="End-rhyme density",
+                        expected=f"at most {self.max_density:.0%} of lines use end rhyme",
+                        actual="not enough lines to form end rhyme",
+                        score=1.0,
+                        passed=True,
+                    )
+                ],
+                constraint_name=self.name,
+                constraint_type=self.constraint_type,
+                details={
+                    "max_density": self.max_density,
+                    "threshold": self.threshold,
+                    "rhyme_density": 0.0,
+                    "rhyming_line_count": 0,
+                    "rhyming_pairs": [],
+                    "end_words": list(end_words),
+                },
+            )
+
+        rhyming_pairs: list[tuple[int, int, float]] = []
+        rhyming_lines: set[int] = set()
+
+        for i in range(len(end_words)):
+            for j in range(i + 1, len(end_words)):
+                word_i = end_words[i]
+                word_j = end_words[j]
+                pair_score = (
+                    1.0 if word_i.lower() == word_j.lower() else rhyme_score(word_i, word_j)
+                )
+                if pair_score >= self.threshold:
+                    rhyming_lines.update((i, j))
+                    rhyming_pairs.append((i, j, pair_score))
+
+        rhyme_density = len(rhyming_lines) / len(end_words)
+        overall_score = max(0.0, 1.0 - rhyme_density)
+        overall_passed = rhyme_density <= self.max_density
+
+        pair_summary = "none detected"
+        if rhyming_pairs:
+            shown_pairs = ", ".join(
+                f"{line_i + 1}/{line_j + 1}" for line_i, line_j, _ in rhyming_pairs[:6]
+            )
+            if len(rhyming_pairs) > 6:
+                shown_pairs += ", ..."
+            pair_summary = shown_pairs
+
+        rubric = [
+            RubricItem(
+                criterion="End-rhyme density",
+                expected=f"at most {self.max_density:.0%} of lines use end rhyme",
+                actual=f"{len(rhyming_lines)}/{len(end_words)} lines ({rhyme_density:.0%}); pairs: {pair_summary}",
+                score=overall_score,
+                passed=overall_passed,
+                explanation=f"Rhyme threshold {self.threshold:.2f}",
+            )
+        ]
+
+        return VerificationResult(
+            score=overall_score,
+            passed=overall_passed,
+            rubric=rubric,
+            constraint_name=self.name,
+            constraint_type=self.constraint_type,
+            details={
+                "max_density": self.max_density,
+                "threshold": self.threshold,
+                "rhyme_density": rhyme_density,
+                "rhyming_line_count": len(rhyming_lines),
+                "rhyming_pairs": [
+                    {"lines": [line_i + 1, line_j + 1], "score": score}
+                    for line_i, line_j, score in rhyming_pairs
+                ],
+                "end_words": list(end_words),
+            },
+        )
+
+    def describe(self) -> str:
+        return f"Uses end rhyme in at most {self.max_density:.0%} of lines"
+
+    def instruction(self) -> str:
+        return (
+            "Avoid systematic end rhyme. At most "
+            f"{self.max_density:.0%} of lines should rhyme at the end."
+        )
+
+
 class Refrain(Constraint):
     """
     Constraint that specific lines repeat exactly (or nearly).

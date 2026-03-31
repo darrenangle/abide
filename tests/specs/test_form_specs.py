@@ -44,6 +44,15 @@ class TestFormSpecBasics:
         assert "syllables" in item_ids
         assert "rhyme_scheme" in item_ids
 
+    def test_shakespearean_spec_uses_syllable_proxy_language(self):
+        """Spec text should match the syllable-based verifier."""
+        spec = shakespearean_sonnet_spec()
+        assert "10 syllables" in spec.description
+        assert "pentameter" not in spec.description.lower()
+        syllables_item = next(item for item in spec if item.id == "syllables")
+        assert "10 syllables" in syllables_item.instruction
+        assert "pentameter" not in syllables_item.instruction.lower()
+
     def test_villanelle_spec_has_refrains(self):
         """Villanelle spec should have refrain constraints."""
         spec = villanelle_spec()

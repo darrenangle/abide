@@ -98,12 +98,12 @@ MAJOR_FORMS_MINI: list[FormSpec] = [
         constraint=HeroicCouplet(strict=False),
         prompt_template=(
             "Write a heroic couplet about {topic}. "
-            "A heroic couplet is 2 rhyming lines of iambic pentameter (10 syllables each). "
+            "A heroic couplet is 2 rhyming lines of about 10 syllables each. "
             "The lines must rhyme with each other. "
             "Output ONLY the couplet."
         ),
         difficulty="medium",
-        description="Two rhyming lines of iambic pentameter",
+        description="Two rhyming lines of about 10 syllables",
     ),
     # Complex forms (all constraints)
     FormSpec(
@@ -117,9 +117,8 @@ MAJOR_FORMS_MINI: list[FormSpec] = [
             "Write a Shakespearean sonnet about {topic}. "
             "A Shakespearean sonnet has:\n"
             "- Exactly 14 lines\n"
-            "- Iambic pentameter (10 syllables per line)\n"
+            "- About 10 syllables per line\n"
             "- Rhyme scheme: ABAB CDCD EFEF GG\n"
-            "- A volta (turn) before the final couplet\n"
             "Output ONLY the sonnet."
         ),
         difficulty="complex",

@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 class Sonnet(Constraint):
     """
-    Generic sonnet: 14 lines of iambic pentameter.
+    Generic sonnet: 14 lines with an approximate 10-syllable line pattern.
 
     This is a base sonnet without a specific rhyme scheme.
     Use ShakespeareanSonnet, PetrarchanSonnet, or SpenserianSonnet
@@ -85,7 +85,7 @@ class Sonnet(Constraint):
         )
 
     def describe(self) -> str:
-        return "Sonnet: 14 lines of iambic pentameter"
+        return "Sonnet: 14 lines of about 10 syllables each"
 
 
 class ShakespeareanSonnet(Constraint):
@@ -93,7 +93,7 @@ class ShakespeareanSonnet(Constraint):
     Shakespearean (English) sonnet: ABAB CDCD EFEF GG.
 
     Structure:
-    - 14 lines of iambic pentameter
+    - 14 lines of about 10 syllables each
     - 3 quatrains + couplet
     - Rhyme scheme: ABAB CDCD EFEF GG
 
@@ -167,7 +167,9 @@ class ShakespeareanSonnet(Constraint):
         )
 
     def describe(self) -> str:
-        return "Shakespearean Sonnet: 14 lines, ABAB CDCD EFEF GG rhyme scheme"
+        return (
+            "Shakespearean Sonnet: 14 lines of about 10 syllables, ABAB CDCD EFEF GG rhyme scheme"
+        )
 
 
 class PetrarchanSonnet(Constraint):
@@ -175,7 +177,7 @@ class PetrarchanSonnet(Constraint):
     Petrarchan (Italian) sonnet: ABBAABBA + varied sestet.
 
     Structure:
-    - 14 lines of iambic pentameter
+    - 14 lines of about 10 syllables each
     - Octave (8 lines): ABBAABBA
     - Sestet (6 lines): CDECDE or CDCDCD
 
@@ -260,7 +262,10 @@ class PetrarchanSonnet(Constraint):
         )
 
     def describe(self) -> str:
-        return f"Petrarchan Sonnet: 14 lines, ABBAABBA {self.sestet_scheme} rhyme scheme"
+        return (
+            "Petrarchan Sonnet: 14 lines of about 10 syllables, "
+            f"ABBAABBA {self.sestet_scheme} rhyme scheme"
+        )
 
 
 class SpenserianSonnet(Constraint):
@@ -268,7 +273,7 @@ class SpenserianSonnet(Constraint):
     Spenserian sonnet: ABAB BCBC CDCD EE.
 
     Structure:
-    - 14 lines of iambic pentameter
+    - 14 lines of about 10 syllables each
     - 3 interlocking quatrains + couplet
     - Rhyme scheme links quatrains: ABAB BCBC CDCD EE
 
@@ -340,4 +345,4 @@ class SpenserianSonnet(Constraint):
         )
 
     def describe(self) -> str:
-        return "Spenserian Sonnet: 14 lines, ABAB BCBC CDCD EE rhyme scheme"
+        return "Spenserian Sonnet: 14 lines of about 10 syllables, ABAB BCBC CDCD EE rhyme scheme"

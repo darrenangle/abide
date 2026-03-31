@@ -2,6 +2,7 @@
 
 from abide.constraints import (
     Acrostic,
+    EndRhymeDensity,
     EndWordPattern,
     Refrain,
     RhymeScheme,
@@ -181,6 +182,58 @@ class TestRefrain:
         desc = constraint.describe()
         assert "1" in desc  # 1-indexed reference
         assert "6" in desc or "12" in desc or "18" in desc
+
+
+class TestEndRhymeDensity:
+    """Tests for EndRhymeDensity constraint."""
+
+    def test_unrhymed_poem_passes(self) -> None:
+        poem = "\n".join(
+            [
+                "Lanterns gather softly near the orchard",
+                "Morning settles slowly over granite",
+                "Children wander quietly through cedar",
+                "Clouds keep drifting farther toward the harbor",
+            ]
+        )
+        constraint = EndRhymeDensity(max_density=0.25, threshold=0.8)
+        result = constraint.verify(poem)
+        assert result.passed is True
+        assert result.score == 1.0
+
+    def test_systematic_rhyme_fails(self) -> None:
+        poem = "The road grows dim at night\nA lantern wakes to light\nThe east begins to bright\nWe listen through the sight"
+        constraint = EndRhymeDensity(max_density=0.25, threshold=0.8)
+        result = constraint.verify(poem)
+        assert result.passed is False
+        assert result.details["rhyming_line_count"] == 4
+        assert result.details["rhyme_density"] == 1.0
+
+    def test_single_incidental_pair_can_pass_longer_poem(self) -> None:
+        poem = "\n".join(
+            [
+                "The river folds itself into the night",
+                "A colder wind arrives before the light",
+                "Pine needles settle softly near the harbor",
+                "The orchard darkens slowly under granite",
+                "A lone cart rattles north beyond the meadow",
+                "Small windows gather amber over cedar",
+                "The distant hills turn quiet under iron",
+                "A heron traces circles through the marshland",
+                "Loose papers drift and settle by the anvil",
+                "The market square grows empty after sunset",
+            ]
+        )
+        constraint = EndRhymeDensity(max_density=0.25, threshold=0.8)
+        result = constraint.verify(poem)
+        assert result.passed is True
+        assert result.score == 0.8
+
+    def test_describe(self) -> None:
+        constraint = EndRhymeDensity(max_density=0.2)
+        desc = constraint.describe()
+        assert "20%" in desc
+        assert "rhyme" in desc.lower()
 
 
 class TestEndWordPattern:

@@ -2,6 +2,7 @@
 
 from abide import verify
 from abide.forms import (
+    BlankVerse,
     Haiku,
     Limerick,
     PetrarchanSonnet,
@@ -244,6 +245,12 @@ class TestSonnet:
         assert "Sonnet" in desc
         assert "14" in desc or "ABAB" in desc
 
+    def test_generic_sonnet_describe_uses_syllable_proxy_language(self) -> None:
+        """Generic sonnet description should not claim full meter verification."""
+        desc = Sonnet().describe().lower()
+        assert "10 syllables" in desc
+        assert "iambic pentameter" not in desc
+
 
 class TestLimerick:
     """Tests for Limerick form template."""
@@ -274,6 +281,36 @@ class TestLimerick:
         desc = limerick.describe()
         assert "Limerick" in desc
         assert "AABBA" in desc
+
+
+class TestBlankVerse:
+    """Tests for BlankVerse form template."""
+
+    def test_blank_verse_rejects_obviously_rhymed_poem(self) -> None:
+        """Lenient blank verse should still reject systematic end rhyme."""
+        blank = BlankVerse(strict=False, syllable_tolerance=1)
+        poem = "\n".join(
+            [
+                "The river folds itself into the night",
+                "A colder wind arrives before the light",
+                "The distant roofs lie waiting for first light",
+            ]
+        )
+        result = verify(poem, blank)
+        assert result.score > 0.6
+        assert result.passed is False
+
+    def test_blank_verse_describe_matches_default_verifier(self) -> None:
+        """Default description should describe the syllable proxy, not full meter."""
+        desc = BlankVerse().describe().lower()
+        assert "unrhymed" in desc
+        assert "10 syllables" in desc
+        assert "iambic pentameter" not in desc
+
+    def test_blank_verse_describe_mentions_meter_when_enabled(self) -> None:
+        """Strict meter mode can claim iambic pentameter explicitly."""
+        desc = BlankVerse(strict_meter=True).describe().lower()
+        assert "iambic pentameter" in desc
 
 
 class TestSestina:

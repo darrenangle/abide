@@ -17,3 +17,7 @@
 - Added integration coverage for TRL helper importability, dataset metadata preservation, and exact form routing.
 - Tightened Shakespearean, Petrarchan, and Spenserian sonnet pass/fail to require their defining child constraints.
 - Added a regression test for the repeated-line Shakespearean sonnet false positive from the audit.
+- Added `EndRhymeDensity` as a reusable relational constraint for forms that should avoid systematic end rhyme.
+- Wired `BlankVerse` onto explicit unrhymed gating so obviously rhymed text can no longer pass in lenient mode.
+- Narrowed sonnet-family and related metrical-form descriptions/spec prompts to the syllable proxy they actually verify.
+- Added regression coverage for blank verse false positives and for the new description/spec language.

@@ -101,7 +101,7 @@ class Couplet(Constraint):
 
 class HeroicCouplet(Couplet):
     """
-    Heroic couplet: 2 lines of iambic pentameter that rhyme (AA).
+    Heroic couplet: 2 rhyming lines of about 10 syllables each.
 
     The form of Pope, Dryden, and much 18th-century English poetry.
     Often end-stopped with a complete thought.
@@ -129,12 +129,12 @@ class HeroicCouplet(Couplet):
         )
 
     def describe(self) -> str:
-        return "Heroic Couplet: 2 lines of iambic pentameter, rhyming AA"
+        return "Heroic Couplet: 2 rhyming lines of about 10 syllables each"
 
 
 class ShortCouplet(Couplet):
     """
-    Short couplet: 2 lines of iambic tetrameter that rhyme (AA).
+    Short couplet: 2 rhyming lines of about 8 syllables each.
 
     Also known as octosyllabic couplet. Common in light verse.
 
@@ -161,7 +161,7 @@ class ShortCouplet(Couplet):
         )
 
     def describe(self) -> str:
-        return "Short Couplet: 2 lines of iambic tetrameter, rhyming AA"
+        return "Short Couplet: 2 rhyming lines of about 8 syllables each"
 
 
 class Elegiac(Constraint):

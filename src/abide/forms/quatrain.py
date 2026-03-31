@@ -119,7 +119,8 @@ class BalladStanza(Quatrain):
     Ballad stanza (Common Meter): 4 lines, 8-6-8-6 syllables, ABCB rhyme.
 
     The classic form for narrative ballads and hymns.
-    Uses iambic tetrameter/trimeter alternation.
+    Traditionally uses iambic tetrameter/trimeter alternation; this verifier
+    checks the 8-6-8-6 syllable pattern.
 
     Examples:
         >>> stanza = BalladStanza()
@@ -157,7 +158,7 @@ class BalladStanza(Quatrain):
 
 class HeroicQuatrain(Quatrain):
     """
-    Heroic quatrain: 4 lines of iambic pentameter, ABAB rhyme.
+    Heroic quatrain: 4 lines of about 10 syllables, ABAB rhyme.
 
     Used in elegies and longer heroic poems.
 
@@ -190,7 +191,7 @@ class HeroicQuatrain(Quatrain):
         )
 
     def describe(self) -> str:
-        return f"Heroic Quatrain: 4 lines, {self.rhyme_scheme_str} rhyme"
+        return f"Heroic Quatrain: 4 lines of about 10 syllables, {self.rhyme_scheme_str} rhyme"
 
 
 class EnvelopeQuatrain(Quatrain):

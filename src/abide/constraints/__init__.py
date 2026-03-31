@@ -39,6 +39,7 @@ from abide.constraints.meter import Meter, MeterPattern
 from abide.constraints.operators import And, AtLeast, AtMost, Not, Or, WeightedSum
 from abide.constraints.relational import (
     Acrostic,
+    EndRhymeDensity,
     EndWordPattern,
     Refrain,
     RhymeScheme,
@@ -78,6 +79,7 @@ __all__ = [
     "ConstraintType",
     "CrossLineVowelWordCount",
     "DoubleAcrostic",
+    "EndRhymeDensity",
     "EndWordPattern",
     "ExactCharacterBudget",
     "ExactTotalCharacters",

@@ -33,7 +33,7 @@ class OttavaRima(Constraint):
     used by Byron in Don Juan and Beppo.
 
     Structure:
-    - 8 lines of iambic pentameter
+    - 8 lines of about 10 syllables each
     - Rhyme scheme: ABABABCC
     - The closing couplet often delivers a witty turn
 
@@ -116,8 +116,8 @@ class OttavaRima(Constraint):
 
     def describe(self) -> str:
         if self.stanza_count_val == 1:
-            return "Ottava Rima: 8 lines of iambic pentameter, ABABABCC rhyme"
-        return f"Ottava Rima: {self.stanza_count_val} stanzas, ABABABCC rhyme"
+            return "Ottava Rima: 8 lines of about 10 syllables, ABABABCC rhyme"
+        return f"Ottava Rima: {self.stanza_count_val} stanzas of about 10 syllables, ABABABCC rhyme"
 
 
 class RhymeRoyal(Constraint):
@@ -128,7 +128,7 @@ class RhymeRoyal(Constraint):
     (The Rape of Lucrece). Also called the Chaucerian stanza.
 
     Structure:
-    - 7 lines of iambic pentameter
+    - 7 lines of about 10 syllables each
     - Rhyme scheme: ABABBCC
     - Often used for narrative and philosophical verse
 
@@ -211,8 +211,8 @@ class RhymeRoyal(Constraint):
 
     def describe(self) -> str:
         if self.stanza_count_val == 1:
-            return "Rhyme Royal: 7 lines of iambic pentameter, ABABBCC rhyme"
-        return f"Rhyme Royal: {self.stanza_count_val} stanzas, ABABBCC rhyme"
+            return "Rhyme Royal: 7 lines of about 10 syllables, ABABBCC rhyme"
+        return f"Rhyme Royal: {self.stanza_count_val} stanzas of about 10 syllables, ABABBCC rhyme"
 
 
 class SpenserianStanza(Constraint):
@@ -222,8 +222,8 @@ class SpenserianStanza(Constraint):
     Invented by Edmund Spenser for The Faerie Queene.
 
     Structure:
-    - 8 lines of iambic pentameter
-    - 1 line of alexandrine (iambic hexameter, 12 syllables)
+    - 8 lines of about 10 syllables each
+    - 1 longer line of about 12 syllables
     - Rhyme scheme: ABABBCBCC
 
     Examples:
@@ -300,4 +300,4 @@ class SpenserianStanza(Constraint):
         )
 
     def describe(self) -> str:
-        return "Spenserian Stanza: 9 lines (8 pentameter + 1 alexandrine), ABABBCBCC rhyme"
+        return "Spenserian Stanza: 9 lines (8 about-10-syllable lines + 1 about-12-syllable line), ABABBCBCC rhyme"

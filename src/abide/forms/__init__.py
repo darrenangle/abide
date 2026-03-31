@@ -21,7 +21,7 @@ Available forms:
 - Clerihew: 4-line humorous biographical poem
 - Quatrain: 4-line stanza with various rhyme schemes
 - Couplet: 2 rhyming lines
-- Blank Verse: Unrhymed iambic pentameter
+- Blank Verse: Unrhymed lines with roughly 10 syllables
 - Ode: Pindaric, Horatian, Irregular variants
 - Ballad: Narrative quatrains with ABCB rhyme
 - Diamante: 7-line diamond shape poem

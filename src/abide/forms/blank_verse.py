@@ -1,7 +1,8 @@
 """
 Blank verse form template.
 
-Blank verse is unrhymed iambic pentameter.
+Default verification checks for unrhymed lines with roughly 10 syllables each.
+Enable ``strict_meter`` to add iambic-meter verification.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from abide.constraints import (
     And,
     Constraint,
     ConstraintType,
+    EndRhymeDensity,
     LineCount,
     Meter,
     NumericBound,
@@ -27,14 +29,15 @@ if TYPE_CHECKING:
 
 class BlankVerse(Constraint):
     """
-    Blank verse: unrhymed iambic pentameter.
+    Blank verse: unrhymed lines with an optional iambic-meter check.
 
     The meter of Shakespeare's plays, Milton's Paradise Lost,
     and much English dramatic and epic poetry.
 
     Structure:
-    - Iambic pentameter (10 syllables, 5 iambs per line)
-    - No rhyme scheme required
+    - Unrhymed lines
+    - About 10 syllables per line by default
+    - Optional strict iambic pentameter verification
     - Variable line count
 
     Examples:
@@ -56,6 +59,8 @@ class BlankVerse(Constraint):
         syllable_tolerance: int = 1,
         strict_meter: bool = False,
         meter_threshold: float = 0.7,
+        rhyme_threshold: float = 0.8,
+        max_rhyme_density: float = 0.25,
         strict: bool = False,
     ) -> None:
         """
@@ -68,6 +73,8 @@ class BlankVerse(Constraint):
             syllable_tolerance: Allow +/- this many syllables per line
             strict_meter: If True, enforce actual iambic meter (not just syllable count)
             meter_threshold: Minimum meter score per line (for strict_meter)
+            rhyme_threshold: Minimum rhyme score to treat two line endings as rhyming
+            max_rhyme_density: Maximum fraction of lines allowed to rhyme at the end
             strict: If True, all constraints must pass
         """
         super().__init__(weight)
@@ -76,6 +83,8 @@ class BlankVerse(Constraint):
         self.syllable_tolerance = syllable_tolerance
         self.strict_meter = strict_meter
         self.meter_threshold = meter_threshold
+        self.rhyme_threshold = rhyme_threshold
+        self.max_rhyme_density = max_rhyme_density
         self.strict_mode = strict
 
         # Build constraints list
@@ -84,6 +93,11 @@ class BlankVerse(Constraint):
         # Line count (at least min_lines)
         self._line_count = LineCount(NumericBound.at_least(min_lines), weight=1.5)
         constraints.append((self._line_count, 1.5))
+        self._unrhymed = EndRhymeDensity(
+            max_density=max_rhyme_density,
+            threshold=rhyme_threshold,
+            weight=1.5,
+        )
 
         if strict_meter:
             # Use actual meter detection
@@ -116,6 +130,8 @@ class BlankVerse(Constraint):
             )
             constraints.append((syllables, 2.0))
 
+        constraints.append((self._unrhymed, 1.5))
+
         # Check max lines if specified
         if self.max_lines is not None and structure.line_count > self.max_lines:
             return VerificationResult(
@@ -131,7 +147,11 @@ class BlankVerse(Constraint):
         if self._strict:
             constraint = And([c for c, _ in constraints])
         else:
-            constraint = WeightedSum(constraints, threshold=0.6)
+            constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
         result = constraint.verify(poem)
         return VerificationResult(
@@ -144,7 +164,13 @@ class BlankVerse(Constraint):
         )
 
     def describe(self) -> str:
-        desc = f"Blank Verse: unrhymed iambic pentameter (min {self.min_lines} lines)"
+        if self.strict_meter:
+            desc = f"Blank Verse: unrhymed iambic pentameter (min {self.min_lines} lines)"
+        else:
+            desc = (
+                f"Blank Verse: unrhymed lines of about 10 syllables "
+                f"(min {self.min_lines} lines)"
+            )
         if self.strict_meter:
             desc += " [strict meter]"
         return desc
@@ -179,4 +205,4 @@ class DramaticVerse(BlankVerse):
         )
 
     def describe(self) -> str:
-        return "Dramatic Verse: flexible blank verse for speech"
+        return "Dramatic Verse: flexible unrhymed lines for speech"
