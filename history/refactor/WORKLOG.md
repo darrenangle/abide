@@ -21,3 +21,6 @@
 - Wired `BlankVerse` onto explicit unrhymed gating so obviously rhymed text can no longer pass in lenient mode.
 - Narrowed sonnet-family and related metrical-form descriptions/spec prompts to the syllable proxy they actually verify.
 - Added regression coverage for blank verse false positives and for the new description/spec language.
+- Added a rhyme-driven false-positive matrix for `Couplet`, `Quatrain`, `Limerick`, `OttavaRima`, and `RhymeRoyal`.
+- Gated those forms so repeated-line non-rhyming near misses keep partial score but can no longer report `passed=True`.
+- Reproduced pre-fix failures at scores around `0.77` to `0.83`, then verified the full repo after the gating change.

@@ -97,6 +97,7 @@ class Quatrain(Constraint):
                     (self._rhyme_scheme, 1.5),
                 ],
                 threshold=0.6,
+                required_indices=[0, 1, 2],
             )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:

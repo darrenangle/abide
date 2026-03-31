@@ -1,11 +1,17 @@
 """Tests for form templates using ground truth poems."""
 
+import pytest
+
 from abide import verify
 from abide.forms import (
     BlankVerse,
+    Couplet,
     Haiku,
     Limerick,
+    OttavaRima,
     PetrarchanSonnet,
+    Quatrain,
+    RhymeRoyal,
     Sestina,
     ShakespeareanSonnet,
     Sonnet,
@@ -64,6 +70,11 @@ Who said, "It is just as I feared!
 Two Owls and a Hen,
 Four Larks and a Wren,
 Have all built their nests in my beard!\""""
+
+TEN_SYLLABLE_LINE_A = "The winter sunlight settles on the bay"
+TEN_SYLLABLE_LINE_B = "A silver morning wanders through the rain"
+TEN_SYLLABLE_LINE_C = "A shadow drifts unnoticed through the storm"
+SHORT_LIMERICK_LINE = "Cold sparrows drift through reeds"
 
 
 class TestHaiku:
@@ -311,6 +322,75 @@ class TestBlankVerse:
         """Strict meter mode can claim iambic pentameter explicitly."""
         desc = BlankVerse(strict_meter=True).describe().lower()
         assert "iambic pentameter" in desc
+
+
+@pytest.mark.parametrize(
+    ("form", "poem"),
+    [
+        (
+            Couplet(strict=False),
+            "\n".join([TEN_SYLLABLE_LINE_A, TEN_SYLLABLE_LINE_B]),
+        ),
+        (
+            Quatrain(strict=False),
+            "\n".join(
+                [
+                    TEN_SYLLABLE_LINE_A,
+                    TEN_SYLLABLE_LINE_B,
+                    TEN_SYLLABLE_LINE_A,
+                    TEN_SYLLABLE_LINE_B,
+                ]
+            ),
+        ),
+        (
+            Limerick(strict=False),
+            "\n".join(
+                [
+                    TEN_SYLLABLE_LINE_A,
+                    TEN_SYLLABLE_LINE_A,
+                    SHORT_LIMERICK_LINE,
+                    SHORT_LIMERICK_LINE,
+                    TEN_SYLLABLE_LINE_A,
+                ]
+            ),
+        ),
+        (
+            OttavaRima(strict=False),
+            "\n".join(
+                [
+                    TEN_SYLLABLE_LINE_A,
+                    TEN_SYLLABLE_LINE_B,
+                    TEN_SYLLABLE_LINE_A,
+                    TEN_SYLLABLE_LINE_B,
+                    TEN_SYLLABLE_LINE_A,
+                    TEN_SYLLABLE_LINE_B,
+                    TEN_SYLLABLE_LINE_C,
+                    TEN_SYLLABLE_LINE_C,
+                ]
+            ),
+        ),
+        (
+            RhymeRoyal(strict=False),
+            "\n".join(
+                [
+                    TEN_SYLLABLE_LINE_A,
+                    TEN_SYLLABLE_LINE_B,
+                    TEN_SYLLABLE_LINE_A,
+                    TEN_SYLLABLE_LINE_B,
+                    TEN_SYLLABLE_LINE_B,
+                    TEN_SYLLABLE_LINE_C,
+                    TEN_SYLLABLE_LINE_C,
+                ]
+            ),
+        ),
+    ],
+    ids=["couplet", "quatrain", "limerick", "ottava-rima", "rhyme-royal"],
+)
+def test_rhyme_driven_forms_reject_repeated_line_false_positives(form, poem) -> None:
+    """Lenient rhyme forms should not canonically pass repeated-line near misses."""
+    result = verify(poem, form)
+    assert result.score > 0.7
+    assert result.passed is False
 
 
 class TestSestina:
