@@ -276,6 +276,29 @@ class TestGhazalValidation:
         result = ghazal.verify(GHAZAL_SYNTHETIC_PERFECT)
         assert result.score >= 0.6, f"Score: {result.score}"
 
+    def test_dangling_line_fails(self):
+        """An extra unmatched line should invalidate the ghazal."""
+        ghazal = Ghazal(strict=False, min_couplets=5, refrain_threshold=0.8)
+        poem = """soft light moon
+cold night moon
+
+green sight moon
+warm night moon
+
+small flight moon
+deep night moon
+
+bright kite moon
+still night moon
+
+faint white moon
+calm night moon
+
+EXTRA DANGLING LINE"""
+        result = ghazal.verify(poem)
+        assert result.score < 0.6
+        assert result.passed is False
+
 
 class TestRondeauValidation:
     """Validate Rondeau form against examples."""

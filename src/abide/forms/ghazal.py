@@ -73,6 +73,18 @@ class Ghazal(Constraint):
         rubric: list[RubricItem] = []
         scores: list[float] = []
 
+        has_complete_couplets = structure.line_count % 2 == 0
+        rubric.append(
+            RubricItem(
+                criterion="Complete couplets",
+                expected="an even number of lines",
+                actual=str(structure.line_count),
+                score=1.0 if has_complete_couplets else 0.0,
+                passed=has_complete_couplets,
+            )
+        )
+        scores.append(1.0 if has_complete_couplets else 0.0)
+
         # Check couplet count
         num_couplets = structure.line_count // 2
         if num_couplets < self.min_couplets:
@@ -251,7 +263,13 @@ class Ghazal(Constraint):
                 scores.append(qafiya_score_final)
 
         overall_score = sum(scores) / len(scores) if scores else 0.0
-        overall_passed = all(r.passed for r in rubric) if self.strict else overall_score >= 0.6
+        if not has_complete_couplets:
+            # A dangling line breaks the defining couplet structure.
+            overall_score *= 0.25
+
+        overall_passed = (
+            all(r.passed for r in rubric) if self.strict else overall_score >= 0.6
+        ) and has_complete_couplets
 
         return VerificationResult(
             score=overall_score,
@@ -262,6 +280,7 @@ class Ghazal(Constraint):
             details={
                 "couplet_count": num_couplets,
                 "radif": radif,
+                "has_complete_couplets": has_complete_couplets,
             },
         )
 

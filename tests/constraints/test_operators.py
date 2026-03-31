@@ -268,6 +268,34 @@ class TestWeightedSum:
         weight_shown = any("w=" in item.criterion for item in result.rubric)
         assert weight_shown
 
+    def test_required_indices_gate_pass(self) -> None:
+        """Required child constraints can gate pass/fail."""
+        poem = "Line one\nLine two\nLine three"
+        constraint = WeightedSum(
+            [
+                (LineCount(3), 3.0),
+                (StanzaCount(1), 1.0),
+            ],
+            required_indices=[0, 1],
+        )
+        result = constraint.verify(poem)
+        assert result.passed is True
+
+    def test_required_indices_gate_fail_despite_high_score(self) -> None:
+        """A required failing child forces the composite to fail."""
+        poem = "Line one\nLine two\nLine three"
+        constraint = WeightedSum(
+            [
+                (LineCount(3), 3.0),
+                (LineCount(5), 1.0),
+            ],
+            threshold=0.6,
+            required_indices=[1],
+        )
+        result = constraint.verify(poem)
+        assert result.score > 0.85
+        assert result.passed is False
+
     def test_describe(self) -> None:
         """Description shows weights."""
         constraint = WeightedSum(

@@ -151,6 +151,37 @@ class TestVillanelle:
         result = verify("Short poem\nTwo lines", villanelle)
         assert result.passed is False
 
+    def test_villanelle_missing_refrains_fails_even_in_lenient_mode(self) -> None:
+        """Lenient scoring still requires the defining refrain structure."""
+        villanelle = Villanelle(strict=False)
+        poem = """alpha cat
+beta bat
+gamma cat
+
+delta cat
+epsilon bat
+zeta cat
+
+eta cat
+theta bat
+iota cat
+
+kappa cat
+lambda bat
+mu cat
+
+nu cat
+xi bat
+omicron cat
+
+pi cat
+rho bat
+sigma cat
+tau cat"""
+        result = verify(poem, villanelle)
+        assert result.score > 0.5
+        assert result.passed is False
+
     def test_villanelle_describe(self) -> None:
         """Description mentions villanelle characteristics."""
         villanelle = Villanelle()

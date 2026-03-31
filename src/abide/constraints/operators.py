@@ -185,6 +185,7 @@ class WeightedSum(Constraint):
         self,
         constraints: Sequence[tuple[Constraint, float]] | Sequence[Constraint],
         threshold: float = 0.5,
+        required_indices: Sequence[int] | None = None,
         weight: float = 1.0,
     ) -> None:
         """
@@ -194,6 +195,8 @@ class WeightedSum(Constraint):
             constraints: Either list of (constraint, weight) tuples,
                         or list of constraints (uses constraint.weight)
             threshold: Score threshold for overall pass
+            required_indices: Optional child positions that must individually
+                            pass for the composite to pass
             weight: Relative weight for further composition
         """
         super().__init__(weight)
@@ -206,6 +209,10 @@ class WeightedSum(Constraint):
                 self.weighted_constraints.append(item)
             else:
                 self.weighted_constraints.append((item, item.weight))
+
+        self.required_indices = tuple(sorted(set(required_indices or ())))
+        if any(idx < 0 or idx >= len(self.weighted_constraints) for idx in self.required_indices):
+            raise ValueError("required_indices must reference valid child constraint positions")
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         results: list[tuple[VerificationResult, float]] = []
@@ -222,7 +229,8 @@ class WeightedSum(Constraint):
             weighted_sum = sum(r.score * w for r, w in results)
             overall_score = weighted_sum / total_weight
 
-        overall_passed = overall_score >= self.threshold
+        required_children_passed = all(results[idx][0].passed for idx in self.required_indices)
+        overall_passed = overall_score >= self.threshold and required_children_passed
 
         # Combine rubrics with weight info
         rubric: list[RubricItem] = []
@@ -248,6 +256,8 @@ class WeightedSum(Constraint):
             details={
                 "child_scores": [(r.score, w) for r, w in results],
                 "threshold": self.threshold,
+                "required_indices": list(self.required_indices),
+                "required_children_passed": required_children_passed,
             },
         )
 

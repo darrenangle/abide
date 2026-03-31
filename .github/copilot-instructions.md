@@ -19,47 +19,23 @@
 - **Phonetic Data**: CMU Pronouncing Dictionary
 - **Target Integration**: `verifiers` framework, ART RL framework
 
-## Issue Tracking with bd
+## Refactor Tracking
 
-**CRITICAL**: This project uses **bd** for ALL task tracking. Do NOT create markdown TODO lists.
-
-### Essential Commands
-
-```bash
-# Find work
-bd ready --json                    # Unblocked issues
-bd stale --days 30 --json          # Forgotten issues
-
-# Create and manage
-bd create "Title" -t bug|feature|task -p 0-4 --json
-bd create "Subtask" --parent <epic-id> --json  # Hierarchical subtask
-bd update <id> --status in_progress --json
-bd close <id> --reason "Done" --json
-
-# Search
-bd list --status open --priority 1 --json
-bd show <id> --json
-
-# Sync (CRITICAL at end of session!)
-bd sync  # Force immediate export/commit/push
-```
+**CRITICAL**: Use the markdown tracker in `history/refactor/` for the current reliability and refactor work.
 
 ### Workflow
 
-1. **Check ready work**: `bd ready --json`
-2. **Claim task**: `bd update <id> --status in_progress`
-3. **Work on it**: Implement, test, document
-4. **Discover new work?** `bd create "Found bug" -p 1 --deps discovered-from:<parent-id> --json`
-5. **Complete**: `bd close <id> --reason "Done" --json`
-6. **Sync**: `bd sync` (flushes changes to git immediately)
+1. Check `history/refactor/BOARD.md`
+2. Claim work by creating `history/refactor/locks/<TICKET-ID>--<agent>.md`
+3. Update the matching file in `history/refactor/tickets/`
+4. Append a short note to `history/refactor/WORKLOG.md`
+5. Delete the lock file when the ticket is done
 
 ### Priorities
 
-- `0` - Critical (security, data loss, broken builds)
-- `1` - High (major features, important bugs)
-- `2` - Medium (default, nice-to-have)
-- `3` - Low (polish, optimization)
-- `4` - Backlog (future ideas)
+- `P1` - correctness, reward integrity, training reliability
+- `P2` - important follow-up or support work
+- `P3` - cleanup or lower-risk backlog
 
 ## Project Structure (Planned)
 
@@ -79,23 +55,14 @@ abide/
 │   └── environment.py       # Main reward environment
 ├── tests/
 ├── examples/
-└── .beads/
-    └── issues.jsonl         # Git-synced issue storage
+└── history/
+    └── refactor/            # Markdown ticket tracker, locks, and worklog
 ```
-
-## CLI Help
-
-Run `bd <command> --help` to see all available flags for any command.
-For example: `bd create --help` shows `--parent`, `--deps`, `--assignee`, etc.
 
 ## Important Rules
 
-- Use bd for ALL task tracking
-- Always use `--json` flag for programmatic use
-- Run `bd sync` at end of sessions
-- Run `bd <cmd> --help` to discover available flags
+- Use `history/refactor/` for current refactor tracking
 - Do NOT create markdown TODO lists
-- Do NOT commit `.beads/beads.db` (JSONL only)
 
 ---
 
