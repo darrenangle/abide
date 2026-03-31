@@ -31,10 +31,12 @@ class BurnsStanza(Constraint):
     Burns Stanza (Standard Habbie): 6-line stanza with AAABAB rhyme.
 
     Structure per stanza:
-    - Lines 1, 2, 3: 8 syllables (tetrameter), rhyme A
-    - Line 4: 4 syllables (dimeter), rhyme B
-    - Line 5: 8 syllables (tetrameter), rhyme A
-    - Line 6: 4 syllables (dimeter), rhyme B
+    - Lines 1, 2, 3: 8 syllables, rhyme A
+    - Line 4: 4 syllables, rhyme B
+    - Line 5: 8 syllables, rhyme A
+    - Line 6: 4 syllables, rhyme B
+
+    This verifier checks the 8-8-8-4-8-4 syllable proxy plus rhyme.
 
     Used extensively by Robert Burns in poems like "To a Mouse"
     and "To a Louse".
@@ -107,7 +109,11 @@ class BurnsStanza(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)

@@ -101,7 +101,11 @@ class Tritina(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -191,7 +195,11 @@ class Quatina(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -286,7 +294,11 @@ class Quintina(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -312,9 +324,13 @@ class Terzanelle(Constraint):
 
     Structure:
     - Tercets with interlocking rhyme like terza rima (ABA BCB CDC...)
-    - But with villanelle-like refrains
+    - Traditionally also includes villanelle-like refrain returns
     - Usually 19 lines like a villanelle
     - First and third lines of first stanza return as refrains
+
+    This verifier currently checks the standard 19-line length and the
+    interlocking terza-rima-style rhyme pattern. It does not yet model
+    the refrain returns directly.
 
     Examples:
         >>> terzanelle = Terzanelle()
@@ -368,7 +384,11 @@ class Terzanelle(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -382,4 +402,4 @@ class Terzanelle(Constraint):
         )
 
     def describe(self) -> str:
-        return "Terzanelle: 19 lines with terza rima rhyme scheme"
+        return "Terzanelle: 19 lines with interlocking terza-rima-style rhyme"

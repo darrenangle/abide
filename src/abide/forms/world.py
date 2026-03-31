@@ -135,14 +135,7 @@ class Tanaga(Constraint):
         score = sum(s * w for s, w in scores) / total_weight
 
         passed = (
-            score >= 0.7
-            if not self.strict_mode
-            else (
-                violations == 0
-                and line_result.passed
-                and stanza_result.passed
-                and rhyme_result.passed
-            )
+            line_result.passed and stanza_result.passed and violations == 0 and rhyme_result.passed
         )
 
         return VerificationResult(
@@ -331,7 +324,11 @@ class Seguidilla(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -414,7 +411,11 @@ class Lai(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -450,7 +451,7 @@ class Rispetto(Constraint):
     Rispetto: Italian 8-line form.
 
     Structure:
-    - 8 lines of hendecasyllables (11 syllables, or 10 in English adaptation)
+    - 8 lines of about 10 or 11 syllables
     - Rhyme scheme: ABABABCC (Tuscan) or ABABCCDD (Sicilian)
     - Often about love or respect (rispetto = respect)
 
@@ -520,7 +521,11 @@ class Rispetto(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)

@@ -262,7 +262,7 @@ class SpenserianStanza(Constraint):
 
         self._line_count = LineCount(total_lines, weight=2.0)
 
-        # 8 lines of pentameter + 1 alexandrine per stanza
+        # 8 about-10-syllable lines + 1 about-12-syllable line per stanza
         syllable_pattern = []
         for _ in range(stanza_count):
             syllable_pattern.extend([10] * 8 + [12])

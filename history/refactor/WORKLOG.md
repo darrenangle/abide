@@ -27,3 +27,15 @@
 - Added a refrain-driven matrix for `Triolet`, `Bop`, and `Kyrielle`, plus a dedicated `Rondelet` regression for score/pass disagreement.
 - Gated the triolet, kyrielle, bop, and rondel families so missing or degraded refrains cannot slip through lenient `passed=True`.
 - Verified the expanded matrix and the full repository after the second RF-002 sweep.
+- Expanded RF-001 gating across the remaining false-positive families: ballads, burns stanza, aubade, horatian and pindaric odes, rubai/rubaiyat, extended-sonnet variants, medieval long forms, kyrielle sonnet, tanaga/seguidilla/lai/rispetto, and distich/tercet/triplet.
+- Tightened `Tanaga`'s manual pass/fail logic so lenient scoring can no longer ignore the defining rhyme and syllable checks.
+- Fixed a core `RhymeScheme` loophole where identical end words could satisfy rhyme groups at `threshold=0.5`.
+- Fixed a core `EndWordPattern` assumption bug where a first stanza with duplicate end words could be treated as a perfect rotation seed.
+- Added a broader adversarial matrix covering long-form refrain/rhyme/end-word variants plus unit tests for the two core relational-constraint bugs.
+- Narrowed additional verifier claims in `extended_sonnet.py`, `tina.py`, `epigram.py`, and `couplet.py` so their descriptions match the checks actually implemented.
+- Re-ran the full repository checks after the sweep: `uv run pytest` -> `491 passed, 1 skipped`; `uv run ruff check src/abide tests` -> clean; `uv run mypy src/abide` -> clean.
+- Fixed the remaining `sapphic.py` family: `SapphicStanza` now actually uses stanza-size checking and gates canonical pass on all defining checks, and `SapphicOde` now requires stanza count, stanza shape, and full syllable-pattern compliance for `passed=True`.
+- Added `SapphicStanza` and `SapphicOde` adversarial regressions, bringing the false-positive matrix up to `493 passed, 1 skipped` on the full suite.
+- Re-ran the ungated-form search after the `sapphic` fix; it now returns no remaining high-risk `WeightedSum` forms without `required_indices`.
+- Finished the remaining claim audit: the only surviving meter-related search hits are intentional caveats (`BlankVerse` strict mode, a narrowed `Quatrain` note, and an internal sonnet comment).
+- Closed `RF-001` and `RF-008` and released their locks.

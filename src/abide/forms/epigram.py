@@ -205,8 +205,9 @@ class Distich(Constraint):
     """
     Distich: Two-line poem or couplet unit.
 
-    Classical distiches use elegiac meter (hexameter + pentameter).
-    Modern distiches are often rhyming couplets.
+    Classical distiches often used elegiac verse.
+    This verifier checks line count, a per-line syllable proxy,
+    and optional rhyme.
 
     Examples:
         >>> distich = Distich()
@@ -246,7 +247,11 @@ class Distich(Constraint):
             self._rhyme = RhymeScheme("AA", threshold=rhyme_threshold, weight=1.5)
             constraints.append((self._rhyme, 1.5))
 
-        self._constraint = WeightedSum(constraints, threshold=0.6)
+        self._constraint = WeightedSum(
+            constraints,
+            threshold=0.6,
+            required_indices=list(range(len(constraints))),
+        )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -316,7 +321,11 @@ class Tercet(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)

@@ -34,9 +34,10 @@ class CurtalSonnet(Constraint):
     - 10 full lines + 1 half-line (traditionally "and a half")
     - Based on 3/4 scale of Petrarchan sonnet
     - Rhyme scheme: ABCABC DBCDC + half-line
-    - Written in sprung rhythm (Hopkins' invention)
+    - Historically associated with Hopkins' original metrical design
 
-    For verification, we check 11 lines with the last being shorter.
+    This verifier checks 11 lines, the characteristic rhyme pattern,
+    and a 10-...-5 syllable proxy with the last line shorter.
 
     Examples:
         >>> curtal = CurtalSonnet()
@@ -95,7 +96,11 @@ class CurtalSonnet(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -109,7 +114,7 @@ class CurtalSonnet(Constraint):
         )
 
     def describe(self) -> str:
-        return "Curtal Sonnet: 10.5 lines (Hopkins variant)"
+        return "Curtal Sonnet: 11 lines with ABCABCDBCDC rhyme and a shorter final line"
 
 
 class CrownOfSonnets(Constraint):
@@ -202,7 +207,11 @@ class CrownOfSonnets(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.5)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.5,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -269,7 +278,7 @@ class OneginStanza(Constraint):
         self._line_count = LineCount(total_lines, weight=2.0)
         self._stanza_count = StanzaCount(stanza_count, weight=1.0)
 
-        # 8 syllables per line (iambic tetrameter)
+        # About 8 syllables per line
         syllable_pattern = [8] * total_lines
         self._syllables = SyllablesPerLine(
             syllable_pattern,
@@ -296,7 +305,11 @@ class OneginStanza(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -377,7 +390,7 @@ class CaudateSonnet(Constraint):
             threshold=rhyme_threshold,
         )
 
-        # 10 syllables per line (iambic pentameter)
+        # 10-syllable proxy per line
         syllable_pattern = [10] * total_lines
         self._syllables = SyllablesPerLine(
             syllable_pattern,
@@ -395,7 +408,11 @@ class CaudateSonnet(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)

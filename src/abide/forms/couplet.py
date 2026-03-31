@@ -167,10 +167,10 @@ class ShortCouplet(Couplet):
 
 class Elegiac(Constraint):
     """
-    Elegiac couplet: Hexameter + pentameter lines (classical form).
+    Elegiac couplet: Classical form approximated as a 12-10 syllable pair.
 
     Traditional form for Greek/Latin elegies and epigrams.
-    Adapted here as 12 + 10 syllables.
+    This verifier uses a 12 + 10 syllable proxy plus AA rhyme.
 
     Examples:
         >>> couplet = Elegiac()
@@ -193,7 +193,7 @@ class Elegiac(Constraint):
         self.strict = strict
 
         self._line_count = LineCount(2, weight=2.0)
-        # Hexameter + pentameter
+        # 12-10 syllable proxy inspired by the classical line lengths
         self._syllables = SyllablesPerLine(
             [12, 10],
             weight=1.0,
@@ -231,4 +231,4 @@ class Elegiac(Constraint):
         )
 
     def describe(self) -> str:
-        return "Elegiac Couplet: hexameter + pentameter (12-10 syllables), rhyming AA"
+        return "Elegiac Couplet: 12-10 syllables, rhyming AA"

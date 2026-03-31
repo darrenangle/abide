@@ -4,24 +4,54 @@ import pytest
 
 from abide import verify
 from abide.forms import (
+    Aubade,
+    Ballad,
     BlankVerse,
     Bop,
+    BroadBallad,
+    BurnsStanza,
+    Canzone,
+    CaudateSonnet,
+    ChantRoyal,
     Couplet,
+    CrownOfSonnets,
+    CurtalSonnet,
+    Distich,
+    DoubleBallade,
     Haiku,
+    HoratianOde,
     Kyrielle,
+    KyrielleSonnet,
+    Lai,
     Limerick,
+    OneginStanza,
     OttavaRima,
     PetrarchanSonnet,
+    PindaricOde,
+    Quatina,
     Quatrain,
+    Quintina,
     RhymeRoyal,
+    Rispetto,
     Rondelet,
+    Rubai,
+    Rubaiyat,
+    SapphicOde,
+    SapphicStanza,
+    Seguidilla,
     Sestina,
     ShakespeareanSonnet,
     Sonnet,
     SpenserianSonnet,
+    Tanaga,
     Tanka,
+    Tercet,
+    Terzanelle,
     Triolet,
+    Triplet,
+    Tritina,
     Villanelle,
+    Virelai,
 )
 
 # Ground truth poems for testing
@@ -79,6 +109,18 @@ TEN_SYLLABLE_LINE_A = "The winter sunlight settles on the bay"
 TEN_SYLLABLE_LINE_B = "A silver morning wanders through the rain"
 TEN_SYLLABLE_LINE_C = "A shadow drifts unnoticed through the storm"
 SHORT_LIMERICK_LINE = "Cold sparrows drift through reeds"
+EIGHT_SYLLABLE_LINE_A = "Cold rain drifts over the bay"
+EIGHT_SYLLABLE_LINE_B = "Small gulls wander through the rain"
+FOUR_SYLLABLE_LINE_A = "Soft rain"
+FOUR_SYLLABLE_LINE_B = "Dark night"
+SEVEN_SYLLABLE_LINE_A = "Cold birds drift through mist at dawn"
+SEVEN_SYLLABLE_LINE_B = "Small lamps glow near the stone wall"
+SEVEN_SYLLABLE_LINE_C = "Soft reeds bend where dark waves break"
+SEVEN_SYLLABLE_LINE_D = "Pale roofs wait for the first light"
+ELEVEN_SYLLABLE_LINE_A = "Cold dawn winds brush pale reeds by dark stone sea wall"
+ELEVEN_SYLLABLE_LINE_B = "Soft clouds drift past small boats near gray cliffs at dusk"
+ELEVEN_SYLLABLE_LINE_C = "Bright gulls wheel low while cold tides break past worn piers"
+SEVEN_SYLLABLE_ADONIC_NEAR_MISS = "Soft rain settles over stone walls"
 
 
 def _triolet_near_miss() -> str:
@@ -171,6 +213,330 @@ def _rondelet_near_miss() -> str:
             "Soft clouds return to stone",
         ]
     )
+
+
+def _ballad_near_miss() -> str:
+    return "\n\n".join(
+        [
+            "\n".join(
+                [
+                    EIGHT_SYLLABLE_LINE_A,
+                    EIGHT_SYLLABLE_LINE_B,
+                    EIGHT_SYLLABLE_LINE_A,
+                    EIGHT_SYLLABLE_LINE_B,
+                ]
+            )
+            for _ in range(4)
+        ]
+    )
+
+
+def _broadside_ballad_near_miss() -> str:
+    return "\n\n".join(
+        [
+            "\n".join(
+                [
+                    EIGHT_SYLLABLE_LINE_A,
+                    EIGHT_SYLLABLE_LINE_A,
+                    EIGHT_SYLLABLE_LINE_B,
+                    EIGHT_SYLLABLE_LINE_B,
+                ]
+            )
+            for _ in range(4)
+        ]
+    )
+
+
+def _burns_near_miss() -> str:
+    return "\n".join(
+        [
+            EIGHT_SYLLABLE_LINE_A,
+            EIGHT_SYLLABLE_LINE_A,
+            EIGHT_SYLLABLE_LINE_A,
+            FOUR_SYLLABLE_LINE_A,
+            EIGHT_SYLLABLE_LINE_A,
+            FOUR_SYLLABLE_LINE_B,
+        ]
+    )
+
+
+def _horatian_near_miss() -> str:
+    return "\n\n".join(
+        [
+            "\n".join(
+                [
+                    TEN_SYLLABLE_LINE_A,
+                    TEN_SYLLABLE_LINE_B,
+                    TEN_SYLLABLE_LINE_A,
+                    TEN_SYLLABLE_LINE_B,
+                ]
+            )
+            for _ in range(4)
+        ]
+    )
+
+
+def _aubade_near_miss() -> str:
+    return "\n\n".join(
+        [
+            "\n".join(
+                [
+                    TEN_SYLLABLE_LINE_A,
+                    TEN_SYLLABLE_LINE_B,
+                    TEN_SYLLABLE_LINE_A,
+                    TEN_SYLLABLE_LINE_B,
+                    TEN_SYLLABLE_LINE_A,
+                    TEN_SYLLABLE_LINE_A,
+                ]
+            )
+            for _ in range(4)
+        ]
+    )
+
+
+def _rubai_near_miss() -> str:
+    return "\n".join(
+        [
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_B,
+            TEN_SYLLABLE_LINE_A,
+        ]
+    )
+
+
+def _rubaiyat_near_miss() -> str:
+    return "\n\n".join(["\n".join(_rubai_near_miss().splitlines()) for _ in range(4)])
+
+
+def _curtal_near_miss() -> str:
+    return "\n".join([TEN_SYLLABLE_LINE_A, TEN_SYLLABLE_LINE_B] * 5 + ["Soft rain returns"])
+
+
+def _crown_near_miss() -> str:
+    return "\n\n".join(
+        ["\n".join([TEN_SYLLABLE_LINE_A, TEN_SYLLABLE_LINE_B] * 7) for _ in range(7)]
+    )
+
+
+def _onegin_near_miss() -> str:
+    return "\n".join([EIGHT_SYLLABLE_LINE_A, TEN_SYLLABLE_LINE_B] * 7)
+
+
+def _caudate_near_miss() -> str:
+    return "\n".join([TEN_SYLLABLE_LINE_A, TEN_SYLLABLE_LINE_B] * 8)
+
+
+def _chant_royal_near_miss() -> str:
+    stanzas = [
+        "\n".join(
+            [
+                TEN_SYLLABLE_LINE_A,
+                TEN_SYLLABLE_LINE_B,
+                TEN_SYLLABLE_LINE_A,
+                TEN_SYLLABLE_LINE_B,
+                TEN_SYLLABLE_LINE_A,
+                TEN_SYLLABLE_LINE_A,
+                TEN_SYLLABLE_LINE_B,
+                TEN_SYLLABLE_LINE_B,
+                TEN_SYLLABLE_LINE_A,
+                TEN_SYLLABLE_LINE_B,
+                "refrain line",
+            ]
+        )
+        for _ in range(5)
+    ]
+    stanzas.append("\n".join(["closing line"] * 5))
+    return "\n\n".join(stanzas)
+
+
+def _double_ballade_near_miss() -> str:
+    stanzas = [
+        "\n".join(
+            [
+                TEN_SYLLABLE_LINE_A,
+                TEN_SYLLABLE_LINE_B,
+                TEN_SYLLABLE_LINE_A,
+                TEN_SYLLABLE_LINE_B,
+                TEN_SYLLABLE_LINE_B,
+                TEN_SYLLABLE_LINE_C,
+                TEN_SYLLABLE_LINE_B,
+                "refrain line",
+            ]
+        )
+        for _ in range(6)
+    ]
+    stanzas.append("\n".join(["closing line"] * 4))
+    return "\n\n".join(stanzas)
+
+
+def _virelai_near_miss() -> str:
+    return "\n\n".join(
+        [
+            "\n".join(
+                [
+                    EIGHT_SYLLABLE_LINE_A,
+                    EIGHT_SYLLABLE_LINE_A,
+                    EIGHT_SYLLABLE_LINE_B,
+                    EIGHT_SYLLABLE_LINE_A,
+                    EIGHT_SYLLABLE_LINE_A,
+                    EIGHT_SYLLABLE_LINE_B,
+                    EIGHT_SYLLABLE_LINE_A,
+                    EIGHT_SYLLABLE_LINE_A,
+                    EIGHT_SYLLABLE_LINE_B,
+                ]
+            )
+            for _ in range(3)
+        ]
+    )
+
+
+def _canzone_near_miss() -> str:
+    stanzas = [
+        "\n".join(
+            [
+                TEN_SYLLABLE_LINE_A,
+                TEN_SYLLABLE_LINE_B,
+                TEN_SYLLABLE_LINE_C,
+                TEN_SYLLABLE_LINE_B,
+                TEN_SYLLABLE_LINE_A,
+                TEN_SYLLABLE_LINE_C,
+                TEN_SYLLABLE_LINE_C,
+                TEN_SYLLABLE_LINE_B,
+                TEN_SYLLABLE_LINE_B,
+                TEN_SYLLABLE_LINE_C,
+                TEN_SYLLABLE_LINE_A,
+                TEN_SYLLABLE_LINE_A,
+                TEN_SYLLABLE_LINE_B,
+            ]
+        )
+        for _ in range(5)
+    ]
+    stanzas.append("\n".join([TEN_SYLLABLE_LINE_C] * 5))
+    return "\n\n".join(stanzas)
+
+
+def _same_end_word_stanzas(
+    stanza_size: int, stanza_count: int, tail_sizes: list[int] | None = None
+) -> str:
+    stanzas = [
+        "\n".join([f"line {line_no} stone" for line_no in range(stanza_size)])
+        for _ in range(stanza_count)
+    ]
+    for index, tail_size in enumerate(tail_sizes or (), start=1):
+        stanzas.append("\n".join([f"tail {index}-{line_no} stone" for line_no in range(tail_size)]))
+    return "\n\n".join(stanzas)
+
+
+def _terzanelle_near_miss() -> str:
+    return "\n".join(
+        [
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_B,
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_B,
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_B,
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_B,
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_B,
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_B,
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_B,
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_B,
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_C,
+            TEN_SYLLABLE_LINE_C,
+        ]
+    )
+
+
+def _tanaga_near_miss() -> str:
+    return "\n".join(
+        [
+            SEVEN_SYLLABLE_LINE_A,
+            SEVEN_SYLLABLE_LINE_B,
+            SEVEN_SYLLABLE_LINE_C,
+            SEVEN_SYLLABLE_LINE_D,
+        ]
+    )
+
+
+def _seguidilla_near_miss() -> str:
+    return "\n".join(
+        [
+            "Cold sparrows drift",
+            "Soft rain at dusk",
+            "Thin branches hover",
+            "Small lamps at dusk",
+            "Dark birds at dusk",
+            "Quiet rivers wander",
+            "Night bells at dusk",
+        ]
+    )
+
+
+def _lai_near_miss() -> str:
+    return "\n".join(
+        [
+            "Soft rain",
+            "Soft rain",
+            "Night falls",
+            "Soft rain",
+            "Soft rain",
+            "Night falls",
+            "Soft rain",
+            "Soft rain",
+            "Night falls",
+        ]
+    )
+
+
+def _rispetto_near_miss() -> str:
+    return "\n".join(
+        [
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_B,
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_B,
+            TEN_SYLLABLE_LINE_A,
+            TEN_SYLLABLE_LINE_B,
+            TEN_SYLLABLE_LINE_C,
+            TEN_SYLLABLE_LINE_C,
+        ]
+    )
+
+
+def _kyrielle_sonnet_near_miss() -> str:
+    return "\n".join([EIGHT_SYLLABLE_LINE_A, EIGHT_SYLLABLE_LINE_B] * 7)
+
+
+def _pindaric_near_miss() -> str:
+    return "\n\n".join(
+        [
+            "\n".join(["line"] * 7),
+            "\n".join(["line"] * 7),
+            "\n".join(["line"] * 8),
+        ]
+    )
+
+
+def _sapphic_stanza_near_miss() -> str:
+    return "\n".join(
+        [
+            ELEVEN_SYLLABLE_LINE_A,
+            ELEVEN_SYLLABLE_LINE_B,
+            ELEVEN_SYLLABLE_LINE_C,
+            SEVEN_SYLLABLE_ADONIC_NEAR_MISS,
+        ]
+    )
+
+
+def _sapphic_ode_near_miss() -> str:
+    return "\n\n".join([_sapphic_stanza_near_miss()] * 3)
 
 
 class TestHaiku:
@@ -509,6 +875,104 @@ def test_rondelet_does_not_report_pass_when_penalty_score_is_low() -> None:
     """Custom score overrides should not hide a failed refrain behind passed=True."""
     result = verify(_rondelet_near_miss(), Rondelet(strict=False))
     assert result.score == 0.05
+    assert result.passed is False
+
+
+@pytest.mark.parametrize(
+    ("form", "poem", "min_score"),
+    [
+        (Ballad(strict=False), _ballad_near_miss(), 0.5),
+        (BroadBallad(strict=False), _broadside_ballad_near_miss(), 0.5),
+        (BurnsStanza(strict=False), _burns_near_miss(), 0.5),
+        (HoratianOde(strict=False), _horatian_near_miss(), 0.5),
+        (Aubade(strict=False), _aubade_near_miss(), 0.5),
+        (Rubai(strict=False), _rubai_near_miss(), 0.5),
+        (Rubaiyat(strict=False), _rubaiyat_near_miss(), 0.5),
+        (CurtalSonnet(strict=False), _curtal_near_miss(), 0.5),
+        (OneginStanza(strict=False), _onegin_near_miss(), 0.5),
+        (CaudateSonnet(strict=False), _caudate_near_miss(), 0.5),
+        (Virelai(strict=False), _virelai_near_miss(), 0.05),
+        (Seguidilla(strict=False), _seguidilla_near_miss(), 0.5),
+        (Rispetto(strict=False), _rispetto_near_miss(), 0.5),
+        (KyrielleSonnet(strict=False), _kyrielle_sonnet_near_miss(), 0.5),
+        (Distich(), "\n".join([TEN_SYLLABLE_LINE_A, TEN_SYLLABLE_LINE_B]), 0.5),
+        (
+            Tercet(strict=False),
+            "\n".join([TEN_SYLLABLE_LINE_A, TEN_SYLLABLE_LINE_B, TEN_SYLLABLE_LINE_A]),
+            0.5,
+        ),
+        (
+            Triplet(strict=False),
+            "\n".join([TEN_SYLLABLE_LINE_A, TEN_SYLLABLE_LINE_A, TEN_SYLLABLE_LINE_A]),
+            0.5,
+        ),
+        (Terzanelle(strict=False), _terzanelle_near_miss(), 0.5),
+        (CrownOfSonnets(strict=False), _crown_near_miss(), 0.5),
+        (Sestina(strict=False), _same_end_word_stanzas(6, 6, [3]), 0.5),
+        (Tritina(strict=False), _same_end_word_stanzas(3, 3, [1]), 0.5),
+        (Quatina(strict=False), _same_end_word_stanzas(4, 4, [2]), 0.5),
+        (Quintina(strict=False), _same_end_word_stanzas(5, 5, [3]), 0.5),
+        (PindaricOde(strict=False), _pindaric_near_miss(), 0.5),
+        (SapphicStanza(strict=False), _sapphic_stanza_near_miss(), 0.8),
+        (SapphicOde(strict=False), _sapphic_ode_near_miss(), 0.6),
+    ],
+    ids=[
+        "ballad",
+        "broadside-ballad",
+        "burns-stanza",
+        "horatian-ode",
+        "aubade",
+        "rubai",
+        "rubaiyat",
+        "curtal-sonnet",
+        "onegin-stanza",
+        "caudate-sonnet",
+        "virelai",
+        "seguidilla",
+        "rispetto",
+        "kyrielle-sonnet",
+        "distich",
+        "tercet",
+        "triplet",
+        "terzanelle",
+        "crown-of-sonnets",
+        "sestina",
+        "tritina",
+        "quatina",
+        "quintina",
+        "pindaric-ode",
+        "sapphic-stanza",
+        "sapphic-ode",
+    ],
+)
+def test_additional_forms_reject_lenient_false_positives(form, poem, min_score) -> None:
+    """Defining rhyme, refrain, end-word, or stanza-shape checks must gate canonical passes."""
+    result = verify(poem, form)
+    assert result.score >= min_score
+    assert result.passed is False
+
+
+@pytest.mark.parametrize(
+    ("form", "poem"),
+    [
+        (ChantRoyal(strict=False), _chant_royal_near_miss()),
+        (DoubleBallade(strict=False), _double_ballade_near_miss()),
+        (Canzone(strict=False), _canzone_near_miss()),
+        (Lai(strict=False), _lai_near_miss()),
+    ],
+    ids=["chant-royal", "double-ballade", "canzone", "lai"],
+)
+def test_low_score_overrides_do_not_hide_failed_long_form_checks(form, poem) -> None:
+    """Custom low scores should agree with canonical pass/fail after gating."""
+    result = verify(poem, form)
+    assert result.score == 0.05
+    assert result.passed is False
+
+
+def test_tanaga_requires_rhyme_even_in_lenient_mode() -> None:
+    """Lenient tanaga scoring should not pass when the defining rhyme pattern fails."""
+    result = verify(_tanaga_near_miss(), Tanaga(strict=False))
+    assert result.score > 0.7
     assert result.passed is False
 
 

@@ -30,13 +30,10 @@ class SapphicStanza(Constraint):
     Sapphic Stanza: Classical 4-line stanza form.
 
     Structure:
-    - Lines 1-3: 11 syllables each (Sapphic hendecasyllables)
-    - Line 4: 5 syllables (Adonic line)
+    - Lines 1-3: 11 syllables each
+    - Line 4: 5 syllables
 
-    The classical meter is: --u-u--u-u- for hendecasyllables
-    and -uu-- for the Adonic.
-
-    In English, often adapted as 11-11-11-5 syllables.
+    This verifier checks the common English 11-11-11-5 syllable proxy.
 
     Examples:
         >>> sapphic = SapphicStanza(stanza_count=2)
@@ -87,6 +84,7 @@ class SapphicStanza(Constraint):
         constraints = [
             (self._line_count, 2.0),
             (self._stanza_count, 1.0),
+            (self._stanza_sizes, 1.0),
             (self._syllables, 2.0),
         ]
 
@@ -94,7 +92,11 @@ class SapphicStanza(Constraint):
         if strict:
             self._constraint = And([c for c, _ in constraints])
         else:
-            self._constraint = WeightedSum(constraints, threshold=0.6)
+            self._constraint = WeightedSum(
+                constraints,
+                threshold=0.6,
+                required_indices=list(range(len(constraints))),
+            )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -118,6 +120,9 @@ class SapphicOde(Constraint):
     Sapphic Ode: Multiple Sapphic stanzas forming an ode.
 
     A poem of at least 3 Sapphic stanzas (12+ lines).
+
+    This verifier checks stanza count, 4-line stanza shape, and the
+    repeated 11-11-11-5 syllable proxy.
 
     Examples:
         >>> ode = SapphicOde(min_stanzas=4)
@@ -158,6 +163,9 @@ class SapphicOde(Constraint):
 
         # Check stanza count - quadratic penalty for stricter GRPO training
         stanza_count = structure.stanza_count
+        stanza_count_passed = stanza_count >= self.min_stanzas and (
+            self.max_stanzas is None or stanza_count <= self.max_stanzas
+        )
 
         if stanza_count < self.min_stanzas:
             linear_stanza = stanza_count / self.min_stanzas
@@ -170,6 +178,7 @@ class SapphicOde(Constraint):
 
         # Check stanza sizes (should all be 4)
         sizes_correct = sum(1 for s in structure.stanzas if len(s) == 4)
+        size_passed = stanza_count > 0 and sizes_correct == stanza_count
         # Quadratic penalty for stricter GRPO training
         linear_size = sizes_correct / max(1, stanza_count)
         size_score = linear_size**2
@@ -193,6 +202,7 @@ class SapphicOde(Constraint):
         for actual, expected in zip(actual_counts, expected_pattern):
             if abs(actual - expected) <= self.syllable_tolerance:
                 syllable_matches += 1
+        syllable_passed = len(actual_counts) > 0 and syllable_matches == len(actual_counts)
         # Quadratic penalty for stricter GRPO training
         linear_syllable = syllable_matches / max(1, len(actual_counts))
         syllable_score = linear_syllable**2
@@ -200,7 +210,7 @@ class SapphicOde(Constraint):
         # Combine scores - syllable pattern (11-11-11-5) is THE defining characteristic
         # It gets 80% weight. Stanza count/size are secondary
         score = stanza_score * 0.1 + size_score * 0.1 + syllable_score * 0.8
-        passed = score >= 0.6 and stanza_count >= self.min_stanzas
+        passed = stanza_count_passed and size_passed and syllable_passed
 
         return VerificationResult(
             score=score,
@@ -212,8 +222,11 @@ class SapphicOde(Constraint):
                 "stanza_count": stanza_count,
                 "min_stanzas": self.min_stanzas,
                 "stanza_score": stanza_score,
+                "stanza_count_passed": stanza_count_passed,
                 "size_score": size_score,
+                "size_passed": size_passed,
                 "syllable_score": syllable_score,
+                "syllable_passed": syllable_passed,
             },
         )
 

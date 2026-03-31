@@ -102,10 +102,10 @@ class RhymeScheme(Constraint):
                     if word_i.lower() == word_j.lower():
                         # Identical words: full credit if allowed, partial otherwise
                         raw_score = 1.0 if self.allow_identical else 0.5
+                        passed = self.allow_identical and raw_score >= self.threshold
                     else:
                         raw_score = rhyme_score(word_i, word_j)
-
-                    passed = raw_score >= self.threshold
+                        passed = raw_score >= self.threshold
                     # For binary scoring, use 1.0 or 0.0 based on threshold
                     score = (1.0 if passed else 0.0) if self.binary_scoring else raw_score
                     pair_scores.append(score)
@@ -517,6 +517,26 @@ class EndWordPattern(Constraint):
                 ],
                 constraint_name=self.name,
                 constraint_type=self.constraint_type,
+            )
+
+        distinct_canonical_words = {word.lower() for word in canonical}
+        if len(distinct_canonical_words) != self.num_words:
+            return VerificationResult(
+                score=0.0,
+                passed=False,
+                rubric=[
+                    RubricItem(
+                        criterion="Distinct end words in first stanza",
+                        expected=str(self.num_words),
+                        actual=str(len(distinct_canonical_words)),
+                        score=0.0,
+                        passed=False,
+                        explanation="The opening stanza must establish distinct end words for rotation.",
+                    )
+                ],
+                constraint_name=self.name,
+                constraint_type=self.constraint_type,
+                details={"canonical_words": canonical},
             )
 
         # Generate expected patterns for each stanza

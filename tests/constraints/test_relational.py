@@ -75,6 +75,15 @@ And as for the bucket, Nantucket"""
         result = constraint.verify(poem)
         # cat/cat and dog/dog are identical, not true rhymes
         assert 0 < result.score < 1.0
+        assert result.passed is False
+
+    def test_identical_words_do_not_pass_without_allow_identical(self) -> None:
+        """Identical end words never satisfy a rhyme group unless explicitly allowed."""
+        poem = "The cat\nThe cat"
+        constraint = RhymeScheme("AA", threshold=0.5, allow_identical=False)
+        result = constraint.verify(poem)
+        assert result.score == 0.5
+        assert result.passed is False
 
     def test_identical_words_allowed(self) -> None:
         """Identical words pass with allow_identical=True."""
@@ -274,6 +283,20 @@ Finally comes banana"""
         result = constraint.verify(poem)
         assert result.passed is False
         assert result.score == 0.0
+
+    def test_duplicate_first_stanza_end_words_fail(self) -> None:
+        """A valid rotation must start from distinct end words in the first stanza."""
+        poem = """First line ends stone
+Second line ends stone
+Third line ends stone
+
+Another line ends stone
+More lines end stone
+Final line ends stone"""
+        constraint = EndWordPattern(num_words=3, num_stanzas=2, rotation=[2, 0, 1])
+        result = constraint.verify(poem)
+        assert result.score == 0.0
+        assert result.passed is False
 
     def test_describe(self) -> None:
         """Description includes pattern info."""

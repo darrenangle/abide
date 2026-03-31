@@ -103,6 +103,7 @@ class Sestina(Constraint):
                     (self._end_word_pattern, 3.0),
                 ],
                 threshold=0.6,
+                required_indices=[0, 1, 2, 3],
             )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
