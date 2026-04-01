@@ -19,3 +19,4 @@ Updated: 2026-03-31
 | RF-013 | P1 | done | | Add inference regression coverage and narrow inference guarantees to what is proven | RF-012 |
 | RF-014 | P1 | done | | Rewrite README and public docs around verified APIs and temporary rollout guardrails | RF-012, RF-013 |
 | RF-015 | P1 | done | | Harden Japanese short forms and shape-poetry families against lenient false positives | RF-014 |
+| RF-016 | P1 | done | | Harden Fibonacci and free-form structural verifiers and narrow their public claims | RF-015 |

@@ -38,6 +38,21 @@ def fibonacci_sequence(n: int) -> list[int]:
     return seq
 
 
+def _compose_fibonacci_constraint(
+    constraints: list[tuple[Constraint, float]],
+    *,
+    strict: bool,
+) -> Constraint:
+    """Compose Fibonacci-family constraints with hard pass gating in lenient mode."""
+    if strict:
+        return And([constraint for constraint, _ in constraints])
+    return WeightedSum(
+        constraints,
+        threshold=0.7,
+        required_indices=[0, 1, 2],
+    )
+
+
 class FibonacciPoem(Constraint):
     """
     Fibonacci Poem (Fib): Syllables follow the Fibonacci sequence.
@@ -93,11 +108,7 @@ class FibonacciPoem(Constraint):
             (self._syllables, 2.0),
         ]
 
-        self._constraint: Constraint
-        if strict:
-            self._constraint = And([c for c, _ in constraints])
-        else:
-            self._constraint = WeightedSum(constraints, threshold=0.7)
+        self._constraint = _compose_fibonacci_constraint(constraints, strict=strict)
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -170,11 +181,7 @@ class ReverseFibonacci(Constraint):
             (self._syllables, 2.0),
         ]
 
-        self._constraint: Constraint
-        if strict:
-            self._constraint = And([c for c, _ in constraints])
-        else:
-            self._constraint = WeightedSum(constraints, threshold=0.7)
+        self._constraint = _compose_fibonacci_constraint(constraints, strict=strict)
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -249,11 +256,7 @@ class DoubleFibonacci(Constraint):
             (self._syllables, 2.0),
         ]
 
-        self._constraint: Constraint
-        if strict:
-            self._constraint = And([c for c, _ in constraints])
-        else:
-            self._constraint = WeightedSum(constraints, threshold=0.7)
+        self._constraint = _compose_fibonacci_constraint(constraints, strict=strict)
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)

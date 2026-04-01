@@ -72,3 +72,9 @@
 - Narrowed semantic claims in `Senryu` and the shape-form docstrings/descriptions to the structural checks the code actually performs.
 - Verified the RF-015 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `562 passed, 1 skipped`.
 - Closed `RF-015` and released its lock.
+- Opened and claimed `RF-016` for Fibonacci forms plus the free-form structural verifiers.
+- Added direct coverage for the Fibonacci family plus `FreeVerse` and `ProsePoem`.
+- Hardened Fibonacci lenient mode with required-child gating and fixed `ProsePoem` so line-broken verse no longer slips through paragraph/sentence counts.
+- Narrowed the free-form module/class descriptions to the structural checks the code actually performs.
+- Verified the RF-016 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `571 passed, 1 skipped`.
+- Closed `RF-016` and released its lock.

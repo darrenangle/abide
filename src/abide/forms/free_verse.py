@@ -1,7 +1,9 @@
 """
 Free verse form template.
 
-Free verse has no fixed meter or rhyme scheme, but still has structure.
+These verifiers check configurable structural bounds only. They do not attempt
+to verify broader poetic qualities such as imagery, rhythm, or figurative
+language.
 """
 
 from __future__ import annotations
@@ -20,14 +22,11 @@ if TYPE_CHECKING:
 
 class FreeVerse(Constraint):
     """
-    Free verse: Poetry without fixed meter or rhyme scheme.
+    Free verse with configurable structural bounds.
 
-    While "free," poems still have structure:
-    - Line breaks create rhythm and emphasis
-    - Stanza breaks create logical divisions
-    - Length and pacing matter
-
-    This constraint verifies minimal structural requirements.
+    This verifier checks only line/stanza counts and optional word-count bounds
+    per line. It does not attempt to verify rhyme, meter, or other stylistic
+    properties.
 
     Examples:
         >>> free = FreeVerse(min_lines=5, min_stanzas=2)
@@ -123,12 +122,11 @@ class FreeVerse(Constraint):
 
 class ProsePoem(Constraint):
     """
-    Prose poem: Poetry in prose form without line breaks.
+    Prose poem in paragraph form without line-broken verse.
 
-    Combines poetic language with prose format:
-    - No line breaks (continuous paragraphs)
-    - Uses poetic devices (imagery, rhythm, sound)
-    - Short paragraphs
+    This verifier checks only paragraph count, approximate sentence count, and
+    whether each paragraph is continuous prose rather than a stack of short
+    verse lines.
 
     Examples:
         >>> prose = ProsePoem(min_paragraphs=2, max_paragraphs=5)
@@ -167,6 +165,11 @@ class ProsePoem(Constraint):
         text = poem if isinstance(poem, str) else "\n".join(poem.lines)
         paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
         para_count = len(paragraphs)
+        line_broken_paragraphs = sum(
+            1
+            for paragraph in paragraphs
+            if len([line for line in paragraph.splitlines() if line.strip()]) > 1
+        )
 
         # Count sentences (rough approximation)
         sentence_count = sum(text.count(c) for c in ".!?")
@@ -190,6 +193,10 @@ class ProsePoem(Constraint):
             score *= self.max_sentences / sentence_count
             issues.append(f"Too many sentences ({sentence_count} > {self.max_sentences})")
 
+        if line_broken_paragraphs:
+            score *= 0.05
+            issues.append(f"Contains line-broken verse in {line_broken_paragraphs} paragraph(s)")
+
         passed = score >= 0.8 and not issues
 
         return VerificationResult(
@@ -201,6 +208,7 @@ class ProsePoem(Constraint):
             details={
                 "paragraph_count": para_count,
                 "sentence_count": sentence_count,
+                "line_broken_paragraphs": line_broken_paragraphs,
                 "issues": issues,
             },
         )
