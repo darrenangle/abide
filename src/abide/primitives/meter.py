@@ -1,7 +1,7 @@
 """
 Meter and scansion analysis for poetry.
 
-Provides meter type detection, foot counting, and scansion scoring
+Provides heuristic meter type detection, approximate foot counting, and scansion scoring
 using CMU pronouncing dictionary stress patterns.
 
 Metrical Feet:
@@ -21,6 +21,7 @@ Common Meters:
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache
@@ -91,7 +92,7 @@ class FootMatch:
 
 @dataclass
 class ScansionResult:
-    """Result of scanning a line for meter."""
+    """Result of scanning a line for meter heuristically."""
 
     stress_pattern: str  # Raw stress pattern (0s and 1s/2s)
     binary_pattern: str  # Normalized to 0s and 1s (/ and u)
@@ -100,6 +101,15 @@ class ScansionResult:
     foot_count: int  # Number of feet detected
     regularity: float  # How regular the meter is (0-1)
     syllable_count: int
+
+
+CLASSIFIABLE_METERS: tuple[MeterType, ...] = (
+    MeterType.IAMB,
+    MeterType.TROCHEE,
+    MeterType.ANAPEST,
+    MeterType.DACTYL,
+    MeterType.AMPHIBRACH,
+)
 
 
 def normalize_stress(pattern: str) -> str:
@@ -162,31 +172,54 @@ def scan_line(line: str) -> ScansionResult:
     binary = normalize_stress(stress_pattern)
     feet = _detect_feet(binary)
 
-    # Count foot types
-    type_counts: dict[MeterType, int] = {}
-    for foot in feet:
-        type_counts[foot.meter_type] = type_counts.get(foot.meter_type, 0) + 1
-
-    # Find dominant meter
-    dominant = None
-    max_count = 0
-    for meter_type, count in type_counts.items():
-        if count > max_count:
-            max_count = count
-            dominant = meter_type
-
-    # Calculate regularity (what portion of feet match dominant type)
-    regularity = max_count / len(feet) if feet else 0.0
+    dominant, expected_feet, regularity = _classify_meter(binary)
 
     return ScansionResult(
         stress_pattern=stress_pattern,
         binary_pattern=binary,
         feet=feet,
         dominant_meter=dominant,
-        foot_count=len(feet),
+        foot_count=expected_feet,
         regularity=regularity,
         syllable_count=len(binary),
     )
+
+
+def _classify_meter(binary_pattern: str) -> tuple[MeterType | None, int, float]:
+    """
+    Infer the dominant line-level meter heuristically.
+
+    This is intentionally based on whole-line pattern alignment rather than the
+    greedy exact-foot parser so the reported dominant meter stays consistent
+    with `meter_score()`.
+    """
+    if not binary_pattern:
+        return None, 0, 0.0
+
+    best_meter: MeterType | None = None
+    best_feet = 0
+    best_score = 0.0
+
+    for meter_type in CLASSIFIABLE_METERS:
+        foot_size = FOOT_SIZES[meter_type]
+        candidate_feet = {
+            max(1, len(binary_pattern) // foot_size),
+            max(1, round(len(binary_pattern) / foot_size)),
+            max(1, math.ceil(len(binary_pattern) / foot_size)),
+        }
+        for expected_feet in sorted(candidate_feet):
+            score = _score_pattern_alignment(
+                binary_pattern,
+                meter_type,
+                expected_feet,
+                allow_substitutions=True,
+            )
+            if score > best_score:
+                best_meter = meter_type
+                best_feet = expected_feet
+                best_score = score
+
+    return best_meter, best_feet, best_score
 
 
 def _detect_feet(binary_pattern: str) -> list[FootMatch]:
@@ -280,7 +313,7 @@ def _matches_foot(pattern: str, meter_type: MeterType) -> bool:
 
 def detect_meter(line: str) -> tuple[MeterType | None, float]:
     """
-    Detect the dominant meter of a line.
+    Detect the dominant meter of a line heuristically.
 
     Args:
         line: Line of text

@@ -57,3 +57,8 @@
 - Added a direct ghazal regression for the broken-late-radif near miss and re-added `Ghazal` to the training-safe adversarial harness plus the conservative catalog.
 - Verified the RF-011 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `530 passed, 1 skipped`.
 - Closed `RF-011` and released its lock.
+- Opened `RF-012` / `RF-013` / `RF-014` for the remaining gap between what the README promises and what the codebase has direct evidence for, starting with meter/scansion reliability.
+- Added dedicated meter/scansion tests for the primitives and constraints, switched `scan_line()` / `detect_meter()` to line-level heuristic classification that agrees with `meter_score()`, and narrowed the README plus meter docs to that verified heuristic behavior.
+- Verified the RF-012 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `537 passed, 1 skipped`.
+- Closed `RF-012` and released its lock.
+- Claimed `RF-013` for the inference reliability pass.

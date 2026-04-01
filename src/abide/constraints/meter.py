@@ -1,7 +1,7 @@
 """
 Meter and scansion constraints for poetry.
 
-Provides constraints for enforcing metrical patterns like
+Provides constraints for heuristically scoring metrical patterns like
 iambic pentameter, trochaic tetrameter, etc.
 """
 
@@ -31,7 +31,7 @@ class Meter(Constraint):
     """
     Constraint on metrical pattern for a poem.
 
-    Verifies that lines follow a specific meter (iamb, trochee, etc.)
+    Heuristically verifies that lines follow a specific meter (iamb, trochee, etc.)
     with a specified number of feet (pentameter, tetrameter, etc.).
 
     Examples:

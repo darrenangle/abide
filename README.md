@@ -11,7 +11,7 @@ Abide is a composable constraint algebra that transforms poetic form specificati
 Training LLMs to write poetry is hard because:
 - **Manual evaluation doesn't scale** - You can't hand-score thousands of poems during RL training
 - **Binary pass/fail loses signal** - A poem with 13/14 correct lines shouldn't score the same as garbage
-- **Form rules are complex** - Villanelles have refrains, sestinas rotate end-words, sonnets need iambic pentameter
+- **Form rules are complex** - Villanelles have refrains, sestinas rotate end-words, and some forms also involve meter
 - **Verification and prompts diverge** - Your reward function checks one thing, your prompt says another
 
 ## The Solution
@@ -26,10 +26,10 @@ sonnet = ShakespeareanSonnet()
 result = sonnet.verify(llm_output)
 reward = result.score  # 0.73
 
-# Automatic prompt generation (matches your reward function exactly)
+# Automatic prompt generation
 prompt = sonnet.instruction()
-# "Write a sonnet with 14 lines of iambic pentameter,
-#  following the rhyme scheme ABAB CDCD EFEF GG..."
+# "Shakespearean Sonnet: 14 lines of about 10 syllables,
+#  ABAB CDCD EFEF GG rhyme scheme."
 
 # Automatic rubric (explainable rewards)
 for item in result.rubric:
@@ -59,24 +59,24 @@ print(result.score)  # 0.87 (partial credit for being close)
 
 ### 2. Metrical Analysis (Scansion)
 
-Detect and enforce meter using CMU Pronouncing Dictionary stress patterns:
+Heuristically score meter using CMU Pronouncing Dictionary stress patterns:
 
 ```python
 from abide.primitives import scan_line, MeterType, meter_score
 from abide.constraints import Meter, FootLength
 
-# Analyze Shakespeare's iambic pentameter
+# Analyze a likely iambic-pentameter line
 line = "Shall I compare thee to a summer's day"
 result = scan_line(line)
 
 print(result.binary_pattern)    # "1101110101"
 print(result.foot_count)        # 5
 print(result.dominant_meter)    # MeterType.IAMB
-print(result.regularity)        # 0.80
+print(result.regularity)        # 0.84
 
 # Score against expected meter
 score = meter_score(line, MeterType.IAMB, expected_feet=5)
-print(score)  # 0.99 (accounts for natural substitutions)
+print(score)  # 0.92 (high heuristic match with substitutions)
 
 # Use as a constraint
 blank_verse = Meter(MeterType.IAMB, FootLength.PENTAMETER)
@@ -165,7 +165,7 @@ sonnet = WeightedSum([
 |------|-------|--------------|
 | **Haiku** | 3 | 5-7-5 syllables |
 | **Tanka** | 5 | 5-7-5-7-7 syllables |
-| **Sonnet** (3 variants) | 14 | Iambic pentameter + rhyme scheme |
+| **Sonnet** (3 variants) | 14 | About 10 syllables per line + rhyme scheme |
 | **Villanelle** | 19 | ABA rhyme + two refrains |
 | **Sestina** | 39 | End-word rotation across 6 stanzas |
 | **Pantoum** | Variable | Interlocking quatrains |
