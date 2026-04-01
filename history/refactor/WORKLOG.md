@@ -62,3 +62,13 @@
 - Verified the RF-012 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `537 passed, 1 skipped`.
 - Closed `RF-012` and released its lock.
 - Claimed `RF-013` for the inference reliability pass.
+- Added direct inference regressions for representative fixtures and narrowed the `abide.inference` language to the self-consistent spec guarantee those tests actually prove.
+- Rewrote the README around real verifier APIs, removed the stale `RewardEnvironment` example, and documented the current RL guardrail as temporary rollout scaffolding rather than the future repo model.
+- Verified the RF-013 / RF-014 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `545 passed, 1 skipped`.
+- Closed `RF-013` and `RF-014` and released the `RF-013` lock.
+- Opened and claimed `RF-015` for the first uncovered-export parity sweep: Japanese short forms plus shape-poetry families.
+- Added direct regression coverage for `Senryu`, `Katauta`, `Sedoka`, `Diamante`, `Cinquain`, `WordCinquain`, `Etheree`, and `ReverseEtheree`.
+- Hardened Japanese short forms and shape-poetry families so one defining-line error can keep partial score but no longer report `passed=True`.
+- Narrowed semantic claims in `Senryu` and the shape-form docstrings/descriptions to the structural checks the code actually performs.
+- Verified the RF-015 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `562 passed, 1 skipped`.
+- Closed `RF-015` and released its lock.

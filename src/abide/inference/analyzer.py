@@ -1,7 +1,8 @@
 """
 Poem analyzer for form inference.
 
-Analyzes a poem's structure and derives constraints that it satisfies.
+Analyzes a poem's structure and derives self-consistent constraints that the
+source poem satisfies.
 """
 
 from __future__ import annotations
@@ -57,7 +58,10 @@ class FormAnalysis:
 
     def to_form_spec(self, name: str = "Inferred Form") -> FormSpec:
         """
-        Convert analysis to a FormSpec that the poem passes 100%.
+        Convert analysis to a self-consistent FormSpec.
+
+        The returned spec is built from the detected structural/prosodic
+        patterns so the source poem itself should score 1.0 against it.
 
         Args:
             name: Name for the form specification
@@ -81,7 +85,7 @@ class FormAnalysis:
         return spec
 
     def verify_score(self) -> float:
-        """Verify that the poem passes all inferred constraints."""
+        """Verify that the source poem scores perfectly against its inferred spec."""
         spec = self.to_form_spec()
         return spec.weighted_score(self.poem)
 
@@ -143,21 +147,20 @@ def analyze_poem(poem: str) -> FormAnalysis:
 
 def infer_form(poem: str, name: str = "Custom Form") -> FormSpec:
     """
-    Infer a FormSpec from a poem that the poem passes 100%.
+    Infer a self-consistent FormSpec from a poem.
 
-    This is the main entry point for form inference.
+    This is the main entry point for structural/prosodic form inference.
 
     Args:
         poem: The poem to analyze
         name: Name for the inferred form
 
     Returns:
-        FormSpec that the poem passes with score 1.0
+        FormSpec that the source poem passes with score 1.0
 
     Example:
         >>> spec = infer_form(my_poem, name="My Custom Form")
-        >>> result = spec.verify(my_poem)
-        >>> assert result["line_count"].score == 1.0
+        >>> assert spec.weighted_score(my_poem) == 1.0
     """
     analysis = analyze_poem(poem)
     return analysis.to_form_spec(name)

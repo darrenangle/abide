@@ -23,12 +23,44 @@ if TYPE_CHECKING:
     from abide.primitives import PoemStructure
 
 
+def _count_syllable_pattern_violations(
+    lines: tuple[str, ...] | list[str],
+    expected: list[int],
+    tolerance: int,
+) -> int:
+    """Count line-level syllable mismatches against an expected pattern."""
+    from abide.primitives import count_line_syllables
+
+    violations = 0
+    for i, expected_syllables in enumerate(expected):
+        if i >= len(lines):
+            violations += 1
+            continue
+
+        actual_syllables = count_line_syllables(lines[i])
+        if abs(actual_syllables - expected_syllables) > tolerance:
+            violations += 1
+
+    return violations
+
+
+def _steep_violation_score(violations: int) -> float:
+    """Convert a syllable violation count into the repo's steep partial-credit curve."""
+    if violations == 0:
+        return 1.0
+    if violations == 1:
+        return 0.5
+    if violations == 2:
+        return 0.25
+    return 0.05
+
+
 class Senryu(Constraint):
     """
     Senryū: 3 lines with 5-7-5 syllable pattern (same as haiku).
 
-    Unlike haiku, senryū focuses on human nature and foibles
-    rather than nature and seasons. Structurally identical to haiku.
+    Traditionally senryū focuses on human nature and foibles rather than
+    seasonal nature imagery, but this verifier checks only the 5-7-5 structure.
 
     Examples:
         >>> senryu = Senryu()
@@ -80,35 +112,16 @@ class Senryu(Constraint):
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
 
-        # Get individual constraint results
         line_result = self._line_count.verify(poem)
         stanza_result = self._stanza_count.verify(poem)
         syllables_result = self._syllables.verify(poem)
-
-        # Count violations in syllable pattern
-        from abide.primitives import count_line_syllables
-
         expected = [5, 7, 5]
-        violations = 0
-        for i, exp_syl in enumerate(expected):
-            if i < len(structure.lines):
-                actual_syl = count_line_syllables(structure.lines[i])
-                if abs(actual_syl - exp_syl) > self.syllable_tolerance:
-                    violations += 1
-            else:
-                violations += 1  # Missing line is a violation
-
-        # Apply steep penalty based on violations
-        if violations == 0:
-            syllable_score = 1.0
-        elif violations == 1:
-            syllable_score = 0.5
-        elif violations == 2:
-            syllable_score = 0.25
-        else:
-            syllable_score = 0.05
-
-        # Combine scores
+        violations = _count_syllable_pattern_violations(
+            structure.lines,
+            expected,
+            self.syllable_tolerance,
+        )
+        syllable_score = _steep_violation_score(violations)
         scores = [
             (line_result.score, 1.0),
             (stanza_result.score, 0.5),
@@ -117,11 +130,7 @@ class Senryu(Constraint):
         total_weight = sum(w for _, w in scores)
         score = sum(s * w for s, w in scores) / total_weight
 
-        passed = (
-            score >= 0.7
-            if not self.strict
-            else (violations == 0 and line_result.passed and stanza_result.passed)
-        )
+        passed = violations == 0 and line_result.passed and stanza_result.passed
 
         return VerificationResult(
             score=score,
@@ -133,7 +142,7 @@ class Senryu(Constraint):
         )
 
     def describe(self) -> str:
-        return "Senryū: 3 lines with 5-7-5 syllables (human-focused haiku)"
+        return "Senryū: 3 lines with 5-7-5 syllables"
 
 
 class Katauta(Constraint):
@@ -193,35 +202,16 @@ class Katauta(Constraint):
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
 
-        # Get individual constraint results
         line_result = self._line_count.verify(poem)
         stanza_result = self._stanza_count.verify(poem)
         syllables_result = self._syllables.verify(poem)
-
-        # Count violations in syllable pattern
-        from abide.primitives import count_line_syllables
-
         expected = [5, 7, 7]
-        violations = 0
-        for i, exp_syl in enumerate(expected):
-            if i < len(structure.lines):
-                actual_syl = count_line_syllables(structure.lines[i])
-                if abs(actual_syl - exp_syl) > self.syllable_tolerance:
-                    violations += 1
-            else:
-                violations += 1  # Missing line is a violation
-
-        # Apply steep penalty based on violations
-        if violations == 0:
-            syllable_score = 1.0
-        elif violations == 1:
-            syllable_score = 0.5
-        elif violations == 2:
-            syllable_score = 0.25
-        else:
-            syllable_score = 0.05
-
-        # Combine scores
+        violations = _count_syllable_pattern_violations(
+            structure.lines,
+            expected,
+            self.syllable_tolerance,
+        )
+        syllable_score = _steep_violation_score(violations)
         scores = [
             (line_result.score, 1.0),
             (stanza_result.score, 0.5),
@@ -230,11 +220,7 @@ class Katauta(Constraint):
         total_weight = sum(w for _, w in scores)
         score = sum(s * w for s, w in scores) / total_weight
 
-        passed = (
-            score >= 0.7
-            if not self.strict
-            else (violations == 0 and line_result.passed and stanza_result.passed)
-        )
+        passed = violations == 0 and line_result.passed and stanza_result.passed
 
         return VerificationResult(
             score=score,
@@ -306,35 +292,16 @@ class Sedoka(Constraint):
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
 
-        # Get individual constraint results
         line_result = self._line_count.verify(poem)
         stanza_result = self._stanza_count.verify(poem)
         syllables_result = self._syllables.verify(poem)
-
-        # Count violations in syllable pattern
-        from abide.primitives import count_line_syllables
-
         expected = [5, 7, 7, 5, 7, 7]
-        violations = 0
-        for i, exp_syl in enumerate(expected):
-            if i < len(structure.lines):
-                actual_syl = count_line_syllables(structure.lines[i])
-                if abs(actual_syl - exp_syl) > self.syllable_tolerance:
-                    violations += 1
-            else:
-                violations += 1  # Missing line is a violation
-
-        # Apply steep penalty based on violations
-        if violations == 0:
-            syllable_score = 1.0
-        elif violations == 1:
-            syllable_score = 0.5
-        elif violations == 2:
-            syllable_score = 0.25
-        else:
-            syllable_score = 0.05
-
-        # Combine scores
+        violations = _count_syllable_pattern_violations(
+            structure.lines,
+            expected,
+            self.syllable_tolerance,
+        )
+        syllable_score = _steep_violation_score(violations)
         scores = [
             (line_result.score, 1.0),
             (stanza_result.score, 0.5),
@@ -343,11 +310,7 @@ class Sedoka(Constraint):
         total_weight = sum(w for _, w in scores)
         score = sum(s * w for s, w in scores) / total_weight
 
-        passed = (
-            score >= 0.7
-            if not self.strict
-            else (violations == 0 and line_result.passed and stanza_result.passed)
-        )
+        passed = violations == 0 and line_result.passed and stanza_result.passed
 
         return VerificationResult(
             score=score,

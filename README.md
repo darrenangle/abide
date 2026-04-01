@@ -18,7 +18,6 @@ Training LLMs to write poetry is hard because:
 
 ```python
 from abide.forms import ShakespeareanSonnet
-from abide.primitives import MeterType
 
 sonnet = ShakespeareanSonnet()
 
@@ -83,31 +82,37 @@ blank_verse = Meter(MeterType.IAMB, FootLength.PENTAMETER)
 result = blank_verse.verify(poem)
 ```
 
-### 3. Form Inference (Reverse Engineering)
+### 3. Form Inference (Self-Consistent Spec Extraction)
 
-Analyze any poem and extract a specification that it passes 100%:
+Analyze a source poem and derive a structural/prosodic `FormSpec` that the
+source poem itself satisfies with score `1.0`:
 
 ```python
 from abide.inference import analyze_poem, infer_form
 
-# Take any poem
-poem = """Do not go gentle into that good night,
-Old age should burn and rave at close of day;
-Rage, rage against the dying of the light..."""
+# Take a poem you want to model
+poem = """The morning sun glows
+Cherry blossoms gently fall
+Spring has come at last"""
 
-# Infer its constraints
 analysis = analyze_poem(poem)
-print(analysis.rhyme_scheme)      # "ABABAB..."
-print(analysis.syllable_pattern)  # [10, 10, 10, ...]
-print(analysis.refrains)          # [(0, [5, 11, 17]), ...]
+print(analysis.structure.line_count)  # 3
+print(analysis.syllable_pattern)      # [5, 7, 5]
+print([c.id for c in analysis.constraints])
+# ['line_count', 'syllables_exact']
 
-# Generate a FormSpec the poem passes with score 1.0
-spec = infer_form(poem, name="Dylan Thomas Style")
+# Generate a self-consistent FormSpec
+spec = infer_form(poem, name="Three-Line Form")
 assert spec.weighted_score(poem) == 1.0
 
-# Now use it to train/evaluate other poems in the same style
+# Now use it to score other poems against that inferred pattern
 new_poem_score = spec.weighted_score(new_llm_output)
 ```
+
+For longer structured poems, inference may also recover stanza counts,
+repeated-line refrains, and rhyme-group constraints when those patterns are
+reproducibly detectable. It is useful for extracting verifiable patterns from a
+source poem, not for canonical literary-form classification.
 
 ### 4. Visual/Shape Poetry
 
@@ -158,37 +163,20 @@ sonnet = WeightedSum([
 
 ---
 
-## Supported Forms (50+)
+## Catalog Coverage
 
-### Classic Forms
-| Form | Lines | Key Features |
-|------|-------|--------------|
-| **Haiku** | 3 | 5-7-5 syllables |
-| **Tanka** | 5 | 5-7-5-7-7 syllables |
-| **Sonnet** (3 variants) | 14 | About 10 syllables per line + rhyme scheme |
-| **Villanelle** | 19 | ABA rhyme + two refrains |
-| **Sestina** | 39 | End-word rotation across 6 stanzas |
-| **Pantoum** | Variable | Interlocking quatrains |
-| **Ghazal** | Variable | Couplets with radif + qafiya |
+Abide exports a broad catalog of historical, repeating, stanzaic, shape, and
+experimental forms. Representative examples include:
 
-### Stanza Forms
-| Form | Lines/Stanza | Rhyme Scheme |
-|------|--------------|--------------|
-| **Ottava Rima** | 8 | ABABABCC |
-| **Rhyme Royal** | 7 | ABABBCC |
-| **Spenserian Stanza** | 9 | ABABBCBCC + alexandrine |
-| **Ballad Stanza** | 4 | ABCB, 8-6-8-6 syllables |
-| **Burns Stanza** | 6 | AAABAB |
+- `Haiku`, `Tanka`, `ShakespeareanSonnet`, `Villanelle`, `Sestina`
+- `Pantoum`, `TerzaRima`, `Rondeau`, `Triolet`, `Ghazal`
+- `OttavaRima`, `RhymeRoyal`, `BalladStanza`, `BurnsStanza`, `Clerihew`
+- `Diamante`, `Cinquain`, `Etheree`, plus many parameterized experimental forms
 
-### Shape/Visual Poetry
-| Form | Pattern |
-|------|---------|
-| **Diamante** | 1-2-3-4-3-2-1 words |
-| **Cinquain** | 2-4-6-8-2 syllables |
-| **Etheree** | 1-2-3-4-5-6-7-8-9-10 syllables |
-
-### And Many More
-Quatrain, Couplet (heroic, short, elegiac), Blank Verse, Ode (Pindaric, Horatian, Irregular), Ballad, Kyrielle, Epigram, Tercet, Rubaiyat, Free Verse, Rondeau, Triolet, Ballade, Blues Poem, Clerihew, Limerick...
+The long-term goal is full-catalog reliability. While that convergence work is
+still in progress, the RL scripts default to a conservative subset from
+`abide.forms.catalog` so training runs do not accidentally depend on form
+families that have not completed the same hardening pass yet.
 
 ---
 
@@ -198,17 +186,22 @@ Quatrain, Couplet (heroic, short, elegiac), Blank Verse, Ode (Pindaric, Horatian
 
 ```python
 from abide.forms import Villanelle
-from abide.verifiers import RewardEnvironment
+from abide.verifiers import PoeticFormReward
 
-# Create reward environment for your RL framework
-env = RewardEnvironment(
-    form=Villanelle(),
-    reward_scale=(0.0, 1.0),  # Continuous rewards
-)
+reward_fn = PoeticFormReward(Villanelle())
 
-# In your training loop
 def compute_reward(generated_poem: str) -> float:
-    return env.score(generated_poem)
+    return reward_fn(generated_poem).score
+```
+
+### Current RL Default
+
+```python
+from abide.forms.catalog import load_training_safe_form_instances
+
+# Current conservative default used by the RL scripts while
+# the remaining form families are being brought up to the same bar.
+forms = load_training_safe_form_instances()
 ```
 
 ### Prompt-Reward Alignment
@@ -222,11 +215,6 @@ spec = villanelle_spec()
 
 # Generate training prompt
 prompt = spec.full_instruction()
-# "Write a Villanelle with the following requirements:
-#  - Write exactly 19 lines in 6 stanzas (5 tercets + 1 quatrain)
-#  - Follow the rhyme scheme ABA ABA ABA ABA ABA ABAA
-#  - Line 1 must be repeated exactly at lines 6, 12, 18
-#  - Line 3 must be repeated exactly at lines 9, 15, 19"
 
 # Verify output with matching criteria
 result = spec.verify(llm_output)
@@ -288,7 +276,7 @@ for item in result.rubric:
 git clone https://github.com/darrenangle/abide.git
 cd abide
 uv sync
-uv run pytest  # 435 tests
+uv run pytest
 ```
 
 ## Architecture
@@ -297,7 +285,7 @@ uv run pytest  # 435 tests
 abide/
 ├── primitives/     # NLP tools: syllables, phonetics, rhyme, meter
 ├── constraints/    # Composable constraint types
-├── forms/          # Pre-built form templates (50+)
+├── forms/          # Pre-built form templates and catalog helpers
 ├── specs/          # FormSpec for instruction generation
 ├── inference/      # Reverse-engineer forms from poems
 └── verifiers/      # RL framework integration
@@ -314,7 +302,7 @@ We're actively running GRPO (Group Relative Policy Optimization) experiments to 
 | [`scripts/train_grpo.py`](scripts/train_grpo.py) | Main GRPO trainer using verifiers library |
 | [`scripts/train_grpo_trl.py`](scripts/train_grpo_trl.py) | TRL-based GRPO with KL regularization (beta parameter) |
 | [`scripts/find_learnable_forms.py`](scripts/find_learnable_forms.py) | Identify forms with high within-rollout variance (best GRPO signal) |
-| [`scripts/prompt_generator.py`](scripts/prompt_generator.py) | Generate training prompts from 140+ poetic forms |
+| [`scripts/prompt_generator.py`](scripts/prompt_generator.py) | Generate training prompts from the form catalog |
 
 ### Run Scripts
 

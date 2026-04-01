@@ -24,20 +24,29 @@ if TYPE_CHECKING:
     from abide.primitives import PoemStructure
 
 
+def _compose_shape_form(
+    line_count: LineCount,
+    shape: LineShape,
+    *,
+    strict: bool,
+) -> Constraint:
+    """Compose a shape-form verifier with hard pass gating in lenient mode."""
+    if strict:
+        return And([line_count, shape])
+    return WeightedSum(
+        [(line_count, 2.0), (shape, 2.0)],
+        threshold=0.7,
+        required_indices=[0, 1],
+    )
+
+
 class Diamante(Constraint):
     """
     Diamante: 7-line diamond-shaped poem.
 
-    Structure:
-    - Line 1: 1 word (noun, subject)
-    - Line 2: 2 words (adjectives describing line 1)
-    - Line 3: 3 words (-ing verbs about line 1)
-    - Line 4: 4 words (nouns, 2 about line 1, 2 about line 7)
-    - Line 5: 3 words (-ing verbs about line 7)
-    - Line 6: 2 words (adjectives describing line 7)
-    - Line 7: 1 word (noun, opposite of line 1)
-
-    Word pattern: 1-2-3-4-3-2-1
+    This verifier checks the 1-2-3-4-3-2-1 line-length shape only, not the
+    part-of-speech or semantic-role conventions sometimes associated with the
+    traditional form.
 
     Examples:
         >>> diamante = Diamante()
@@ -96,14 +105,7 @@ class Diamante(Constraint):
                 weight=2.0,
             )
 
-        self._constraint: Constraint
-        if strict:
-            self._constraint = And([self._line_count, self._shape])
-        else:
-            self._constraint = WeightedSum(
-                [(self._line_count, 2.0), (self._shape, 2.0)],
-                threshold=0.7,
-            )
+        self._constraint = _compose_shape_form(self._line_count, self._shape, strict=strict)
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -170,14 +172,7 @@ class Cinquain(Constraint):
             weight=2.0,
         )
 
-        self._constraint: Constraint
-        if strict:
-            self._constraint = And([self._line_count, self._shape])
-        else:
-            self._constraint = WeightedSum(
-                [(self._line_count, 2.0), (self._shape, 2.0)],
-                threshold=0.7,
-            )
+        self._constraint = _compose_shape_form(self._line_count, self._shape, strict=strict)
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -200,12 +195,7 @@ class WordCinquain(Constraint):
 
     Variant of cinquain measured by words instead of syllables.
 
-    Structure:
-    - Line 1: 1 word (title)
-    - Line 2: 2 words (describe title)
-    - Line 3: 3 words (action)
-    - Line 4: 4 words (feeling)
-    - Line 5: 1 word (synonym for title)
+    This verifier checks only the 1-2-3-4-1 word-count pattern.
 
     Examples:
         >>> cinquain = WordCinquain()
@@ -236,14 +226,7 @@ class WordCinquain(Constraint):
             weight=2.0,
         )
 
-        self._constraint: Constraint
-        if strict:
-            self._constraint = And([self._line_count, self._shape])
-        else:
-            self._constraint = WeightedSum(
-                [(self._line_count, 2.0), (self._shape, 2.0)],
-                threshold=0.7,
-            )
+        self._constraint = _compose_shape_form(self._line_count, self._shape, strict=strict)
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -306,14 +289,7 @@ class Etheree(Constraint):
             weight=2.0,
         )
 
-        self._constraint: Constraint
-        if strict:
-            self._constraint = And([self._line_count, self._shape])
-        else:
-            self._constraint = WeightedSum(
-                [(self._line_count, 2.0), (self._shape, 2.0)],
-                threshold=0.7,
-            )
+        self._constraint = _compose_shape_form(self._line_count, self._shape, strict=strict)
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
@@ -365,14 +341,7 @@ class ReverseEtheree(Constraint):
             weight=2.0,
         )
 
-        self._constraint: Constraint
-        if strict:
-            self._constraint = And([self._line_count, self._shape])
-        else:
-            self._constraint = WeightedSum(
-                [(self._line_count, 2.0), (self._shape, 2.0)],
-                threshold=0.7,
-            )
+        self._constraint = _compose_shape_form(self._line_count, self._shape, strict=strict)
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         result = self._constraint.verify(poem)
