@@ -72,10 +72,14 @@ class Abecedarian(Constraint):
         for i, (expected_letter, line) in enumerate(zip(self.letters, structure.lines)):
             line_stripped = line.strip()
             if line_stripped:
-                actual_first = line_stripped[0].upper()
+                actual_first = next(
+                    (char.upper() for char in line_stripped if char.isalpha()), None
+                )
                 if actual_first == expected_letter:
                     matches += 1
                     details.append(f"Line {i + 1}: ✓ starts with '{expected_letter}'")
+                elif actual_first is None:
+                    details.append(f"Line {i + 1}: ✗ no alphabetic opening")
                 else:
                     details.append(
                         f"Line {i + 1}: ✗ expected '{expected_letter}', got '{actual_first}'"
@@ -432,11 +436,10 @@ class Anaphora(Constraint):
             detected_phrase = self.target_phrase
         else:
             # Auto-detect: find most common opening word(s)
-            openings = []
+            openings: list[str] = []
             for line in lines_lower:
                 if line:
-                    # Get first 1-3 words
-                    words = line.split()[:3]
+                    words = line.split()
                     for i in range(1, len(words) + 1):
                         openings.append(" ".join(words[:i]))
 
@@ -454,7 +457,14 @@ class Anaphora(Constraint):
             from collections import Counter
 
             opening_counts = Counter(openings)
-            detected_phrase, repeats = opening_counts.most_common(1)[0]
+            detected_phrase, repeats = max(
+                opening_counts.items(),
+                key=lambda item: (
+                    item[1],
+                    len(item[0].split()),
+                    len(item[0]),
+                ),
+            )
 
         # Score based on repeats - steep penalties for GRPO training
         if repeats >= self.min_repeats:

@@ -78,3 +78,11 @@
 - Narrowed the free-form module/class descriptions to the structural checks the code actually performs.
 - Verified the RF-016 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `571 passed, 1 skipped`.
 - Closed `RF-016` and released its lock.
+
+## 2026-04-01
+
+- Opened and claimed `RF-017` for the constrained semantic forms after finding that catalog instantiation currently passes the wrong kwargs to `Mesostic` and `Anaphora`.
+- Added direct coverage for the constrained semantic forms plus catalog-instantiation regressions for `Mesostic` and `Anaphora`.
+- Fixed the shared catalog kwargs for `Mesostic` / `Anaphora`, improved `Anaphora` auto-detection to prefer the longest repeated opening, and made `Abecedarian` ignore leading punctuation.
+- Verified the RF-017 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `577 passed, 1 skipped`.
+- Closed `RF-017` and released its lock.

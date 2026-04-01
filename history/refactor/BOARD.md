@@ -1,6 +1,6 @@
 # Refactor Board
 
-Updated: 2026-03-31
+Updated: 2026-04-01
 
 | ID | Priority | Status | Lock | Summary | Depends On |
 | --- | --- | --- | --- | --- | --- |
@@ -20,3 +20,4 @@ Updated: 2026-03-31
 | RF-014 | P1 | done | | Rewrite README and public docs around verified APIs and temporary rollout guardrails | RF-012, RF-013 |
 | RF-015 | P1 | done | | Harden Japanese short forms and shape-poetry families against lenient false positives | RF-014 |
 | RF-016 | P1 | done | | Harden Fibonacci and free-form structural verifiers and narrow their public claims | RF-015 |
+| RF-017 | P1 | done | | Add constrained-form coverage and fix catalog instantiation for semantic constraint forms | RF-016 |
