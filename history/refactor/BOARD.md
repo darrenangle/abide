@@ -22,3 +22,4 @@ Updated: 2026-04-01
 | RF-016 | P1 | done | | Harden Fibonacci and free-form structural verifiers and narrow their public claims | RF-015 |
 | RF-017 | P1 | done | | Add constrained-form coverage and fix catalog instantiation for semantic constraint forms | RF-016 |
 | RF-018 | P1 | done | | Harden mathematical forms against prefix-pass and token-count false positives | RF-017 |
+| RF-019 | P1 | done | | Harden novel semantic-token forms and short-input handling | RF-018 |

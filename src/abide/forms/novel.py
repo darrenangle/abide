@@ -32,6 +32,32 @@ if TYPE_CHECKING:
     from abide.primitives import PoemStructure
 
 
+def _contains_whole_word(line_lower: str, word: str) -> bool:
+    """Return whether a candidate appears as a whole token in the line."""
+    return re.search(rf"\b{re.escape(word)}\b", line_lower) is not None
+
+
+def _find_matching_word(
+    line_lower: str,
+    candidates: set[str] | list[str],
+    *,
+    exclude: set[str] | None = None,
+) -> str | None:
+    """Return a deterministic whole-word match from candidate tokens."""
+    excluded = exclude or set()
+    ordered = (
+        candidates
+        if isinstance(candidates, list)
+        else sorted(candidates, key=lambda word: (-len(word), word))
+    )
+    for candidate in ordered:
+        if candidate in excluded:
+            continue
+        if _contains_whole_word(line_lower, candidate):
+            return candidate
+    return None
+
+
 class HourglassVerse(Constraint):
     """
     Hourglass Verse: Word count expands then contracts.
@@ -189,9 +215,9 @@ class VowelPilgrimage(Constraint):
 
         for i, line in enumerate(structure.lines[:5]):
             expected = self.VOWELS[i]
-            words = line.strip().split()
-            if words:
-                first_letter = words[0][0].upper() if words[0] else ""
+            first_alpha = next((char.upper() for char in line.strip() if char.isalpha()), None)
+            if first_alpha is not None:
+                first_letter = first_alpha
                 if first_letter == expected:
                     matches += 1
                     details.append(f"Line {i + 1}: ✓ starts with '{expected}'")
@@ -805,7 +831,7 @@ class ColorSpectrum(Constraint):
 
         for i, (color, line) in enumerate(zip(self.COLORS, structure.lines)):
             line_lower = line.lower()
-            if color in line_lower:
+            if _contains_whole_word(line_lower, color):
                 matches += 1
                 details.append(f"Line {i + 1}: ✓ contains '{color}'")
             else:
@@ -903,16 +929,13 @@ class ElementalVerse(Constraint):
 
         matches = 0
         details = []
-        found_elements = set()
+        found_elements: set[str] = set()
 
         for i, line in enumerate(structure.lines):
             line_lower = line.lower()
-            found = None
-            for element in self.ELEMENTS:
-                if element in line_lower and element not in found_elements:
-                    found = element
-                    found_elements.add(element)
-                    break
+            found = _find_matching_word(line_lower, self.ELEMENTS, exclude=found_elements)
+            if found is not None:
+                found_elements.add(found)
 
             if found:
                 matches += 1
@@ -1492,6 +1515,7 @@ class SandwichSonnet(Constraint):
         line_result = self._line_count.verify(poem)
 
         n = len(structure.lines)
+        violations = 2
         if n < 4:
             sandwich_score = 0.0
             matches = 0
@@ -1502,7 +1526,6 @@ class SandwichSonnet(Constraint):
 
             matches = sum(1 for a, b in zip(first_couplet, last_couplet) if a == b)
             # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
-
             violations = 2 - matches
 
             if violations == 0:

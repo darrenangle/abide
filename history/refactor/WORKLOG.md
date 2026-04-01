@@ -91,3 +91,8 @@
 - Tightened `GoldenRatioVerse`, `PythagoreanTercet`, `CoprimeVerse`, `SquareStanzas`, and `SelfReferential` to require exact line or stanza counts, and changed `SelfReferential` to count whole number tokens only.
 - Verified the RF-018 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `580 passed, 1 skipped`.
 - Closed `RF-018` and released its lock.
+- Opened and claimed `RF-019` after reproducing novel-form false positives from raw substring matching in `ColorSpectrum` and `ElementalVerse`, a punctuation false negative in `VowelPilgrimage`, and an `UnboundLocalError` path in `SandwichSonnet`.
+- Added direct novel-form coverage for valid examples plus regressions for color/element substring false positives and the short-input `SandwichSonnet` crash.
+- Switched `ColorSpectrum` and `ElementalVerse` to whole-word matching, made `VowelPilgrimage` ignore leading punctuation, and fixed `SandwichSonnet` to fail deterministically on short inputs.
+- Verified the RF-019 sweep with `uv run ruff check src/abide tests scripts` -> clean after normalizing the known `scripts/param_search.py` import-order drift, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `584 passed, 1 skipped`.
+- Closed `RF-019` and released its lock.
