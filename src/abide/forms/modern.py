@@ -286,7 +286,7 @@ class Skeltonic(Constraint):
 
         # Combine scores - defining characteristics get more weight
         score = line_result.score * 0.1 + short_line_score * 0.45 + rhyme_score * 0.45
-        passed = score >= 0.6
+        passed = line_result.passed and score >= 0.6
 
         return VerificationResult(
             score=score,

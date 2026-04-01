@@ -239,7 +239,11 @@ class Naani(Constraint):
         total_weight = sum(w for _, w in scores)
         score = sum(s * w for s, w in scores) / total_weight
 
-        passed = score >= 0.7
+        passed = (
+            line_result.passed
+            and stanza_result.passed
+            and self.min_syllables <= total_syllables <= self.max_syllables
+        )
 
         return VerificationResult(
             score=score,

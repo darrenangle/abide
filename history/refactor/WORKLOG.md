@@ -96,3 +96,8 @@
 - Switched `ColorSpectrum` and `ElementalVerse` to whole-word matching, made `VowelPilgrimage` ignore leading punctuation, and fixed `SandwichSonnet` to fail deterministically on short inputs.
 - Verified the RF-019 sweep with `uv run ruff check src/abide tests scripts` -> clean after normalizing the known `scripts/param_search.py` import-order drift, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `584 passed, 1 skipped`.
 - Closed `RF-019` and released its lock.
+- Opened and claimed `RF-020` after reproducing that `Naani` can pass with only 3 lines if the total syllable count is in range, and `Skeltonic` can pass with only 9 lines if short-line and rhyme-run scores are high enough.
+- Added direct coverage for `Naani` and `Skeltonic`, including valid baseline examples plus the reproduced wrong-line-count false positives.
+- Tightened `Naani` and `Skeltonic` so canonical `passed` now requires the defining line-count check in addition to their existing content-based scoring.
+- Verified the RF-020 sweep with `uv run ruff check src/abide tests scripts` -> clean after normalizing the known `scripts/param_search.py` import-order drift, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `588 passed, 1 skipped`.
+- Closed `RF-020` and released its lock.
