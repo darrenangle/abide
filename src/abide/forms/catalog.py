@@ -37,6 +37,7 @@ TRAINING_SAFE_FORM_DEFAULTS: dict[str, dict[str, Any]] = {
     },
     "PetrarchanSonnet": {},
     "Villanelle": {},
+    "Ghazal": {},
     "Sestina": {},
     "Triolet": {},
     "Pantoum": {},

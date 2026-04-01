@@ -14,3 +14,4 @@ Updated: 2026-03-31
 | RF-008 | P2 | done | | Audit remaining form descriptions for verifier/claim mismatch after core fixes land | RF-003, RF-004 |
 | RF-009 | P1 | done | | Refactor remaining manual fixed-form verifiers onto shared constraints | RF-001, RF-002 |
 | RF-010 | P1 | done | | Add a training-safe form catalog and generated adversarial harness | RF-009 |
+| RF-011 | P1 | done | | Harden `Ghazal` canonical pass/fail and reevaluate training-safe eligibility | RF-010 |

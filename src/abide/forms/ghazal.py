@@ -87,6 +87,7 @@ class Ghazal(Constraint):
 
         # Check couplet count
         num_couplets = structure.line_count // 2
+        couplet_count_passed = self.min_couplets <= num_couplets <= self.max_couplets
         if num_couplets < self.min_couplets:
             rubric.append(
                 RubricItem(
@@ -136,7 +137,8 @@ class Ghazal(Constraint):
         second_line = structure.lines[1]
 
         radif = self._extract_radif(first_line, second_line)
-        if radif:
+        has_radif = radif is not None
+        if has_radif:
             rubric.append(
                 RubricItem(
                     criterion="Radif detected",
@@ -160,18 +162,22 @@ class Ghazal(Constraint):
             scores.append(0.5)
 
         # Check first couplet (matla) - both lines should have radif
-        if radif:
-            matla_score = 1.0
-            rubric.append(
-                RubricItem(
-                    criterion="Matla (first couplet): both lines have radif",
-                    expected=f"ends with '{radif}'",
-                    actual="both lines match",
-                    score=matla_score,
-                    passed=True,
-                )
+        matla_passed = False
+        if radif is not None:
+            matla_passed = self._ends_with_phrase(first_line, radif) and self._ends_with_phrase(
+                second_line,
+                radif,
             )
-            scores.append(matla_score)
+        rubric.append(
+            RubricItem(
+                criterion="Matla (first couplet): both lines have radif",
+                expected=f"ends with '{radif}'" if radif else "shared radif",
+                actual="both lines match" if matla_passed else "matla radif not established",
+                score=1.0 if matla_passed else 0.0,
+                passed=matla_passed,
+            )
+        )
+        scores.append(1.0 if matla_passed else 0.0)
 
         # Check subsequent couplets - second line should have radif
         radif_violations = 0
@@ -201,14 +207,7 @@ class Ghazal(Constraint):
 
         # Steep penalty for radif violations
         if radif_total > 0:
-            if radif_violations == 0:
-                radif_score_final = 1.0
-            elif radif_violations == 1:
-                radif_score_final = 0.5
-            elif radif_violations == 2:
-                radif_score_final = 0.25
-            else:
-                radif_score_final = 0.05
+            radif_score_final = self._steep_penalty(radif_violations)
             scores.append(radif_score_final)
 
         # Check qafiya (rhyme before radif) - all rhyming lines should rhyme
@@ -252,14 +251,7 @@ class Ghazal(Constraint):
 
             # Steep penalty for qafiya violations
             if qafiya_total > 0:
-                if qafiya_violations == 0:
-                    qafiya_score_final = 1.0
-                elif qafiya_violations == 1:
-                    qafiya_score_final = 0.5
-                elif qafiya_violations == 2:
-                    qafiya_score_final = 0.25
-                else:
-                    qafiya_score_final = 0.05
+                qafiya_score_final = self._steep_penalty(qafiya_violations)
                 scores.append(qafiya_score_final)
 
         overall_score = sum(scores) / len(scores) if scores else 0.0
@@ -267,9 +259,19 @@ class Ghazal(Constraint):
             # A dangling line breaks the defining couplet structure.
             overall_score *= 0.25
 
+        radif_pattern_passed = radif_total == 0 or radif_violations == 0
+        qafiya_pattern_passed = qafiya_total > 0 and qafiya_violations == 0
+        canonical_requirements_passed = (
+            has_complete_couplets
+            and couplet_count_passed
+            and has_radif
+            and matla_passed
+            and radif_pattern_passed
+            and qafiya_pattern_passed
+        )
         overall_passed = (
             all(r.passed for r in rubric) if self.strict else overall_score >= 0.6
-        ) and has_complete_couplets
+        ) and canonical_requirements_passed
 
         return VerificationResult(
             score=overall_score,
@@ -281,8 +283,21 @@ class Ghazal(Constraint):
                 "couplet_count": num_couplets,
                 "radif": radif,
                 "has_complete_couplets": has_complete_couplets,
+                "canonical_requirements_passed": canonical_requirements_passed,
+                "radif_violations": radif_violations,
+                "qafiya_violations": qafiya_violations,
             },
         )
+
+    def _steep_penalty(self, violations: int) -> float:
+        """Map violations to the steep penalty ladder used for reward shaping."""
+        if violations == 0:
+            return 1.0
+        if violations == 1:
+            return 0.5
+        if violations == 2:
+            return 0.25
+        return 0.05
 
     def _extract_radif(self, line1: str, line2: str) -> str | None:
         """Extract common ending phrase (radif) from two lines."""

@@ -299,6 +299,29 @@ EXTRA DANGLING LINE"""
         assert result.score < 0.6
         assert result.passed is False
 
+    def test_broken_late_radif_fails(self):
+        """A later broken radif/qafiya line should not pass canonically."""
+        ghazal = Ghazal(strict=False, min_couplets=5, refrain_threshold=0.8)
+        poem = """The moon hangs low and bright tonight above
+The stars shine clear and light tonight above
+
+I walk alone through empty streets at dusk
+My path is lit by sight tonight above
+
+The wind has gone to sleep within the trees
+The world is calm beneath the cedar plain
+
+What dreams may come to those who wait for dawn
+When stars take flight tonight above
+
+The poet writes these words with all his might
+His verses take their flight tonight above"""
+        result = ghazal.verify(poem)
+        assert result.score >= 0.6
+        assert result.passed is False
+        assert result.details["radif_violations"] == 1
+        assert result.details["qafiya_violations"] == 1
+
 
 class TestRondeauValidation:
     """Validate Rondeau form against examples."""

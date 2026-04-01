@@ -12,6 +12,7 @@ from abide.forms.catalog import load_training_safe_form_instances
 from tests.fixtures.poems import (
     BLUES_SYNTHETIC_PERFECT,
     CLERIHEW_SYNTHETIC_PERFECT,
+    GHAZAL_SYNTHETIC_PERFECT,
     HAIKU_SYNTHETIC_PERFECT,
     LIMERICK_SYNTHETIC_PERFECT,
     PANTOUM_SYNTHETIC_PERFECT,
@@ -59,6 +60,14 @@ def _villanelle_near_miss(poem: str) -> str:
     lines = poem.splitlines()
     lines[5] = "A lone bell falters in the rain"
     return "\n".join(lines)
+
+
+def _ghazal_near_miss(poem: str) -> str:
+    couplets = poem.split("\n\n")
+    broken_couplet = couplets[2].splitlines()
+    broken_couplet[1] = "The world is calm beneath the cedar plain"
+    couplets[2] = "\n".join(broken_couplet)
+    return "\n\n".join(couplets)
 
 
 def _sestina_near_miss(poem: str) -> str:
@@ -111,6 +120,7 @@ TRAINING_SAFE_FIXTURES: list[tuple[str, str, Callable[[str], str]]] = [
     ("ShakespeareanSonnet", SONNET_SHAKESPEARE_18, _shakespearean_near_miss),
     ("PetrarchanSonnet", SONNET_MILTON_BLINDNESS, _petrarchan_near_miss),
     ("Villanelle", VILLANELLE_SYNTHETIC_PERFECT, _villanelle_near_miss),
+    ("Ghazal", GHAZAL_SYNTHETIC_PERFECT, _ghazal_near_miss),
     ("Sestina", SESTINA_SYNTHETIC_PERFECT, _sestina_near_miss),
     ("Triolet", TRIOLET_SYNTHETIC_PERFECT, _triolet_near_miss),
     ("Pantoum", PANTOUM_SYNTHETIC_PERFECT, _pantoum_near_miss),

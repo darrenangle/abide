@@ -52,3 +52,8 @@
 - Added catalog/integration tests and a mutation-based adversarial harness for the trusted subset; the harness demoted `Ghazal` out of `training_safe` because a broken-radif near miss still reported `passed=True`.
 - Verified the full repository after the RF-010 sweep: `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, `uv run pytest` -> `528 passed, 1 skipped`.
 - Closed `RF-010` and released its lock.
+- Opened `RF-011` for the remaining Ghazal false-positive path that still allows a broken radif/qafiya couplet to report `passed=True`.
+- Hardened `Ghazal` so canonical `passed` is gated on complete couplets, valid couplet count, detected radif, a valid matla, and zero radif/qafiya violations rather than the blended score alone.
+- Added a direct ghazal regression for the broken-late-radif near miss and re-added `Ghazal` to the training-safe adversarial harness plus the conservative catalog.
+- Verified the RF-011 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `530 passed, 1 skipped`.
+- Closed `RF-011` and released its lock.
