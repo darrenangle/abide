@@ -86,3 +86,8 @@
 - Fixed the shared catalog kwargs for `Mesostic` / `Anaphora`, improved `Anaphora` auto-detection to prefer the longest repeated opening, and made `Abecedarian` ignore leading punctuation.
 - Verified the RF-017 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `577 passed, 1 skipped`.
 - Closed `RF-017` and released its lock.
+- Opened and claimed `RF-018` after reproducing that `GoldenRatioVerse`, `PythagoreanTercet`, `CoprimeVerse`, `SquareStanzas`, and `SelfReferential` can all report `passed=True` while ignoring extra trailing lines or stanzas.
+- Added direct mathematical-form coverage for valid exact examples plus regressions for the trailing-prefix false positives and `SelfReferential` substring counting.
+- Tightened `GoldenRatioVerse`, `PythagoreanTercet`, `CoprimeVerse`, `SquareStanzas`, and `SelfReferential` to require exact line or stanza counts, and changed `SelfReferential` to count whole number tokens only.
+- Verified the RF-018 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `580 passed, 1 skipped`.
+- Closed `RF-018` and released its lock.

@@ -9,6 +9,7 @@ instruction-following AND mathematical reasoning.
 from __future__ import annotations
 
 import math
+import re
 from typing import TYPE_CHECKING, ClassVar
 
 from abide.constraints import (
@@ -54,6 +55,29 @@ def gcd(a: int, b: int) -> int:
     while b:
         a, b = b, a % b
     return a
+
+
+def _exact_count_failure(
+    *,
+    expected_kind: str,
+    expected_count: int,
+    actual_count: int,
+    constraint_name: str,
+    constraint_type: ConstraintType,
+) -> VerificationResult:
+    """Return a consistent failure for forms that require an exact line or stanza count."""
+    return VerificationResult(
+        score=0.0,
+        passed=False,
+        rubric=[],
+        constraint_name=constraint_name,
+        constraint_type=constraint_type,
+        details={
+            "error": f"Expected exactly {expected_count} {expected_kind}, got {actual_count}",
+            f"expected_{expected_kind}": expected_count,
+            f"actual_{expected_kind}": actual_count,
+        },
+    )
 
 
 class FibonacciVerse(Constraint):
@@ -144,14 +168,13 @@ class GoldenRatioVerse(Constraint):
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
 
-        if len(structure.lines) < self.num_lines:
-            return VerificationResult(
-                score=0.0,
-                passed=False,
-                rubric=[],
+        if len(structure.lines) != self.num_lines:
+            return _exact_count_failure(
+                expected_kind="lines",
+                expected_count=self.num_lines,
+                actual_count=len(structure.lines),
                 constraint_name=self.name,
                 constraint_type=self.constraint_type,
-                details={"error": f"Expected at least {self.num_lines} lines"},
             )
 
         matches = 0
@@ -303,14 +326,13 @@ class PythagoreanTercet(Constraint):
         structure = self._ensure_structure(poem)
 
         expected_lines = self.num_stanzas * 3
-        if len(structure.lines) < expected_lines:
-            return VerificationResult(
-                score=0.0,
-                passed=False,
-                rubric=[],
+        if len(structure.lines) != expected_lines:
+            return _exact_count_failure(
+                expected_kind="lines",
+                expected_count=expected_lines,
+                actual_count=len(structure.lines),
                 constraint_name=self.name,
                 constraint_type=self.constraint_type,
-                details={"error": f"Expected at least {expected_lines} lines"},
             )
 
         matches = 0
@@ -381,14 +403,13 @@ class CoprimeVerse(Constraint):
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
 
-        if len(structure.lines) < self.num_lines:
-            return VerificationResult(
-                score=0.0,
-                passed=False,
-                rubric=[],
+        if len(structure.lines) != self.num_lines:
+            return _exact_count_failure(
+                expected_kind="lines",
+                expected_count=self.num_lines,
+                actual_count=len(structure.lines),
                 constraint_name=self.name,
                 constraint_type=self.constraint_type,
-                details={"error": f"Expected at least {self.num_lines} lines"},
             )
 
         matches = 0
@@ -542,14 +563,13 @@ class SquareStanzas(Constraint):
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
 
-        if len(structure.stanzas) < self.num_stanzas:
-            return VerificationResult(
-                score=0.0,
-                passed=False,
-                rubric=[],
+        if len(structure.stanzas) != self.num_stanzas:
+            return _exact_count_failure(
+                expected_kind="stanzas",
+                expected_count=self.num_stanzas,
+                actual_count=len(structure.stanzas),
                 constraint_name=self.name,
                 constraint_type=self.constraint_type,
-                details={"error": f"Expected at least {self.num_stanzas} stanzas"},
             )
 
         matches = 0
@@ -622,14 +642,13 @@ class SelfReferential(Constraint):
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
 
-        if len(structure.lines) < self.num_lines:
-            return VerificationResult(
-                score=0.0,
-                passed=False,
-                rubric=[],
+        if len(structure.lines) != self.num_lines:
+            return _exact_count_failure(
+                expected_kind="lines",
+                expected_count=self.num_lines,
+                actual_count=len(structure.lines),
                 constraint_name=self.name,
                 constraint_type=self.constraint_type,
-                details={"error": f"Expected at least {self.num_lines} lines"},
             )
 
         matches = 0
@@ -637,9 +656,8 @@ class SelfReferential(Constraint):
         for i in range(self.num_lines):
             line = structure.lines[i].lower()
             n = i + 1
-            digit_count = line.count(str(n))
-            word_count = line.count(self.WORDS[n])
-            total = digit_count + word_count
+            token_matches = re.findall(rf"\b(?:{n}|{re.escape(self.WORDS[n])})\b", line)
+            total = len(token_matches)
 
             if total == n:
                 matches += 1
