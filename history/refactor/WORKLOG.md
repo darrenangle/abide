@@ -101,3 +101,7 @@
 - Tightened `Naani` and `Skeltonic` so canonical `passed` now requires the defining line-count check in addition to their existing content-based scoring.
 - Verified the RF-020 sweep with `uv run ruff check src/abide tests scripts` -> clean after normalizing the known `scripts/param_search.py` import-order drift, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `588 passed, 1 skipped`.
 - Closed `RF-020` and released its lock.
+- Opened and claimed `RF-021` after confirming the recurring lint churn comes from a version split: `uv run ruff` is `0.14.8` while `.pre-commit-config.yaml` is still pinned to `ruff-pre-commit` `v0.8.4`.
+- Updated `.pre-commit-config.yaml` to pin `ruff-pre-commit` to `v0.14.8`, matching the project Ruff version, and normalized `scripts/param_search.py` once under the now-aligned formatter.
+- Verified that `uv run ruff check src/abide tests scripts` and `uv run pre-commit run ruff --files scripts/param_search.py` now agree, and re-ran `uv run mypy src/abide` plus `uv run pytest` (`588 passed, 1 skipped`).
+- Closed `RF-021` and released its lock.

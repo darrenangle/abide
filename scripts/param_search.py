@@ -61,13 +61,13 @@ def wait_for_vllm(timeout: int = 300) -> bool:
 def run_experiment(config: ExperimentConfig) -> dict:
     """Run a single experiment and return results."""
     from prompt_generator import generate_verifiers_dataset, get_forms
-
-    import verifiers as vf
     from verifiers.rl.trainer import RLConfig, RLTrainer
 
-    print(f"\n{'='*60}")
+    import verifiers as vf
+
+    print(f"\n{'=' * 60}")
     print(f"EXPERIMENT: max_tokens={config.max_tokens}, rep_penalty={config.repetition_penalty}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Load forms
     forms = get_forms()
@@ -228,14 +228,14 @@ def run_experiment(config: ExperimentConfig) -> dict:
         "elapsed_seconds": elapsed,
     }
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("RESULTS:")
     print(f"  Mean Reward: {mean_reward:.4f}")
     print(f"  Max Reward:  {max_reward:.4f}")
     print(f"  Min Reward:  {min_reward:.4f}")
     print(f"  Non-zero:    {nonzero}/{len(rewards)} ({nonzero_pct:.1f}%)")
     print(f"  Time:        {elapsed:.1f}s")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     # Cleanup
     del model, trainer
