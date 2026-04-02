@@ -45,3 +45,4 @@ Updated: 2026-04-01
 | RF-039 | P2 | done | | Expand the fixed-form mutation harness to additional stable fixture families | RF-038 |
 | RF-040 | P1 | done | | Reject flattened single-block Blues layouts instead of chunking them back into tercets | RF-039 |
 | RF-041 | P1 | done | | Reject flattened single-block Terza Rima layouts instead of chunking them back into tercets | RF-040 |
+| RF-042 | P2 | done | | Add shared mutation coverage for exact-count short-form families | RF-041 |

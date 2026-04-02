@@ -200,3 +200,7 @@
 - Removed synthetic single-block chunking from `TerzaRima` and extended the shared flattening harness so terza-rima stanza-layout regressions are enforced alongside villanelle, sestina, pantoum, and blues.
 - Verified the RF-041 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `637 passed, 1 skipped`.
 - Closed `RF-041` and released its lock.
+- Opened and claimed `RF-042` to lock in extra-line and dropped-line rejection across the remaining exact-count short-form families with stable generated fixtures.
+- Added a shared exact-structure mutation harness covering Japanese short forms, shape forms, the Fibonacci family, and `Naani`.
+- Verified the RF-042 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `661 passed, 1 skipped`.
+- Closed `RF-042` and released its lock.
