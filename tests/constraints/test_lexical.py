@@ -4,6 +4,7 @@ import pytest
 
 from abide.constraints import (
     Alliteration,
+    AllWordsUnique,
     CharacterCount,
     CharacterPalindrome,
     CrossLineVowelWordCount,
@@ -143,3 +144,21 @@ def test_uniform_word_count_keeps_open_ended_single_line_behavior() -> None:
 
     assert result.passed is True
     assert result.score == 1.0
+
+
+def test_all_words_unique_penalizes_inputs_below_minimum_sample_size() -> None:
+    result = AllWordsUnique(min_words=10).verify("alpha bravo")
+
+    assert result.passed is False
+    assert result.score == pytest.approx(0.04)
+    assert result.details["adequacy"] == pytest.approx(0.2)
+    assert result.details["linear_score"] == pytest.approx(0.2)
+
+
+def test_monosyllabic_only_penalizes_inputs_below_minimum_sample_size() -> None:
+    result = MonosyllabicOnly(min_words=10).verify("cat dog")
+
+    assert result.passed is False
+    assert result.score == pytest.approx(0.04)
+    assert result.details["adequacy"] == pytest.approx(0.2)
+    assert result.details["linear_score"] == pytest.approx(0.2)

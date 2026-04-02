@@ -199,9 +199,12 @@ class AllWordsUnique(Constraint):
         if total_words == 0:
             score = 0.0
             passed = False
+            linear_score = 0.0
+            adequacy = 0.0
         else:
             # Quadratic penalty for stricter GRPO training
-            linear_score = unique_count / total_words
+            adequacy = min(1.0, total_words / self.min_words)
+            linear_score = (unique_count / total_words) * adequacy
             score = linear_score**2
             passed = linear_score == 1.0 and total_words >= self.min_words
 
@@ -215,6 +218,9 @@ class AllWordsUnique(Constraint):
                 "total_words": total_words,
                 "unique_words": unique_count,
                 "duplicates": total_words - unique_count,
+                "min_words": self.min_words,
+                "adequacy": adequacy,
+                "linear_score": linear_score,
             },
         )
 
@@ -870,7 +876,8 @@ class MonosyllabicOnly(Constraint):
 
         total = len(all_words)
         # Quadratic penalty for stricter GRPO training
-        linear_score = monosyllabic / max(1, total)
+        adequacy = min(1.0, total / self.min_words) if total > 0 else 0.0
+        linear_score = (monosyllabic / max(1, total)) * adequacy
         score = linear_score**2
         passed = linear_score == 1.0 and total >= self.min_words
 
@@ -880,7 +887,13 @@ class MonosyllabicOnly(Constraint):
             rubric=[],
             constraint_name=self.name,
             constraint_type=self.constraint_type,
-            details={"monosyllabic": monosyllabic, "total": total},
+            details={
+                "monosyllabic": monosyllabic,
+                "total": total,
+                "min_words": self.min_words,
+                "adequacy": adequacy,
+                "linear_score": linear_score,
+            },
         )
 
     def describe(self) -> str:

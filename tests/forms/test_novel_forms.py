@@ -10,6 +10,7 @@ from abide.forms.novel import (
     ExclamationEcho,
     GoldenRatio,
     HourglassVerse,
+    MonotoneMountain,
     NumberWord,
     NumericalEcho,
     OddEvenDance,
@@ -171,6 +172,21 @@ def test_unique_utterance_does_not_hide_an_undocumented_min_word_threshold() -> 
 
     assert result.score == 1.0
     assert result.passed is True
+
+
+@pytest.mark.parametrize("poem", ["alpha", "alpha\nbravo"])
+def test_unique_utterance_does_not_reward_too_few_words_for_its_line_floor(poem: str) -> None:
+    result = UniqueUtterance().verify(poem)
+
+    assert result.passed is False
+    assert result.score < 0.2
+
+
+def test_monotone_mountain_does_not_reward_short_monosyllabic_prefixes() -> None:
+    result = MonotoneMountain().verify("cat dog")
+
+    assert result.passed is False
+    assert result.score < 0.2
 
 
 def test_prime_verse_rejects_unsupported_line_counts_instead_of_wrapping_pattern() -> None:

@@ -1279,7 +1279,7 @@ class UniqueUtterance(Constraint):
         super().__init__(weight)
         self.min_lines = min_lines
         self._line_count = LineCount(NumericBound.at_least(min_lines), weight=1.0)
-        self._unique = AllWordsUnique(min_words=1, weight=2.0)
+        self._unique = AllWordsUnique(min_words=min_lines, weight=2.0)
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)

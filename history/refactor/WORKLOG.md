@@ -290,3 +290,9 @@
 - Added direct regressions for primitive missing-line scoring and for the reproduced short-prefix leaks in `PrimeVerse`, `HourglassVerse`, `DescendingStaircase`, `NumericalEcho`, `BinaryBeat`, and `GoldenRatio`.
 - Verified the RF-059 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `819 passed, 1 skipped`.
 - Closed `RF-059` and released its lock.
+- Opened and claimed `RF-060` after reproducing that low-sample semantic checks still score perfect or near-perfect despite failing minimum-size requirements: `AllWordsUnique(min_words=10)` scores `1.0` on one or two unique words, `MonosyllabicOnly(min_words=10)` scores `1.0` on `\"cat dog\"`, `UniqueUtterance` leaks `0.90+` on one- and two-line inputs, and `MonotoneMountain` still leaks partial reward through a perfect monosyllable score on a two-word prefix.
+- Hardened `AllWordsUnique` and `MonosyllabicOnly` so their scores now reflect minimum-sample adequacy instead of returning perfect scores on trivially small clean samples.
+- Aligned `UniqueUtterance` with its own line floor by requiring at least one unique word per required line for the semantic component to reach full credit, which also removed the `MonotoneMountain` monosyllabic prefix leak after the primitive fix.
+- Added direct regressions for the reproduced low-sample primitive and form leaks.
+- Verified the RF-060 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `824 passed, 1 skipped`.
+- Closed `RF-060` and released its lock.
