@@ -342,6 +342,8 @@ class DescendingStaircase(Constraint):
 
     def __init__(self, start_words: int = 7, weight: float = 1.0) -> None:
         super().__init__(weight)
+        if start_words <= 0:
+            raise ValueError("start_words must be positive")
         self.start_words = start_words
         self.word_pattern = list(range(start_words, 0, -1))
         self._line_count = LineCount(start_words, weight=2.0)
@@ -607,6 +609,8 @@ class AlphabeticTerminus(Constraint):
 
     def __init__(self, letters: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ", weight: float = 1.0) -> None:
         super().__init__(weight)
+        if not letters or not letters.isalpha():
+            raise ValueError("letters must contain at least one alphabetic character")
         self.letters = letters.upper()
         self._line_count = LineCount(len(self.letters), weight=1.0)
 

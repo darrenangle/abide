@@ -239,3 +239,8 @@
 - Added direct regressions for both invalid-configuration cases.
 - Verified the RF-049 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `670 passed, 1 skipped`.
 - Closed `RF-049` and released its lock.
+- Opened and claimed `RF-050` after reproducing that `Abecedarian(letters=\"\")`, `Mesostic(word=\"\")`, and `AlphabeticTerminus(letters=\"\")` all report `passed=True, score=1.0` on an empty poem, and `DescendingStaircase(start_words=0)` constructs a nonsensical 0-line form.
+- Added explicit validation to `Abecedarian`, `Mesostic`, `AlphabeticTerminus`, and `DescendingStaircase` so degenerate empty targets and nonpositive staircase sizes fail fast instead of creating meaningless verifiers.
+- Added direct regressions for the reproduced degenerate-constructor cases.
+- Verified the RF-050 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `672 passed, 1 skipped`.
+- Closed `RF-050` and released its lock.

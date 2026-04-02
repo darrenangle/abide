@@ -1,7 +1,9 @@
 import pytest
 
 from abide.forms.novel import (
+    AlphabeticTerminus,
     ColorSpectrum,
+    DescendingStaircase,
     ElementalVerse,
     NumberWord,
     PrimeVerse,
@@ -131,3 +133,11 @@ def test_prime_verse_rejects_unsupported_line_counts_instead_of_wrapping_pattern
 def test_number_word_rejects_unsupported_line_counts_instead_of_clamping() -> None:
     with pytest.raises(ValueError, match="num_lines must be between 1 and 10"):
         NumberWord(num_lines=12)
+
+
+def test_novel_target_sequence_forms_reject_degenerate_constructor_values() -> None:
+    with pytest.raises(ValueError, match="letters must contain at least one alphabetic character"):
+        AlphabeticTerminus(letters="")
+
+    with pytest.raises(ValueError, match="start_words must be positive"):
+        DescendingStaircase(start_words=0)

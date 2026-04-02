@@ -88,3 +88,11 @@ def test_catalog_can_instantiate_constrained_forms_with_defaults() -> None:
     assert isinstance(anaphora, Anaphora)
     assert anaphora.target_phrase == "i am"
     assert anaphora.min_lines == 4
+
+
+def test_acrostic_like_forms_reject_empty_target_sequences() -> None:
+    with pytest.raises(ValueError, match="letters must contain at least one alphabetic character"):
+        Abecedarian(letters="")
+
+    with pytest.raises(ValueError, match="word must contain at least one alphabetic character"):
+        Mesostic(word="")

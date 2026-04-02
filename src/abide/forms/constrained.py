@@ -55,6 +55,8 @@ class Abecedarian(Constraint):
             weight: Relative weight for composition
         """
         super().__init__(weight)
+        if not letters or not letters.isalpha():
+            raise ValueError("letters must contain at least one alphabetic character")
         self.letters = letters.upper()
         self.num_lines = len(self.letters)
 
@@ -313,6 +315,8 @@ class Mesostic(Constraint):
             weight: Relative weight for composition
         """
         super().__init__(weight)
+        if not word or not word.isalpha():
+            raise ValueError("word must contain at least one alphabetic character")
         self.target_word = word.upper()
         self.num_lines = len(self.target_word)
 
