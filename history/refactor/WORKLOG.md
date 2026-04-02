@@ -308,3 +308,8 @@
 - Added direct regressions for the reproduced comparison-based vacuity cases across the primitive, novel-form, and hard-form surfaces.
 - Verified the RF-062 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `839 passed, 1 skipped`.
 - Closed `RF-062` and released its lock.
+- Opened and claimed `RF-063` after rescanning the exported forms and finding that `Ghazal` still returns `score=1.0, passed=False` on a repeated-line degenerate poem because missing qafiya evidence blocks the canonical pass but does not materially reduce the blended score.
+- Hardened `Ghazal` so missing qafiya extraction now produces a failed rubric item and scales down the overall score, instead of leaving repeated-line degenerate poems at `score=1.0`.
+- Added a direct regression for the reproduced repeated-line `Ghazal` case where the full line was incorrectly treated as radif with no qafiya penalty.
+- Verified the RF-063 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `840 passed, 1 skipped`.
+- Closed `RF-063` and released its lock.

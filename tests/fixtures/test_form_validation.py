@@ -322,6 +322,16 @@ His verses take their flight tonight above"""
         assert result.details["radif_violations"] == 1
         assert result.details["qafiya_violations"] == 1
 
+    def test_repeated_full_line_radif_without_qafiya_does_not_score_perfectly(self):
+        """A repeated full-line suffix should not score like a real ghazal."""
+        ghazal = Ghazal(strict=False, min_couplets=5, refrain_threshold=0.8)
+        poem = "\n".join(["same line again"] * 10)
+
+        result = ghazal.verify(poem)
+
+        assert result.passed is False
+        assert result.score < 0.2
+
 
 class TestRondeauValidation:
     """Validate Rondeau form against examples."""

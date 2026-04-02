@@ -211,6 +211,7 @@ class Ghazal(Constraint):
 
         # Check qafiya (rhyme before radif) - all rhyming lines should rhyme
         qafiya_words = []
+        expected_qafiya_slots = num_couplets + 1
         for i in range(num_couplets):
             # First couplet: both lines
             # Other couplets: only second line
@@ -226,6 +227,23 @@ class Ghazal(Constraint):
                     word = self._extract_qafiya(structure.lines[line_idx], radif)
                     if word:
                         qafiya_words.append((i, 1, word))
+
+        qafiya_presence_passed = len(qafiya_words) == expected_qafiya_slots
+        qafiya_presence_score = (
+            1.0
+            if qafiya_presence_passed
+            else self._steep_penalty(expected_qafiya_slots - len(qafiya_words))
+        )
+        rubric.append(
+            RubricItem(
+                criterion="Qafiya extracted",
+                expected=f"{expected_qafiya_slots} pre-radif words",
+                actual=str(len(qafiya_words)),
+                score=qafiya_presence_score,
+                passed=qafiya_presence_passed,
+            )
+        )
+        scores.append(qafiya_presence_score)
 
         # Check that all qafiya words rhyme with first one
         qafiya_violations = 0
@@ -257,6 +275,11 @@ class Ghazal(Constraint):
         if not has_complete_couplets:
             # A dangling line breaks the defining couplet structure.
             overall_score *= 0.25
+        if not qafiya_presence_passed:
+            # Missing qafiya evidence means the poem has not established the
+            # defining radif+qafiya structure, even if repeated lines inflate
+            # the other heuristics.
+            overall_score *= 0.2
 
         radif_pattern_passed = radif_total == 0 or radif_violations == 0
         qafiya_pattern_passed = qafiya_total > 0 and qafiya_violations == 0
@@ -265,6 +288,7 @@ class Ghazal(Constraint):
             and couplet_count_passed
             and has_radif
             and matla_passed
+            and qafiya_presence_passed
             and radif_pattern_passed
             and qafiya_pattern_passed
         )
