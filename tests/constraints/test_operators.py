@@ -1,5 +1,7 @@
 """Tests for composition operators."""
 
+import pytest
+
 from abide.constraints import (
     And,
     AtLeast,
@@ -211,7 +213,7 @@ class TestWeightedSum:
     def test_different_weights(self) -> None:
         """Different weights affect score appropriately."""
         poem = "Line one\nLine two\nLine three"
-        # LineCount(3) passes (1.0), LineCount(5) fails (~0.6)
+        failing_score = LineCount(5).verify(poem).score
         # With weights 3:1, score leans toward the heavier one
         constraint = WeightedSum(
             [
@@ -220,8 +222,8 @@ class TestWeightedSum:
             ]
         )
         result = constraint.verify(poem)
-        # (3.0 * 1.0 + 1.0 * 0.6) / 4.0 ≈ 0.9
-        assert result.score > 0.85
+        expected = (3.0 * 1.0 + failing_score) / 4.0
+        assert result.score == pytest.approx(expected)
 
     def test_threshold(self) -> None:
         """Threshold controls pass/fail."""
@@ -284,6 +286,7 @@ class TestWeightedSum:
     def test_required_indices_gate_fail_despite_high_score(self) -> None:
         """A required failing child forces the composite to fail."""
         poem = "Line one\nLine two\nLine three"
+        failing_score = LineCount(5).verify(poem).score
         constraint = WeightedSum(
             [
                 (LineCount(3), 3.0),
@@ -293,7 +296,8 @@ class TestWeightedSum:
             required_indices=[1],
         )
         result = constraint.verify(poem)
-        assert result.score > 0.85
+        expected = (3.0 * 1.0 + failing_score) / 4.0
+        assert result.score == pytest.approx(expected)
         assert result.passed is False
 
     def test_describe(self) -> None:

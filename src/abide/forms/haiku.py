@@ -116,6 +116,10 @@ class Haiku(Constraint):
         ]
         total_weight = sum(w for _, w in scores)
         score = sum(s * w for s, w in scores) / total_weight
+        if not line_result.passed:
+            score *= line_result.score
+        if not stanza_result.passed:
+            score *= stanza_result.score
 
         canonical_requirements_passed = (
             line_result.passed and stanza_result.passed and syllables_result.passed
@@ -222,6 +226,10 @@ class Tanka(Constraint):
         ]
         total_weight = sum(w for _, w in scores)
         score = sum(s * w for s, w in scores) / total_weight
+        if not line_result.passed:
+            score *= line_result.score
+        if not stanza_result.passed:
+            score *= stanza_result.score
 
         canonical_requirements_passed = (
             line_result.passed and stanza_result.passed and syllables_result.passed

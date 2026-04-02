@@ -203,7 +203,7 @@ class DramaticVerse(BlankVerse):
 
     def __init__(
         self,
-        min_lines: int = 1,
+        min_lines: int = 3,
         weight: float = 1.0,
         syllable_tolerance: int = 2,  # More flexible
         strict: bool = False,

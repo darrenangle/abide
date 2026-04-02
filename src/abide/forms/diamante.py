@@ -34,7 +34,7 @@ def _compose_shape_form(
     if strict:
         return And([line_count, shape])
     return WeightedSum(
-        [(line_count, 2.0), (shape, 2.0)],
+        [(line_count, 1.0), (shape, 3.0)],
         threshold=0.7,
         required_indices=[0, 1],
     )

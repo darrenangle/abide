@@ -186,16 +186,19 @@ class LineShape(Constraint):
 
         # Check line count matches
         if len(actual_lengths) != len(self.lengths):
+            expected_count = len(self.lengths)
+            actual_count = len(actual_lengths)
+            alignment_ratio = min(actual_count, expected_count) / max(actual_count, expected_count)
             rubric.append(
                 RubricItem(
                     criterion="Line count",
                     expected=str(len(self.lengths)),
                     actual=str(len(actual_lengths)),
-                    score=0.5,
+                    score=alignment_ratio**2,
                     passed=False,
                 )
             )
-            scores.append(0.5)
+            scores.append(alignment_ratio**2)
 
         if self.relative:
             # Check relative ordering (each line compared to next)
@@ -203,18 +206,26 @@ class LineShape(Constraint):
             scores.append(score)
         else:
             # Check exact lengths with tolerance
-            for i, (actual, expected) in enumerate(zip(actual_lengths, self.lengths)):
-                diff = abs(actual - expected)
-                passed = diff <= self.tolerance
+            expected_count = len(self.lengths)
+            actual_count = len(actual_lengths)
+            for i, expected in enumerate(self.lengths):
+                if i < actual_count:
+                    actual = actual_lengths[i]
+                    diff = abs(actual - expected)
+                    passed = diff <= self.tolerance
 
-                if diff == 0:
-                    line_score = 1.0
-                elif diff <= self.tolerance:
-                    line_score = 1.0 - (diff / (self.tolerance + 1)) * 0.2
+                    if diff == 0:
+                        line_score = 1.0
+                    elif diff <= self.tolerance:
+                        line_score = 1.0 - (diff / (self.tolerance + 1)) * 0.2
+                    else:
+                        # Quadratic penalty for stricter GRPO training
+                        linear_score = max(0.0, 1.0 - diff / max(expected, 1))
+                        line_score = linear_score**2
                 else:
-                    # Quadratic penalty for stricter GRPO training
-                    linear_score = max(0.0, 1.0 - diff / max(expected, 1))
-                    line_score = linear_score**2
+                    actual = 0
+                    passed = False
+                    line_score = 0.0
 
                 rubric.append(
                     RubricItem(
@@ -226,6 +237,18 @@ class LineShape(Constraint):
                     )
                 )
                 scores.append(line_score)
+
+            for i in range(expected_count, actual_count):
+                rubric.append(
+                    RubricItem(
+                        criterion=f"Line {i + 1} length",
+                        expected="(no extra line)",
+                        actual=str(actual_lengths[i]),
+                        score=0.0,
+                        passed=False,
+                    )
+                )
+                scores.append(0.0)
 
         overall_score = sum(scores) / len(scores) if scores else 0.0
         overall_passed = all(r.passed for r in rubric)

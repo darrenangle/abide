@@ -331,3 +331,6 @@
 - Opened and claimed `RF-067` to turn the zero-argument public-constraint sanity scan into a permanent test and eliminate the remaining `CrossLineVowelWordCount` punctuation-only outlier before tightening the next score ceiling.
 - Added a committed zero-argument public-constraint degenerate harness, hardened `CrossLineVowelWordCount` so punctuation-only input no longer produces a near-pass, and verified the constraint sweep with `uv run pytest -q tests/constraints/test_lexical.py tests/constraints/test_degenerate_constraint_surface.py` -> `51 passed`, `uv run ruff check src/abide tests scripts` -> clean, and `uv run mypy src/abide` -> clean.
 - Closed `RF-067` and released its lock.
+- Opened and claimed `RF-068` to tighten structural-count decay and push the exported-form degenerate ceiling down from the current `0.75` guardrail using the 2026-04-02 outlier scan as the fix list.
+- Tightened shared structural decay and manual shell/proxy scoring across the form surface, hardened `LinePairSimilarity` and exact shape scoring, lowered the committed degenerate-form ceiling to `0.55`, and verified the sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `852 passed, 1 skipped`.
+- Closed `RF-068` and released its lock.

@@ -23,6 +23,6 @@ def test_exported_forms_do_not_leak_high_failed_scores_on_degenerate_inputs() ->
             result = form.verify(poem)
             if result.passed:
                 continue
-            assert result.score <= 0.75, (
+            assert result.score <= 0.55, (
                 f"{name} leaked failed score {result.score:.3f} on degenerate case {case_name}"
             )

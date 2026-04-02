@@ -237,6 +237,10 @@ class Naani(Constraint):
         ]
         total_weight = sum(w for _, w in scores)
         score = sum(s * w for s, w in scores) / total_weight
+        if not line_result.passed:
+            score *= line_result.score
+        if not stanza_result.passed:
+            score *= stanza_result.score
 
         passed = (
             line_result.passed

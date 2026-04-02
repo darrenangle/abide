@@ -258,6 +258,14 @@ class TestLinePairSimilarity:
         with pytest.raises(ValueError, match=message):
             factory()
 
+    def test_rejects_pairs_without_meaningful_text(self) -> None:
+        constraint = LinePairSimilarity([(0, 1)], threshold=0.9)
+
+        result = constraint.verify("!!!\n???")
+
+        assert result.passed is False
+        assert result.score == 0.0
+
 
 class TestOpeningPhraseRefrain:
     """Tests for OpeningPhraseRefrain constraint."""

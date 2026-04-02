@@ -41,13 +41,13 @@ def test_japanese_short_forms_accept_valid_lenient_examples(
     ],
     ids=["haiku-extra-line", "tanka-extra-line"],
 )
-def test_japanese_short_forms_reject_extra_trailing_lines_in_lenient_mode(
+def test_japanese_short_forms_retain_partial_credit_but_fail_extra_trailing_lines_in_lenient_mode(
     factory: callable,
     poem: str,
 ) -> None:
     result = verify(poem, factory())
 
-    assert result.score > 0.9
+    assert 0.4 < result.score < 0.5
     assert result.passed is False
     assert result.details["canonical_requirements_passed"] is False
 
@@ -66,12 +66,12 @@ def test_japanese_short_forms_reject_extra_trailing_lines_in_lenient_mode(
     ],
     ids=["haiku-two-stanzas", "tanka-two-stanzas"],
 )
-def test_japanese_short_forms_reject_multiple_stanzas_in_lenient_mode(
+def test_japanese_short_forms_retain_partial_credit_but_fail_multiple_stanzas_in_lenient_mode(
     factory: callable,
     poem: str,
 ) -> None:
     result = verify(poem, factory())
 
-    assert result.score > 0.9
+    assert 0.5 < result.score < 0.6
     assert result.passed is False
     assert result.details["canonical_requirements_passed"] is False

@@ -91,20 +91,24 @@ class FreeVerse(Constraint):
 
         # Check line count
         if structure.line_count < self.min_lines:
-            score *= structure.line_count / self.min_lines
+            line_adequacy = structure.line_count / self.min_lines
+            score *= line_adequacy**2
             issues.append(f"Too few lines ({structure.line_count} < {self.min_lines})")
 
         if self.max_lines and structure.line_count > self.max_lines:
-            score *= self.max_lines / structure.line_count
+            line_excess_ratio = self.max_lines / structure.line_count
+            score *= line_excess_ratio**2
             issues.append(f"Too many lines ({structure.line_count} > {self.max_lines})")
 
         # Check stanza count
         if structure.stanza_count < self.min_stanzas:
-            score *= structure.stanza_count / self.min_stanzas
+            stanza_adequacy = structure.stanza_count / self.min_stanzas
+            score *= stanza_adequacy**2
             issues.append(f"Too few stanzas ({structure.stanza_count} < {self.min_stanzas})")
 
         if self.max_stanzas and structure.stanza_count > self.max_stanzas:
-            score *= self.max_stanzas / structure.stanza_count
+            stanza_excess_ratio = self.max_stanzas / structure.stanza_count
+            score *= stanza_excess_ratio**2
             issues.append(f"Too many stanzas ({structure.stanza_count} > {self.max_stanzas})")
 
         # Check word counts per line

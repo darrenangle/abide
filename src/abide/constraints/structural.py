@@ -45,7 +45,7 @@ class LineCount(NumericConstraint):
         self,
         bound: int | NumericBound,
         weight: float = 1.0,
-        sigma: float = 2.0,
+        sigma: float = 0.9,
     ) -> None:
         if isinstance(bound, int):
             bound = NumericBound.exact(bound)

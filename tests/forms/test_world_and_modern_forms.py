@@ -20,7 +20,7 @@ def test_naani_accepts_valid_four_line_example() -> None:
     assert 20 <= result.details["total_syllables"] <= 25
 
 
-def test_naani_rejects_high_scoring_wrong_line_count() -> None:
+def test_naani_retain_partial_credit_but_fail_wrong_line_count() -> None:
     poem = "\n".join(
         [
             "sun sun sun sun sun sun sun",
@@ -32,7 +32,7 @@ def test_naani_rejects_high_scoring_wrong_line_count() -> None:
     result = Naani().verify(poem)
 
     assert result.passed is False
-    assert result.score > 0.9
+    assert 0.4 < result.score < 0.5
 
 
 def test_skeltonic_accepts_valid_min_line_example() -> None:

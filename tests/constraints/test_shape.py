@@ -58,3 +58,11 @@ def test_line_length_range_rejects_empty_poem() -> None:
 
     assert result.passed is False
     assert result.score == 0.0
+
+
+def test_line_shape_penalizes_missing_expected_lines() -> None:
+    constraint = LineShape(lengths=[1, 2, 3], mode=MeasureMode.WORDS, relative=False)
+    result = constraint.verify("sun")
+
+    assert result.passed is False
+    assert result.score < 0.4

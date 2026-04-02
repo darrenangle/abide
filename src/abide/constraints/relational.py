@@ -50,6 +50,9 @@ def _line_similarity(line1: str, line2: str) -> float:
     normalized_1 = _normalize_similarity_line(line1)
     normalized_2 = _normalize_similarity_line(line2)
 
+    if not normalized_1 or not normalized_2:
+        return 0.0
+
     if normalized_1 == normalized_2:
         return 1.0
 

@@ -72,8 +72,8 @@ class Limerick(Constraint):
         self.rhyme_threshold = rhyme_threshold
         self.strict = strict
 
-        self._line_count = LineCount(5, weight=2.0)
-        self._stanza_count = StanzaCount(1, weight=0.5)
+        self._line_count = LineCount(5, weight=1.5)
+        self._stanza_count = StanzaCount(1, weight=0.25)
         self._rhyme_scheme = RhymeScheme(
             self.RHYME_SCHEME,
             weight=2.0,
@@ -84,7 +84,7 @@ class Limerick(Constraint):
         # Lines 3,4 are shorter (5 syllables)
         self._syllables = SyllablesPerLine(
             [8, 8, 5, 5, 8],
-            weight=1.5,
+            weight=2.25,
             tolerance=syllable_tolerance,
         )
 
@@ -101,10 +101,10 @@ class Limerick(Constraint):
         else:
             self._constraint = WeightedSum(
                 [
-                    (self._line_count, 2.0),
-                    (self._stanza_count, 0.5),
+                    (self._line_count, 1.5),
+                    (self._stanza_count, 0.25),
                     (self._rhyme_scheme, 2.0),
-                    (self._syllables, 1.5),
+                    (self._syllables, 2.25),
                 ],
                 threshold=0.6,
                 required_indices=[0, 1, 2, 3],
