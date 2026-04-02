@@ -3,6 +3,9 @@
 import pytest
 
 from abide.constraints import (
+    Alliteration,
+    CharacterCount,
+    CharacterPalindrome,
     CrossLineVowelWordCount,
     DoubleAcrostic,
     ExactCharacterBudget,
@@ -13,6 +16,7 @@ from abide.constraints import (
     LetterFrequency,
     LineEndsWith,
     LineStartsWith,
+    MonosyllabicOnly,
     NoConsecutiveRepeats,
     NoSharedLetters,
     PositionalCharacter,
@@ -31,6 +35,14 @@ from abide.constraints import (
         (
             lambda: WordCount([3, 0]),
             "words_per_line must contain at least one positive count",
+        ),
+        (
+            lambda: CharacterCount([]),
+            "chars_per_line must contain at least one positive count",
+        ),
+        (
+            lambda: CharacterCount(0),
+            "chars_per_line must contain at least one positive count",
         ),
         (lambda: ForcedWords([]), "required_words must contain at least one word"),
         (lambda: ForcedWords([""]), "required_words must contain non-empty words"),
@@ -54,6 +66,11 @@ from abide.constraints import (
             lambda: LetterFrequency("A", min_percent=60, max_percent=40),
             "max_percent must be greater than or equal to min_percent",
         ),
+        (
+            lambda: Alliteration(letter="S", min_words=0),
+            "min_words must be positive",
+        ),
+        (lambda: Alliteration(min_consecutive=0), "min_consecutive must be positive"),
         (lambda: NoConsecutiveRepeats(min_lines=0), "min_lines must be positive"),
         (
             lambda: VowelConsonantPattern(""),
@@ -78,6 +95,7 @@ from abide.constraints import (
             lambda: DoubleAcrostic("", ""),
             "first_word must contain at least one alphabetic character",
         ),
+        (lambda: MonosyllabicOnly(min_words=0), "min_words must be positive"),
         (lambda: ExactCharacterBudget("e", 0), "count must be positive"),
         (
             lambda: ExactCharacterBudget(["a"], 1),  # type: ignore[arg-type]
@@ -94,6 +112,14 @@ from abide.constraints import (
         (
             lambda: PositionalCharacter([(1, "ab")]),
             "position characters must be a single character string",
+        ),
+        (
+            lambda: CharacterPalindrome(lines=[]),
+            "lines must contain at least one 1-based line number",
+        ),
+        (
+            lambda: CharacterPalindrome(lines=[0]),
+            "lines must be 1-based positive integers",
         ),
     ],
 )

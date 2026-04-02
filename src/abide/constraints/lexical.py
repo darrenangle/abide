@@ -341,7 +341,13 @@ class Alliteration(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
-        self.letter = letter.upper() if letter else None
+        if letter is None:
+            self.letter = None
+            require_positive(min_consecutive, "min_consecutive")
+        else:
+            require_single_alphabetic_character(letter, "letter")
+            self.letter = letter.upper()
+            require_positive(min_words, "min_words")
         self.min_consecutive = min_consecutive
         self.min_words = min_words
         self.per_line = per_line
@@ -426,12 +432,17 @@ class CharacterCount(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        require_nonnegative(tolerance, "tolerance")
+        values: tuple[int, ...]
         if isinstance(chars_per_line, int):
-            self.chars_per_line = [chars_per_line]
+            values = (chars_per_line,)
             self.uniform = True
         else:
-            self.chars_per_line = chars_per_line
+            values = tuple(chars_per_line)
             self.uniform = False
+        if not values or any(count <= 0 for count in values):
+            raise ValueError("chars_per_line must contain at least one positive count")
+        self.chars_per_line = list(values)
         self.count_spaces = count_spaces
         self.tolerance = tolerance
 
@@ -835,6 +846,7 @@ class MonosyllabicOnly(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        require_positive(min_words, "min_words")
         self.min_words = min_words
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -1342,6 +1354,11 @@ class CharacterPalindrome(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        if lines is not None:
+            if not lines:
+                raise ValueError("lines must contain at least one 1-based line number")
+            if any(line <= 0 for line in lines):
+                raise ValueError("lines must be 1-based positive integers")
         self.lines = lines  # 1-indexed, None means all
         self.ignore_spaces = ignore_spaces
         self.ignore_punctuation = ignore_punctuation

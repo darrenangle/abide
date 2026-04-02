@@ -275,3 +275,8 @@
 - Added direct lexical constructor regressions for the reproduced vacuous-pass and runtime-error cases, including invalid pattern lists, empty strings, zero budgets, malformed pair/position specs, and invalid single-character targets.
 - Verified the RF-056 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `796 passed, 1 skipped`.
 - Closed `RF-056` and released its lock.
+- Opened and claimed `RF-057` after reproducing the remaining lexical contract holes: `CharacterCount([])` crashes with modulo-by-zero, `Alliteration(letter=\"S\", min_words=0)` and `MonosyllabicOnly(min_words=0)` pass vacuously, and `CharacterPalindrome(lines=[0])` accepts an invalid 1-based line reference.
+- Hardened `CharacterCount`, `Alliteration`, `MonosyllabicOnly`, and `CharacterPalindrome` against empty count patterns, zero minima, negative tolerances, and invalid explicit 1-based line lists.
+- Added direct regressions for the reproduced `CharacterCount([])`, `CharacterCount(0)`, `Alliteration(letter=\"S\", min_words=0)`, `Alliteration(min_consecutive=0)`, `MonosyllabicOnly(min_words=0)`, and `CharacterPalindrome(lines=[0])` constructor holes.
+- Verified the RF-057 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `803 passed, 1 skipped`.
+- Closed `RF-057` and released its lock.

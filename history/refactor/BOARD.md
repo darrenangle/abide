@@ -60,3 +60,4 @@ Updated: 2026-04-01
 | RF-054 | P1 | done | | Harden public constraint constructors against empty patterns and invalid indices | RF-053 |
 | RF-055 | P1 | done | | Harden shape and meter constraint constructors against degenerate configs | RF-054 |
 | RF-056 | P1 | done | | Harden remaining lexical constraint constructors and 1-based position contracts | RF-055 |
+| RF-057 | P1 | done | | Harden remaining character and sound lexical constraint constructors | RF-056 |
