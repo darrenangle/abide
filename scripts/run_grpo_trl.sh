@@ -50,7 +50,7 @@ mkdir -p logs models/grpo_trl
 
 # Start TRL vLLM server on GPU 1
 echo "Starting TRL vLLM server on GPU 1..."
-CUDA_VISIBLE_DEVICES=1 nohup /home/darren/miniconda3/bin/trl vllm-serve \
+CUDA_VISIBLE_DEVICES=1 nohup uv run trl vllm-serve \
     --model "$MODEL" \
     --port $PORT \
     --gpu_memory_utilization 0.92 \
@@ -78,7 +78,7 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export ABIDE_LEARNABLE=1
 export ABIDE_MODEL="$MODEL"
 
-CUDA_VISIBLE_DEVICES=0 python scripts/train_grpo_trl.py \
+CUDA_VISIBLE_DEVICES=0 uv run python scripts/train_grpo_trl.py \
     --prompts $NUM_PROMPTS \
     --batch-size 16 \
     --num-generations 16 \

@@ -4,13 +4,13 @@ Evaluate a local model on abide poetry forms.
 
 Usage:
     # Start vf-vllm first:
-    CUDA_VISIBLE_DEVICES=0 vf-vllm --model google/gemma-3n-e2b-it --port 8000
+    CUDA_VISIBLE_DEVICES=0 uv run vf-vllm --model google/gemma-3n-e2b-it --port 8000
 
     # Run eval:
-    python scripts/eval_local.py
+    uv run python scripts/eval_local.py
 
     # Save results for comparison:
-    python scripts/eval_local.py --output results/baseline.json
+    uv run python scripts/eval_local.py --output results/baseline.json
 """
 
 from __future__ import annotations

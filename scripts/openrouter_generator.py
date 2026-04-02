@@ -7,13 +7,13 @@ retry logic based on abide verification scores.
 
 Usage:
     # Single poem
-    python scripts/openrouter_generator.py --form Sonnet --topic "autumn" --tone melancholic
+    uv run python scripts/openrouter_generator.py --form Sonnet --topic "autumn" --tone melancholic
 
     # Batch generation
-    python scripts/openrouter_generator.py --form Sonnet --num 10 --output data/sonnets.jsonl
+    uv run python scripts/openrouter_generator.py --form Sonnet --num 10 --output data/sonnets.jsonl
 
     # With specific model
-    python scripts/openrouter_generator.py --form Haiku --model moonshotai/kimi-k2
+    uv run python scripts/openrouter_generator.py --form Haiku --model moonshotai/kimi-k2
 """
 
 import argparse

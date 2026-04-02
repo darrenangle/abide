@@ -46,14 +46,16 @@ evals = [
     "openai>=1.0.0",            # OpenAI client (for verifiers compat)
     "verifiers>=0.1.0",         # RL training framework
 ]
-# Local GRPO training (uses verifiers[rl] which includes vLLM, torch, etc.)
+# Local GRPO training
 training = [
+    "accelerate>=1.13.0",
     "datasets>=2.0.0",
     "torch>=2.0.0",
     "transformers>=4.45.0",
     "peft>=0.13.0",
     "trl>=0.11.0",
-    "verifiers[rl]>=0.1.0",     # Includes vLLM, torch, transformers, accelerate, etc.
+    "verifiers>=0.1.0",
+    "vllm>=0.18.1",
     "wandb>=0.16.0",            # Experiment tracking
 ]
 # Development dependencies

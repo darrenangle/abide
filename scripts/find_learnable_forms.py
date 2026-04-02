@@ -307,7 +307,7 @@ def main():
     except Exception:
         print(f"ERROR: vLLM not running at {args.vllm_url}")
         print(
-            "Start it with: CUDA_VISIBLE_DEVICES=0 vf-vllm --model google/gemma-3-4b-it --port 8000"
+            "Start it with: CUDA_VISIBLE_DEVICES=0 uv run vf-vllm --model google/gemma-3-4b-it --port 8000"
         )
         sys.exit(1)
 

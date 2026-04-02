@@ -8,16 +8,16 @@ adheres to formal constraints.
 
 Usage:
     # Run with default settings (llama-3.1-8b)
-    python scripts/run_forms_mini.py
+    uv run python scripts/run_forms_mini.py
 
     # Use a specific model
-    python scripts/run_forms_mini.py --model anthropic/claude-3-haiku
+    uv run python scripts/run_forms_mini.py --model anthropic/claude-3-haiku
 
     # Run only specific forms
-    python scripts/run_forms_mini.py --forms haiku,limerick
+    uv run python scripts/run_forms_mini.py --forms haiku,limerick
 
     # Run with more samples per form
-    python scripts/run_forms_mini.py --samples 3
+    uv run python scripts/run_forms_mini.py --samples 3
 
 Environment:
     OPENROUTER_API_KEY: Your OpenRouter API key (required)

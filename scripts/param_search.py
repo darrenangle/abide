@@ -6,7 +6,7 @@ Runs a small number of rollouts and measures mean reward to compare
 different parameter configurations before committing to a full training run.
 
 Usage:
-    python scripts/param_search.py --max-tokens 2048 --rep-penalty 1.15
+    uv run python scripts/param_search.py --max-tokens 2048 --rep-penalty 1.15
 """
 
 from __future__ import annotations
@@ -258,7 +258,7 @@ def main():
     if not check_vllm_ready():
         print("vLLM not ready. Please start it first:")
         print(
-            f"  CUDA_VISIBLE_DEVICES=1 vf-vllm --model {BAGUETTOTRON_PATH} --port {VLLM_PORT} --max-model-len 4096 --enforce-eager"
+            f"  CUDA_VISIBLE_DEVICES=1 uv run vf-vllm --model {BAGUETTOTRON_PATH} --port {VLLM_PORT} --max-model-len 4096 --enforce-eager"
         )
         sys.exit(1)
 

@@ -14,16 +14,16 @@ Features:
 
 Usage:
     # Start vf-vllm on GPU 0 first (in separate terminal):
-    CUDA_VISIBLE_DEVICES=0 vf-vllm --model /home/darren/10k-poems/models/baguettotron_sft/final --port 8000 --enforce-eager
+    CUDA_VISIBLE_DEVICES=0 uv run vf-vllm --model /home/darren/10k-poems/models/baguettotron_sft/final --port 8000 --enforce-eager
 
     # Then run training on GPU 1:
-    CUDA_VISIBLE_DEVICES=1 python scripts/train_grpo.py
+    CUDA_VISIBLE_DEVICES=1 uv run python scripts/train_grpo.py
 
     # Resume from checkpoint:
-    CUDA_VISIBLE_DEVICES=1 python scripts/train_grpo.py --resume models/abide_grpo/checkpoint-500
+    CUDA_VISIBLE_DEVICES=1 uv run python scripts/train_grpo.py --resume models/abide_grpo/checkpoint-500
 
     # Or use a different model:
-    CUDA_VISIBLE_DEVICES=1 python scripts/train_grpo.py --model google/gemma-3-270m-it
+    CUDA_VISIBLE_DEVICES=1 uv run python scripts/train_grpo.py --model google/gemma-3-270m-it
 """
 
 from __future__ import annotations

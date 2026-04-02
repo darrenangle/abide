@@ -125,7 +125,7 @@ if [ "$RUN_PARAM_SEARCH" -eq 1 ]; then
 
     # Start vLLM for param search (verifiers library)
     echo "Starting vf-vllm server..."
-    CUDA_VISIBLE_DEVICES=1 nohup /home/darren/miniconda3/bin/vf-vllm \
+    CUDA_VISIBLE_DEVICES=1 nohup uv run vf-vllm \
         --model "$MODEL" \
         --port $PORT \
         --max-model-len 4096 \
@@ -147,7 +147,7 @@ if [ "$RUN_PARAM_SEARCH" -eq 1 ]; then
         for rep_penalty in 1.1 1.15 1.2 1.25 1.3; do
             echo ""
             echo ">>> Testing max_tokens=$max_tokens, rep_penalty=$rep_penalty"
-            python scripts/param_search.py \
+            uv run python scripts/param_search.py \
                 --max-tokens $max_tokens \
                 --rep-penalty $rep_penalty \
                 --num-rollouts 128 \
@@ -187,7 +187,7 @@ if [ "$RUN_LEARNABLE_SEARCH" -eq 1 ]; then
     # Use standard vLLM (OpenAI-compatible API) for learnable forms search
     # TRL's vLLM server has a different API that doesn't support /v1/completions
     echo "Starting standard vLLM server (OpenAI-compatible)..."
-    CUDA_VISIBLE_DEVICES=1 nohup python -m vllm.entrypoints.openai.api_server \
+    CUDA_VISIBLE_DEVICES=1 nohup uv run python -m vllm.entrypoints.openai.api_server \
         --model "$MODEL" \
         --port $PORT \
         --gpu-memory-utilization 0.92 \
@@ -213,7 +213,7 @@ if [ "$RUN_LEARNABLE_SEARCH" -eq 1 ]; then
     done
 
     # Run learnable forms search
-    python scripts/find_learnable_forms.py \
+    uv run python scripts/find_learnable_forms.py \
         --model "$MODEL" \
         --vllm-url "http://localhost:$PORT" \
         --prompts 5 \
@@ -249,7 +249,7 @@ if [ "$RUN_TRAINING" -eq 1 ]; then
 
     # Start TRL vLLM server
     echo "Starting TRL vLLM server on GPU 1..."
-    CUDA_VISIBLE_DEVICES=1 nohup /home/darren/miniconda3/bin/trl vllm-serve \
+    CUDA_VISIBLE_DEVICES=1 nohup uv run trl vllm-serve \
         --model "$MODEL" \
         --port $PORT \
         --gpu_memory_utilization 0.92 \
@@ -273,7 +273,7 @@ if [ "$RUN_TRAINING" -eq 1 ]; then
 
     echo ""
     echo "Starting TRL GRPO training on GPU 0..."
-    CUDA_VISIBLE_DEVICES=0 python scripts/train_grpo_baguettotron.py \
+    CUDA_VISIBLE_DEVICES=0 uv run python scripts/train_grpo_baguettotron.py \
         --prompts $NUM_PROMPTS \
         --batch-size $BATCH_SIZE \
         --num-generations $NUM_GENERATIONS \

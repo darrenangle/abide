@@ -10,7 +10,6 @@ cd "$PROJECT_DIR"
 
 MODEL="/home/darren/10k-poems/models/baguettotron_sft/final"
 PORT=8000
-PYTHON="/home/darren/miniconda3/bin/python"
 LOG_FILE="experiments/grpo_param_search.md"
 RESULTS_FILE="experiments/param_search_results.jsonl"
 
@@ -42,7 +41,7 @@ mkdir -p experiments logs
 
 # Start vLLM on GPU 1 with Baguettotron
 echo "Starting vLLM on GPU 1..."
-CUDA_VISIBLE_DEVICES=1 /home/darren/miniconda3/bin/vf-vllm \
+CUDA_VISIBLE_DEVICES=1 uv run vf-vllm \
     --model "$MODEL" \
     --port $PORT \
     --gpu-memory-utilization 0.7 \
@@ -94,7 +93,7 @@ for exp in "${EXPERIMENTS[@]}"; do
     echo ""
     echo ">>> Experiment $EXP_NUM: max_tokens=$MAX_TOKENS, rep_penalty=$REP_PENALTY"
 
-    CUDA_VISIBLE_DEVICES=0 $PYTHON scripts/param_search.py \
+    CUDA_VISIBLE_DEVICES=0 uv run python scripts/param_search.py \
         --max-tokens "$MAX_TOKENS" \
         --rep-penalty "$REP_PENALTY" \
         --num-rollouts 128 \
@@ -109,7 +108,7 @@ echo "ANALYZING RESULTS"
 echo "============================================================"
 
 # Find best params using Python
-BEST_PARAMS=$($PYTHON -c "
+BEST_PARAMS=$(uv run python -c "
 import json
 results = []
 with open('$RESULTS_FILE') as f:
@@ -141,7 +140,7 @@ for i in 1 2 3; do
     echo ""
     echo ">>> Confirmation run $i/3: max_tokens=$BEST_MAX_TOKENS, rep_penalty=$BEST_REP_PENALTY"
 
-    CUDA_VISIBLE_DEVICES=0 $PYTHON scripts/param_search.py \
+    CUDA_VISIBLE_DEVICES=0 uv run python scripts/param_search.py \
         --max-tokens "$BEST_MAX_TOKENS" \
         --rep-penalty "$BEST_REP_PENALTY" \
         --num-rollouts 128 \
@@ -154,7 +153,7 @@ echo "============================================================"
 echo "CONFIRMATION ANALYSIS"
 echo "============================================================"
 
-$PYTHON -c "
+uv run python -c "
 import json
 results = []
 with open('experiments/confirmation_results.jsonl') as f:
@@ -203,7 +202,7 @@ cat >> "$LOG_FILE" << EOF
 
 ### All Experiment Results
 \`\`\`
-$(cat "$RESULTS_FILE" | $PYTHON -c "
+$(cat "$RESULTS_FILE" | uv run python -c "
 import json, sys
 for line in sys.stdin:
     r = json.loads(line)
@@ -213,7 +212,7 @@ for line in sys.stdin:
 
 ### Confirmation Results
 \`\`\`
-$(cat experiments/confirmation_results.jsonl 2>/dev/null | $PYTHON -c "
+$(cat experiments/confirmation_results.jsonl 2>/dev/null | uv run python -c "
 import json, sys
 for i, line in enumerate(sys.stdin, 1):
     r = json.loads(line)

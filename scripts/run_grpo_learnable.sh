@@ -65,7 +65,7 @@ mkdir -p logs models/grpo_learnable_lr5e5
 
 # Start vf-vllm on GPU 1
 echo "Starting vf-vllm on GPU 1..."
-CUDA_VISIBLE_DEVICES=1 nohup /home/darren/miniconda3/bin/vf-vllm \
+CUDA_VISIBLE_DEVICES=1 nohup uv run vf-vllm \
     --model "$MODEL" \
     --port $PORT \
     --gpu-memory-utilization 0.92 \
@@ -105,7 +105,7 @@ if [ -n "$LATEST_CKPT" ]; then
     RESUME_ARG="--resume $LATEST_CKPT"
 fi
 
-CUDA_VISIBLE_DEVICES=0 /home/darren/miniconda3/bin/torchrun --nproc_per_node=1 scripts/train_grpo.py \
+CUDA_VISIBLE_DEVICES=0 uv run torchrun --nproc_per_node=1 scripts/train_grpo.py \
     --prompts $NUM_PROMPTS \
     --batch-size 16 \
     --rollouts 16 \

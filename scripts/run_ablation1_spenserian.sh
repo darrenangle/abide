@@ -54,7 +54,7 @@ mkdir -p logs experiments
 
 # Start vf-vllm on GPU 1
 echo "Starting vf-vllm on GPU 1..."
-CUDA_VISIBLE_DEVICES=1 nohup /home/darren/miniconda3/bin/vf-vllm \
+CUDA_VISIBLE_DEVICES=1 nohup uv run vf-vllm \
     --model "$MODEL" \
     --port $PORT \
     --gpu-memory-utilization 0.92 \
@@ -91,7 +91,7 @@ export ABIDE_MODEL="$MODEL"
 # Actually let's use smaller batch for more gradient updates
 BATCH_SIZE=16  # 5000 / 16 = 312 steps, close enough for 500-step target
 
-CUDA_VISIBLE_DEVICES=0 /home/darren/miniconda3/bin/torchrun --nproc_per_node=1 scripts/train_grpo.py \
+CUDA_VISIBLE_DEVICES=0 uv run torchrun --nproc_per_node=1 scripts/train_grpo.py \
     --prompts $NUM_PROMPTS \
     --batch-size $BATCH_SIZE \
     --output models/ablation1_spenserian \

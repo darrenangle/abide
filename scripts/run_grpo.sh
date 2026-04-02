@@ -40,7 +40,7 @@ mkdir -p logs
 # Start vf-vllm on GPU 1
 # Using V1 engine (patched scheduler assertion)
 echo "Starting vf-vllm on GPU 1..."
-CUDA_VISIBLE_DEVICES=1 nohup /home/darren/miniconda3/bin/vf-vllm \
+CUDA_VISIBLE_DEVICES=1 nohup uv run vf-vllm \
     --model "$MODEL" \
     --port $PORT \
     --gpu-memory-utilization 0.92 \
@@ -69,7 +69,7 @@ echo ""
 echo "Starting training on GPU 0..."
 export OMP_NUM_THREADS=4
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-CUDA_VISIBLE_DEVICES=0 /home/darren/miniconda3/bin/torchrun --nproc_per_node=1 scripts/train_grpo.py
+CUDA_VISIBLE_DEVICES=0 uv run torchrun --nproc_per_node=1 scripts/train_grpo.py
 
 # Cleanup
 echo ""

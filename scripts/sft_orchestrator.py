@@ -10,16 +10,16 @@ Generates verified poems with dual reasoning traces (SYNTH + natural).
 
 Usage:
     # OpenRouter only
-    python scripts/sft_orchestrator.py --forms Sonnet,Haiku --num 10 --backend openrouter
+    uv run python scripts/sft_orchestrator.py --forms Sonnet,Haiku --num 10 --backend openrouter
 
     # Claude Code agents only
-    python scripts/sft_orchestrator.py --forms Sonnet,Haiku --num 10 --backend claude
+    uv run python scripts/sft_orchestrator.py --forms Sonnet,Haiku --num 10 --backend claude
 
     # Mixed mode (50/50)
-    python scripts/sft_orchestrator.py --forms Sonnet,Haiku --num 10 --model-mix 0.5
+    uv run python scripts/sft_orchestrator.py --forms Sonnet,Haiku --num 10 --model-mix 0.5
 
     # From config file
-    python scripts/sft_orchestrator.py --config config/sft_generation.yaml
+    uv run python scripts/sft_orchestrator.py --config config/sft_generation.yaml
 """
 
 import argparse
@@ -475,11 +475,11 @@ class SFTOrchestrator:
         print("=" * 60)
         print(f"Total: {self.stats['total']}")
         print(
-            f"Successes: {self.stats['successes']} ({100*self.stats['successes']/max(1,self.stats['total']):.1f}%)"
+            f"Successes: {self.stats['successes']} ({100 * self.stats['successes'] / max(1, self.stats['total']):.1f}%)"
         )
         print(f"Failures: {self.stats['failures']}")
-        print(f"Time: {elapsed:.1f}s ({elapsed/60:.1f}min)")
-        print(f"Rate: {self.stats['successes']/elapsed*60:.1f} poems/min")
+        print(f"Time: {elapsed:.1f}s ({elapsed / 60:.1f}min)")
+        print(f"Rate: {self.stats['successes'] / elapsed * 60:.1f} poems/min")
         print()
         print("By backend:")
         for backend, count in self.stats["by_backend"].items():

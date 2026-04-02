@@ -248,11 +248,8 @@ stage3_reward = spec.weighted_score(poem)
 ## Installation
 
 ```bash
-# Using uv (recommended)
+# Package install
 uv add abide
-
-# Using pip
-pip install abide
 ```
 
 ## Quick Start
@@ -278,7 +275,8 @@ for item in result.rubric:
 ```bash
 git clone https://github.com/darrenangle/abide.git
 cd abide
-uv sync
+uv sync --all-extras
+uv run pre-commit install
 uv run pytest
 ```
 

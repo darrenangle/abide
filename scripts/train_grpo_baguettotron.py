@@ -10,12 +10,12 @@ Baguettotron-specific:
 
 Usage:
     # Start vLLM server first:
-    CUDA_VISIBLE_DEVICES=1 trl vllm-serve \\
+    CUDA_VISIBLE_DEVICES=1 uv run trl vllm-serve \\
         --model /home/darren/10k-poems/models/baguettotron_sft/final \\
         --port 8000 --max_model_len 4096
 
     # Then run training:
-    CUDA_VISIBLE_DEVICES=0 python scripts/train_grpo_baguettotron.py
+    CUDA_VISIBLE_DEVICES=0 uv run python scripts/train_grpo_baguettotron.py
 """
 
 from __future__ import annotations

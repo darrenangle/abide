@@ -8,7 +8,7 @@ from pathlib import Path
 
 MODEL = "/home/darren/10k-poems/models/baguettotron_sft/final"
 PORT = 8000
-PYTHON = "/home/darren/miniconda3/bin/python"
+PYTHON = sys.executable
 OUTPUT = "experiments/extended_results.jsonl"
 
 # Experiments: max_tokens=2048, higher rep_penalty

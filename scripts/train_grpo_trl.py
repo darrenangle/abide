@@ -14,13 +14,13 @@ Key differences from verifiers-based training:
 
 Usage:
     # Start trl vllm server on GPU 1 first (in separate terminal):
-    CUDA_VISIBLE_DEVICES=1 trl vllm-serve --model google/gemma-4-E4B-it --port 8000
+    CUDA_VISIBLE_DEVICES=1 uv run trl vllm-serve --model google/gemma-4-E4B-it --port 8000
 
     # Then run training on GPU 0:
-    CUDA_VISIBLE_DEVICES=0 python scripts/train_grpo_trl.py
+    CUDA_VISIBLE_DEVICES=0 uv run python scripts/train_grpo_trl.py
 
     # With custom beta:
-    CUDA_VISIBLE_DEVICES=0 python scripts/train_grpo_trl.py --beta 0.01
+    CUDA_VISIBLE_DEVICES=0 uv run python scripts/train_grpo_trl.py --beta 0.01
 """
 
 from __future__ import annotations
