@@ -48,3 +48,4 @@ Updated: 2026-04-01
 | RF-042 | P2 | done | | Add shared mutation coverage for exact-count short-form families | RF-041 |
 | RF-043 | P1 | done | | Stop Clerihew from treating bare sentence-start capitalization as a name | RF-042 |
 | RF-044 | P1 | done | | Require whole-token prefix matches for explicit Anaphora phrases | RF-043 |
+| RF-045 | P1 | done | | Remove the hidden 20-word gate from UniqueUtterance | RF-044 |

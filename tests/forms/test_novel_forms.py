@@ -1,4 +1,10 @@
-from abide.forms.novel import ColorSpectrum, ElementalVerse, SandwichSonnet, VowelPilgrimage
+from abide.forms.novel import (
+    ColorSpectrum,
+    ElementalVerse,
+    SandwichSonnet,
+    UniqueUtterance,
+    VowelPilgrimage,
+)
 
 
 def test_novel_forms_accept_valid_examples() -> None:
@@ -93,3 +99,21 @@ def test_sandwich_sonnet_short_input_fails_instead_of_throwing() -> None:
 
     assert result.passed is False
     assert result.score < 0.1
+
+
+def test_unique_utterance_does_not_hide_an_undocumented_min_word_threshold() -> None:
+    poem = "\n".join(
+        [
+            "alpha beta gamma",
+            "delta epsilon zeta",
+            "eta theta iota",
+            "kappa lambda mu",
+            "nu xi omicron",
+            "pi rho sigma",
+        ]
+    )
+
+    result = UniqueUtterance().verify(poem)
+
+    assert result.score == 1.0
+    assert result.passed is True

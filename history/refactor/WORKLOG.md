@@ -214,3 +214,8 @@
 - Added a direct regression for the reproduced `dream` / `dreamer` false positive while preserving the existing auto-detected opening behavior.
 - Verified the RF-044 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `663 passed, 1 skipped`.
 - Closed `RF-044` and released its lock.
+- Opened and claimed `RF-045` after reproducing that `UniqueUtterance()` reports `score=1.0` but `passed=False` for a 6-line poem with 18 unique words because the form hid an undocumented `min_words=20` requirement inside `AllWordsUnique`.
+- Removed the hidden `min_words=20` gate from `UniqueUtterance` so the form now matches its public contract: minimum line count plus no repeated words.
+- Added a direct regression for the reproduced six-line all-unique poem that previously scored perfectly but still failed canonically.
+- Verified the RF-045 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `664 passed, 1 skipped`.
+- Closed `RF-045` and released its lock.
