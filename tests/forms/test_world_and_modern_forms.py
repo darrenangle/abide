@@ -36,16 +36,16 @@ def test_naani_rejects_high_scoring_wrong_line_count() -> None:
 def test_skeltonic_accepts_valid_min_line_example() -> None:
     poem = "\n".join(
         [
-            "cat bat",
-            "hat bat",
-            "mat bat",
-            "bell fell",
-            "tell fell",
-            "shell fell",
-            "soon moon",
-            "tune moon",
-            "noon moon",
-            "light bright",
+            "small cat",
+            "hard hat",
+            "old mat",
+            "soft bell",
+            "grim tell",
+            "thin shell",
+            "pale moon",
+            "swift tune",
+            "dark noon",
+            "clear light",
         ]
     )
 
@@ -73,4 +73,26 @@ def test_skeltonic_rejects_high_scoring_wrong_line_count() -> None:
     result = Skeltonic().verify(poem)
 
     assert result.passed is False
-    assert result.score > 0.9
+    assert result.score > 0.5
+
+
+def test_skeltonic_rejects_identical_end_word_repetition() -> None:
+    poem = "\n".join(
+        [
+            "small wind rain",
+            "brief dust rain",
+            "thin ash rain",
+            "bare dusk rain",
+            "hard frost rain",
+            "small branch rain",
+            "cold pond rain",
+            "thin cloud rain",
+            "brief field rain",
+            "dark road rain",
+        ]
+    )
+
+    result = Skeltonic().verify(poem)
+
+    assert result.passed is False
+    assert result.score >= 0.55

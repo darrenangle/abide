@@ -138,3 +138,8 @@
 - Added direct epigram regressions for the reproduced three-line essay false positive plus compact and non-rhyming baseline examples.
 - Verified the RF-027 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `604 passed, 1 skipped`.
 - Closed `RF-027` and released its lock.
+- Opened and claimed `RF-028` after reproducing that `Skeltonic` can still pass on ten short lines ending in the exact same word because the rhyme-run heuristic counts identical repeated end words as a valid rhyme chain.
+- Fixed `Skeltonic` to require genuinely different end words within a rhyme run, so ten short lines all ending in the exact same word no longer count as a valid Skeltonic chain.
+- Added a direct regression for identical end-word repetition and corrected the positive Skeltonic fixture to use non-identical rhyming end words.
+- Verified the RF-028 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `605 passed, 1 skipped`.
+- Closed `RF-028` and released its lock.

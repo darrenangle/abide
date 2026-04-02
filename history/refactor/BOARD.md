@@ -31,3 +31,4 @@ Updated: 2026-04-01
 | RF-025 | P2 | done | | Narrow generic-form claims to the structure the code actually verifies | RF-024 |
 | RF-026 | P2 | done | | Strip remaining unverified thematic claims from form docstrings and catalog summaries | RF-025 |
 | RF-027 | P1 | done | | Harden Epigram so 3-line prose blocks no longer pass as perfect fits | RF-026 |
+| RF-028 | P1 | done | | Stop Skeltonic from treating repeated identical end words as valid rhyme runs | RF-027 |

@@ -260,21 +260,25 @@ class Skeltonic(Constraint):
 
         # Check for heavy rhyming (consecutive rhymes)
         # Skeltonic verse often has 3+ lines rhyming together
+        from abide.primitives import extract_end_word
         from abide.primitives.phonetics import get_end_sound
 
         rhyme_runs = 0
         current_run = 1
         prev_sound = None
+        prev_end_word = None
 
         for line in structure.lines:
             sound = get_end_sound(line)
-            if sound and sound == prev_sound:
+            end_word = extract_end_word(line)
+            if sound and sound == prev_sound and end_word and end_word != prev_end_word:
                 current_run += 1
             else:
                 if current_run >= 3:
                     rhyme_runs += 1
                 current_run = 1
             prev_sound = sound
+            prev_end_word = end_word or None
 
         if current_run >= 3:
             rhyme_runs += 1
