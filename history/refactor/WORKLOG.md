@@ -334,3 +334,6 @@
 - Opened and claimed `RF-068` to tighten structural-count decay and push the exported-form degenerate ceiling down from the current `0.75` guardrail using the 2026-04-02 outlier scan as the fix list.
 - Tightened shared structural decay and manual shell/proxy scoring across the form surface, hardened `LinePairSimilarity` and exact shape scoring, lowered the committed degenerate-form ceiling to `0.55`, and verified the sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `852 passed, 1 skipped`.
 - Closed `RF-068` and released its lock.
+- Opened and claimed `RF-069` to add generated mutation coverage on top of the stable fixture-backed fixed-form harnesses without creating a second parallel testing strategy.
+- Added a Hypothesis-backed fixture mutation harness covering generated line insertion, content deletion, and stanza-break collapse over stable fixed-form families, and verified the expanded suite with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `879 passed, 1 skipped`.
+- Closed `RF-069` and released its lock.

@@ -72,4 +72,4 @@ Updated: 2026-04-02
 | RF-066 | P1 | done | | Eliminate vacuous lexical passes in NoConsecutiveRepeats and CharacterPalindrome | RF-065 |
 | RF-067 | P1 | done | | Add a permanent degenerate harness for zero-argument public constraints | RF-066 |
 | RF-068 | P1 | done | | Tighten structural-count decay and lower the failed-score ceiling across exported forms | RF-067 |
-| RF-069 | P2 | todo | | Add property-based mutation coverage for stable fixed-form fixture families | RF-068 |
+| RF-069 | P2 | done | | Add property-based mutation coverage for stable fixed-form fixture families | RF-068 |
