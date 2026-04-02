@@ -148,3 +148,8 @@
 - Added regressions for the catalog instantiation path and the early-validation path.
 - Verified the RF-029 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `607 passed, 1 skipped`.
 - Closed `RF-029` and released its lock.
+- Opened and claimed `RF-030` after reproducing that `LiteraryBallad` still reports `passed=True` for a 14-line single-stanza repeated-line block because its lenient `WeightedSum` does not require the stanza-count constraint to pass.
+- Added required-child gating to `LiteraryBallad` so canonical passes now require both minimum line count and minimum stanza count, while preserving partial credit for near misses.
+- Added direct regressions for a valid multi-stanza literary ballad and the reproduced single-stanza false positive.
+- Verified the RF-030 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `609 passed, 1 skipped`.
+- Closed `RF-030` and released its lock.

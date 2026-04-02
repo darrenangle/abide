@@ -185,6 +185,7 @@ class LiteraryBallad(Constraint):
             self._constraint = WeightedSum(
                 [(self._line_count, 2.0), (self._stanza_count, 1.5)],
                 threshold=0.6,
+                required_indices=[0, 1],
             )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
