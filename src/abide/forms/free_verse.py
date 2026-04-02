@@ -70,6 +70,7 @@ class FreeVerse(Constraint):
         structure = self._ensure_structure(poem)
         score = 1.0
         issues = []
+        word_bound_violations: list[str] = []
 
         # Check line count
         if structure.line_count < self.min_lines:
@@ -91,13 +92,20 @@ class FreeVerse(Constraint):
 
         # Check word counts per line
         if self.min_words_per_line or self.max_words_per_line:
-            for _i, line in enumerate(structure.lines):
+            for i, line in enumerate(structure.lines):
                 word_count = len(line.split())
                 if word_count < self.min_words_per_line:
                     score *= 0.95  # Minor penalty
+                    word_bound_violations.append(
+                        f"Line {i + 1} has too few words ({word_count} < {self.min_words_per_line})"
+                    )
                 if self.max_words_per_line and word_count > self.max_words_per_line:
                     score *= 0.95
+                    word_bound_violations.append(
+                        f"Line {i + 1} has too many words ({word_count} > {self.max_words_per_line})"
+                    )
 
+        issues.extend(word_bound_violations)
         passed = score >= 0.8 and not issues
 
         return VerificationResult(
@@ -109,6 +117,7 @@ class FreeVerse(Constraint):
             details={
                 "line_count": structure.line_count,
                 "stanza_count": structure.stanza_count,
+                "word_bound_violations": word_bound_violations,
                 "issues": issues,
             },
         )

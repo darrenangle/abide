@@ -105,3 +105,9 @@
 - Updated `.pre-commit-config.yaml` to pin `ruff-pre-commit` to `v0.14.8`, matching the project Ruff version, and normalized `scripts/param_search.py` once under the now-aligned formatter.
 - Verified that `uv run ruff check src/abide tests scripts` and `uv run pre-commit run ruff --files scripts/param_search.py` now agree, and re-ran `uv run mypy src/abide` plus `uv run pytest` (`588 passed, 1 skipped`).
 - Closed `RF-021` and released its lock.
+- Opened and claimed `RF-022` after reproducing that `Abecedarian` and `Mesostic` can pass with missing trailing lines, and `FreeVerse` can pass while violating configured per-line word-count bounds because those violations only shave the score.
+- Added direct coverage for `Abecedarian`, `Mesostic`, and configured `FreeVerse` word-bound behavior, including the reproduced high-score false positives.
+- Tightened `Abecedarian` and `Mesostic` so missing required lines count as real violations and canonical pass requires the exact line count plus all expected matches.
+- Tightened `FreeVerse` so configured per-line word-count violations are surfaced in `issues` and force canonical `passed=False` even when the blended score remains high.
+- Verified the RF-022 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `591 passed, 1 skipped`.
+- Closed `RF-022` and released its lock.

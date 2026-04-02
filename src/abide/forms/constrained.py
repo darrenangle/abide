@@ -88,8 +88,7 @@ class Abecedarian(Constraint):
                 details.append(f"Line {i + 1}: ✗ empty line")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
-        expected_matches = min(len(self.letters), len(structure.lines))
-        violations = expected_matches - matches
+        violations = len(self.letters) - matches
         if violations == 0:
             letter_score = 1.0
         elif violations == 1:
@@ -101,7 +100,7 @@ class Abecedarian(Constraint):
 
         # Combine scores
         score = line_result.score * 0.1 + letter_score * 0.9
-        passed = score >= 0.8
+        passed = line_result.passed and matches == len(self.letters)
 
         return VerificationResult(
             score=score,
@@ -348,8 +347,7 @@ class Mesostic(Constraint):
                 details.append(f"Line {i + 1}: ✗ missing '{target_letter}' in middle")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
-        expected_matches = min(len(self.target_word), len(structure.lines))
-        violations = expected_matches - matches
+        violations = len(self.target_word) - matches
         if violations == 0:
             mesostic_score = 1.0
         elif violations == 1:
@@ -361,7 +359,7 @@ class Mesostic(Constraint):
 
         # Combine scores
         score = line_result.score * 0.1 + mesostic_score * 0.9
-        passed = score >= 0.8
+        passed = line_result.passed and matches == len(self.target_word)
 
         return VerificationResult(
             score=score,
