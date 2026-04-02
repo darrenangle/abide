@@ -67,3 +67,4 @@ Updated: 2026-04-01
 | RF-061 | P1 | done | | Penalize underlength line-match reward leaks in manual novel forms | RF-060 |
 | RF-062 | P1 | done | | Reject vacuous comparison passes and punctuation-only reward leaks | RF-061 |
 | RF-063 | P1 | done | | Eliminate Ghazal perfect-score leakage when qafiya evidence is missing | RF-062 |
+| RF-064 | P1 | done | | Penalize repeated-line overscore leakage in Triolet | RF-063 |

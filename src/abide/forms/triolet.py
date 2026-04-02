@@ -124,14 +124,21 @@ class Triolet(Constraint):
             )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
+        line_result = self._line_count.verify(poem)
         result = self._constraint.verify(poem)
+        adjusted_score = result.score
+        if not line_result.passed:
+            adjusted_score *= line_result.score**3
         return VerificationResult(
-            score=result.score,
+            score=adjusted_score,
             passed=result.passed,
             rubric=result.rubric,
             constraint_name=self.name,
             constraint_type=self.constraint_type,
-            details=result.details,
+            details={
+                **(result.details or {}),
+                "line_score": line_result.score,
+            },
         )
 
     def describe(self) -> str:

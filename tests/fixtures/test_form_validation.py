@@ -240,6 +240,16 @@ class TestTrioletValidation:
         result = triolet.verify(TRIOLET_HARDY_BIRDS)
         assert result.score >= 0.5
 
+    def test_repeated_line_oversize_triolet_does_not_score_near_perfectly(self):
+        """A repeated-line oversize poem should not earn a triolet-like score."""
+        triolet = Triolet(strict=False, rhyme_threshold=0.5, refrain_threshold=0.8)
+        poem = "\n".join(["same line again"] * 10)
+
+        result = triolet.verify(poem)
+
+        assert result.passed is False
+        assert result.score < 0.2
+
 
 class TestPantoumValidation:
     """Validate Pantoum form against examples."""

@@ -313,3 +313,8 @@
 - Added a direct regression for the reproduced repeated-line `Ghazal` case where the full line was incorrectly treated as radif with no qafiya penalty.
 - Verified the RF-063 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `840 passed, 1 skipped`.
 - Closed `RF-063` and released its lock.
+- Opened and claimed `RF-064` after the repeated-line rescan showed one remaining exported outlier: `Triolet` still scores `0.870` on a 10-line repeated-line poem because the refrain and rhyme components stay perfect while the exact 8-line requirement only weakly reduces the blended score.
+- Hardened `Triolet` so an exact-line-count miss now materially scales down the final score instead of letting repeated-line refrain/rhyme subscores dominate the result.
+- Added a direct regression for the reproduced 10-line repeated-line triolet case and reran the repeated-line exported-form rescan to confirm the outlier is gone.
+- Verified the RF-064 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `841 passed, 1 skipped`.
+- Closed `RF-064` and released its lock.
