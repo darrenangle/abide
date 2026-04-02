@@ -184,3 +184,7 @@
 - Added a stanza-flattening mutation harness for representative multi-stanza fixed forms and asserted that canonical fixtures fail once blank-line stanza boundaries are collapsed.
 - Verified the RF-037 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `630 passed, 1 skipped`.
 - Closed `RF-037` and released its lock.
+- Opened and claimed `RF-038` after a catalog-wide smoke sweep confirmed the exported form surface currently survives generic inputs without runtime exceptions, making it feasible to lock that expectation in as a standing regression test.
+- Added a full-surface smoke test that instantiates every exported form, asserts `describe()` is non-empty, and verifies generic inputs produce sane `VerificationResult` objects without runtime exceptions.
+- Verified the RF-038 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `631 passed, 1 skipped`.
+- Closed `RF-038` and released its lock.

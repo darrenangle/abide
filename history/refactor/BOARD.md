@@ -41,3 +41,4 @@ Updated: 2026-04-01
 | RF-035 | P1 | done | | Add fixture-driven line-add/drop mutation regressions for core fixed forms | RF-034 |
 | RF-036 | P1 | done | | Reject flattened single-block Pantoum layouts instead of chunking them back into quatrains | RF-035 |
 | RF-037 | P2 | done | | Add fixture-driven stanza-flattening regressions for multi-stanza fixed forms | RF-036 |
+| RF-038 | P2 | done | | Add exported-form surface smoke tests for instantiate/describe/verify stability | RF-037 |
