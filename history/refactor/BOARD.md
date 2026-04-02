@@ -40,3 +40,4 @@ Updated: 2026-04-01
 | RF-034 | P1 | done | | Fix stale special-form kwargs so the catalog instantiates every exported form | RF-033 |
 | RF-035 | P1 | done | | Add fixture-driven line-add/drop mutation regressions for core fixed forms | RF-034 |
 | RF-036 | P1 | done | | Reject flattened single-block Pantoum layouts instead of chunking them back into quatrains | RF-035 |
+| RF-037 | P2 | done | | Add fixture-driven stanza-flattening regressions for multi-stanza fixed forms | RF-036 |

@@ -47,6 +47,16 @@ CASES = [
     ),
 ]
 
+FLATTENING_CASES = [
+    (
+        "villanelle",
+        Villanelle(strict=False, rhyme_threshold=0.5, refrain_threshold=0.8),
+        VILLANELLE_SYNTHETIC_PERFECT,
+    ),
+    ("sestina", Sestina(strict=False), SESTINA_SYNTHETIC_PERFECT),
+    ("pantoum", Pantoum(strict=False), PANTOUM_SYNTHETIC_PERFECT),
+]
+
 
 @pytest.mark.parametrize(("name", "form", "poem"), CASES, ids=[name for name, _, _ in CASES])
 def test_fixture_mutation_harness_rejects_added_line(name: str, form, poem: str) -> None:
@@ -75,5 +85,21 @@ def test_pantoum_rejects_flattened_single_block_layout() -> None:
     assert baseline.passed is True
 
     flattened = form.verify(PANTOUM_SYNTHETIC_PERFECT.replace("\n\n", "\n"))
+
+    assert flattened.passed is False
+
+
+@pytest.mark.parametrize(
+    ("name", "form", "poem"),
+    FLATTENING_CASES,
+    ids=[name for name, _, _ in FLATTENING_CASES],
+)
+def test_fixture_mutation_harness_rejects_flattened_stanza_layouts(
+    name: str, form, poem: str
+) -> None:
+    baseline = form.verify(poem)
+    assert baseline.passed is True, f"{name} baseline should pass before flattening"
+
+    flattened = form.verify(poem.replace("\n\n", "\n"))
 
     assert flattened.passed is False

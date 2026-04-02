@@ -180,3 +180,7 @@
 - Removed synthetic single-block chunking from `Pantoum` and added a direct regression asserting that flattened pantoum layouts no longer pass canonically.
 - Verified the RF-036 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `627 passed, 1 skipped`.
 - Closed `RF-036` and released its lock.
+- Opened and claimed `RF-037` to convert the latest stanza-flattening sweep into durable shared coverage for multi-stanza fixed forms, so villanelle/sestina/pantoum stanza-layout regressions are enforced systematically.
+- Added a stanza-flattening mutation harness for representative multi-stanza fixed forms and asserted that canonical fixtures fail once blank-line stanza boundaries are collapsed.
+- Verified the RF-037 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `630 passed, 1 skipped`.
+- Closed `RF-037` and released its lock.
