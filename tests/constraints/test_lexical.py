@@ -126,3 +126,20 @@ from abide.constraints import (
 def test_lexical_constraints_reject_invalid_constructor_values(factory, message: str) -> None:
     with pytest.raises(ValueError, match=message):
         factory()
+
+
+def test_nonuniform_word_count_penalizes_missing_expected_lines() -> None:
+    result = WordCount([1, 2, 3]).verify("alpha")
+
+    assert result.passed is False
+    assert result.score == pytest.approx((1 / 3) ** 2)
+    assert result.details["matches"] == 1
+    assert result.details["linear_score"] == pytest.approx(1 / 3)
+    assert "Missing 2 expected line(s)" in result.details["line_details"]
+
+
+def test_uniform_word_count_keeps_open_ended_single_line_behavior() -> None:
+    result = WordCount(1).verify("alpha")
+
+    assert result.passed is True
+    assert result.score == 1.0

@@ -285,3 +285,8 @@
 - Added direct regressions covering the reproduced empty-input cases for `QuestionQuest`, `WhisperPoem`, `ThunderVerse`, `OddEvenDance`, `ElementalVerse`, `TemporalVerse`, `ExclamationEcho`, and `EndRhymeDensity`.
 - Verified the RF-058 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `811 passed, 1 skipped`.
 - Closed `RF-058` and released its lock.
+- Opened and claimed `RF-059` after reproducing that non-uniform `WordCount` patterns still award near-perfect scores to short prefix poems, leaking `0.90+` reward through `PrimeVerse`, `HourglassVerse`, `DescendingStaircase`, `NumericalEcho`, `BinaryBeat`, and `GoldenRatio` when only the earliest lines in the pattern are present.
+- Hardened non-uniform `WordCount` scoring so missing expected lines count against the score instead of letting exact-pattern forms grade only the present prefix.
+- Added direct regressions for primitive missing-line scoring and for the reproduced short-prefix leaks in `PrimeVerse`, `HourglassVerse`, `DescendingStaircase`, `NumericalEcho`, `BinaryBeat`, and `GoldenRatio`.
+- Verified the RF-059 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `819 passed, 1 skipped`.
+- Closed `RF-059` and released its lock.

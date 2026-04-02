@@ -2,12 +2,16 @@ import pytest
 
 from abide.forms.novel import (
     AlphabeticTerminus,
+    BinaryBeat,
     ColorSpectrum,
     DescendingStaircase,
     EchoEnd,
     ElementalVerse,
     ExclamationEcho,
+    GoldenRatio,
+    HourglassVerse,
     NumberWord,
+    NumericalEcho,
     OddEvenDance,
     PrimeVerse,
     QuestionQuest,
@@ -124,6 +128,24 @@ def test_empty_poem_does_not_receive_high_score_in_line_match_novel_forms(factor
 
     assert result.passed is False
     assert result.score <= 0.2
+
+
+@pytest.mark.parametrize(
+    ("form", "poem"),
+    [
+        (PrimeVerse(), "alpha beta"),
+        (HourglassVerse(), "alpha"),
+        (DescendingStaircase(), "one two three four five six seven"),
+        (NumericalEcho(), "one two three"),
+        (BinaryBeat(), "alpha beta"),
+        (GoldenRatio(), "alpha"),
+    ],
+)
+def test_exact_word_pattern_novel_forms_do_not_reward_short_prefixes(form, poem: str) -> None:
+    result = form.verify(poem)
+
+    assert result.passed is False
+    assert result.score < 0.2
 
 
 def test_sandwich_sonnet_short_input_fails_instead_of_throwing() -> None:

@@ -63,6 +63,11 @@ class WordCount(Constraint):
         structure = self._ensure_structure(poem)
         matches = 0
         details = []
+        expected_total = len(structure.lines)
+        if not self.uniform and len(structure.lines) < len(self.words_per_line):
+            expected_total = len(self.words_per_line)
+            missing = len(self.words_per_line) - len(structure.lines)
+            details.append(f"Missing {missing} expected line(s)")
 
         for i, line in enumerate(structure.lines):
             words = line.split()
@@ -77,7 +82,7 @@ class WordCount(Constraint):
 
         # Quadratic penalty: 3/9 correct = 0.11 instead of 0.33
         # This makes partial compliance less rewarding in GRPO training
-        linear_score = matches / max(1, len(structure.lines))
+        linear_score = matches / max(1, expected_total)
         score = linear_score**2
         passed = linear_score >= 0.9  # Stricter pass threshold
 
