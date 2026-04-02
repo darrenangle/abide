@@ -209,3 +209,8 @@
 - Added a direct regression for the reproduced non-name clerihew false positive.
 - Verified the RF-043 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `662 passed, 1 skipped`.
 - Closed `RF-043` and released its lock.
+- Opened and claimed `RF-044` after reproducing that `Anaphora(phrase=\"I have a dream\")` reports `passed=True, score=1.0` for lines starting `I have a dreamer...` / `dreamscape...` / `dreamboat...` because explicit phrase matching used raw string prefixes.
+- Switched explicit anaphora phrase matching to whole-token prefix comparison and normalized auto-detection onto the same tokenization path.
+- Added a direct regression for the reproduced `dream` / `dreamer` false positive while preserving the existing auto-detected opening behavior.
+- Verified the RF-044 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `663 passed, 1 skipped`.
+- Closed `RF-044` and released its lock.

@@ -39,18 +39,27 @@ def test_mesostic_requires_target_letters_in_the_middle() -> None:
 
 
 def test_anaphora_auto_detect_prefers_longest_repeated_opening() -> None:
-    poem = (
-        "I have a dream today\n"
-        "I have a dream tonight\n"
-        "I have a dream still\n"
-        "The road is dark"
-    )
+    poem = "I have a dream today\nI have a dream tonight\nI have a dream still\nThe road is dark"
 
     result = Anaphora(min_repeats=3, min_lines=4).verify(poem)
 
     assert result.passed is True
     assert result.details["phrase"] == "i have a dream"
     assert result.details["repeats"] == 3
+
+
+def test_anaphora_explicit_phrase_requires_whole_word_prefix_match() -> None:
+    poem = (
+        "I have a dreamer waiting\n"
+        "I have a dreamscape rising\n"
+        "I have a dreamboat drifting\n"
+        "Other opening here"
+    )
+
+    result = Anaphora(phrase="I have a dream", min_repeats=3, min_lines=4).verify(poem)
+
+    assert result.passed is False
+    assert result.details["repeats"] == 0
 
 
 def test_palindrome_poem_supports_word_and_letter_levels() -> None:

@@ -7,6 +7,7 @@ These forms focus on letter/word constraints rather than structure.
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, ClassVar
 
 from abide.constraints import (
@@ -430,14 +431,16 @@ class Anaphora(Constraint):
 
         if self.target_phrase:
             # Count lines starting with target phrase
-            repeats = sum(1 for line in lines_lower if line.startswith(self.target_phrase))
+            repeats = sum(
+                1 for line in lines_lower if self._line_starts_with_phrase(line, self.target_phrase)
+            )
             detected_phrase = self.target_phrase
         else:
             # Auto-detect: find most common opening word(s)
             openings: list[str] = []
             for line in lines_lower:
                 if line:
-                    words = line.split()
+                    words = self._tokenize(line)
                     for i in range(1, len(words) + 1):
                         openings.append(" ".join(words[:i]))
 
@@ -497,6 +500,18 @@ class Anaphora(Constraint):
         if self.target_phrase:
             return f"Anaphora: '{self.target_phrase}' repeated {self.min_repeats}+ times"
         return f"Anaphora: repeated opening phrase ({self.min_repeats}+ times)"
+
+    @staticmethod
+    def _tokenize(text: str) -> list[str]:
+        return re.findall(r"[a-z0-9']+", text.lower())
+
+    @classmethod
+    def _line_starts_with_phrase(cls, line: str, phrase: str) -> bool:
+        line_tokens = cls._tokenize(line)
+        phrase_tokens = cls._tokenize(phrase)
+        if not phrase_tokens:
+            return False
+        return line_tokens[: len(phrase_tokens)] == phrase_tokens
 
 
 class PalindromePoem(Constraint):
