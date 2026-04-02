@@ -132,6 +132,31 @@ def test_empty_poem_does_not_receive_high_score_in_line_match_novel_forms(factor
 
 
 @pytest.mark.parametrize(
+    ("form", "poem", "max_score"),
+    [
+        (QuestionQuest(), "?", 0.2),
+        (ElementalVerse(), "gold", 0.2),
+        (TemporalVerse(), "today", 0.2),
+        (ExclamationEcho(), "!", 0.2),
+        (OddEvenDance(), "one two three", 0.2),
+        (ThunderVerse(), "x" * 60, 0.2),
+        (WhisperPoem(), "alpha", 0.2),
+        (WhisperPoem(), "alpha\nbravo", 0.2),
+        (WhisperPoem(), "!!!\n???\n...\n!!!\n???", 0.6),
+    ],
+)
+def test_min_line_novel_forms_do_not_reward_underlength_valid_prefixes(
+    form,
+    poem: str,
+    max_score: float,
+) -> None:
+    result = form.verify(poem)
+
+    assert result.passed is False
+    assert result.score < max_score
+
+
+@pytest.mark.parametrize(
     ("form", "poem"),
     [
         (PrimeVerse(), "alpha beta"),

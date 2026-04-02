@@ -58,12 +58,18 @@ def _find_matching_word(
     return None
 
 
-def _steep_empty_safe_score(total_items: int, matches: int) -> tuple[int, float]:
-    """Apply the standard steep penalty ladder without rewarding empty input."""
+def _steep_empty_safe_score(
+    total_items: int,
+    matches: int,
+    *,
+    required_items: int | None = None,
+) -> tuple[int, float]:
+    """Apply the standard steep penalty ladder without rewarding undersized samples."""
     if total_items == 0:
         return 1, 0.0
 
-    violations = total_items - matches
+    target_total = max(total_items, required_items or total_items)
+    violations = target_total - matches
     if violations == 0:
         return violations, 1.0
     if violations == 1:
@@ -433,7 +439,11 @@ class QuestionQuest(Constraint):
                 details.append(f"Line {i + 1}: ✗ not a question")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
-        violations, question_score = _steep_empty_safe_score(len(structure.lines), questions)
+        violations, question_score = _steep_empty_safe_score(
+            len(structure.lines),
+            questions,
+            required_items=self.min_lines,
+        )
 
         score = line_result.score * 0.1 + question_score * 0.9
         passed = violations == 0 and line_result.passed
@@ -495,7 +505,11 @@ class WhisperPoem(Constraint):
                 details.append(f"Line {i + 1}: ✗ {length} chars (max {self.max_chars})")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
-        violations, char_score = _steep_empty_safe_score(len(structure.lines), short_lines)
+        violations, char_score = _steep_empty_safe_score(
+            len(structure.lines),
+            short_lines,
+            required_items=self.min_lines,
+        )
 
         score = line_result.score * 0.1 + char_score * 0.9
         passed = violations == 0 and line_result.passed
@@ -556,7 +570,11 @@ class ThunderVerse(Constraint):
                 details.append(f"Line {i + 1}: ✗ {length} chars (min {self.min_chars})")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
-        violations, char_score = _steep_empty_safe_score(len(structure.lines), long_lines)
+        violations, char_score = _steep_empty_safe_score(
+            len(structure.lines),
+            long_lines,
+            required_items=self.min_lines,
+        )
 
         score = line_result.score * 0.1 + char_score * 0.9
         passed = violations == 0 and line_result.passed
@@ -708,7 +726,11 @@ class OddEvenDance(Constraint):
                 )
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
-        violations, dance_score = _steep_empty_safe_score(len(structure.lines), matches)
+        violations, dance_score = _steep_empty_safe_score(
+            len(structure.lines),
+            matches,
+            required_items=self.min_lines,
+        )
 
         score = line_result.score * 0.1 + dance_score * 0.9
         passed = violations == 0 and line_result.passed
@@ -933,7 +955,11 @@ class ElementalVerse(Constraint):
                 details.append(f"Line {i + 1}: ✗ no unique element found")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
-        violations, element_score = _steep_empty_safe_score(len(structure.lines), matches)
+        violations, element_score = _steep_empty_safe_score(
+            len(structure.lines),
+            matches,
+            required_items=self.min_lines,
+        )
 
         score = line_result.score * 0.1 + element_score * 0.9
         passed = violations == 0 and line_result.passed
@@ -1123,7 +1149,11 @@ class TemporalVerse(Constraint):
                 details.append(f"Line {i + 1}: ✗ no time word found")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
-        violations, time_score = _steep_empty_safe_score(len(structure.lines), matches)
+        violations, time_score = _steep_empty_safe_score(
+            len(structure.lines),
+            matches,
+            required_items=self.min_lines,
+        )
 
         score = line_result.score * 0.1 + time_score * 0.9
         passed = violations == 0 and line_result.passed
@@ -1181,7 +1211,11 @@ class ExclamationEcho(Constraint):
                 details.append(f"Line {i + 1}: ✗ missing '!'")
 
         # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
-        violations, exclaim_score = _steep_empty_safe_score(len(structure.lines), exclamations)
+        violations, exclaim_score = _steep_empty_safe_score(
+            len(structure.lines),
+            exclamations,
+            required_items=self.min_lines,
+        )
 
         score = line_result.score * 0.1 + exclaim_score * 0.9
         passed = violations == 0 and line_result.passed

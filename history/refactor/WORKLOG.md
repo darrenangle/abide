@@ -296,3 +296,9 @@
 - Added direct regressions for the reproduced low-sample primitive and form leaks.
 - Verified the RF-060 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `824 passed, 1 skipped`.
 - Closed `RF-060` and released its lock.
+- Opened and claimed `RF-061` after reproducing that several manual novel forms still leak `0.90+` reward when only one valid line is present: `QuestionQuest(\"?\")`, `ElementalVerse(\"gold\")`, `TemporalVerse(\"today\")`, `ExclamationEcho(\"!\")`, `OddEvenDance(\"one two three\")`, `ThunderVerse(\"x\" * 60)`, and multiple underlength `WhisperPoem` cases all fail canonically but still score near-perfectly.
+- Hardened the steep-penalty helper used by the min-line manual novel forms so missing required lines now count against the main content score rather than leaving the content component near-perfect.
+- Applied that sample-aware scoring to `QuestionQuest`, `WhisperPoem`, `ThunderVerse`, `OddEvenDance`, `ElementalVerse`, `TemporalVerse`, and `ExclamationEcho`, eliminating the reproduced `0.90+` underlength leaks while preserving moderate partial credit for nearly complete cases like a 5-of-6-line `WhisperPoem`.
+- Added direct regressions for the reproduced underlength one-line and short-input cases across the affected forms.
+- Verified the RF-061 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `833 passed, 1 skipped`.
+- Closed `RF-061` and released its lock.

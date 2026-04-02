@@ -64,3 +64,4 @@ Updated: 2026-04-01
 | RF-058 | P1 | done | | Eliminate high-score empty-input reward leaks in remaining public forms and constraints | RF-057 |
 | RF-059 | P1 | done | | Penalize short-prefix leaks in non-uniform word-count patterns | RF-058 |
 | RF-060 | P1 | done | | Penalize low-sample semantic reward leaks in uniqueness and monosyllabic checks | RF-059 |
+| RF-061 | P1 | done | | Penalize underlength line-match reward leaks in manual novel forms | RF-060 |
