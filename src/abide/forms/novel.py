@@ -144,6 +144,8 @@ class PrimeVerse(Constraint):
 
     def __init__(self, num_lines: int = 6, weight: float = 1.0) -> None:
         super().__init__(weight)
+        if not 1 <= num_lines <= len(self.PRIMES):
+            raise ValueError(f"num_lines must be between 1 and {len(self.PRIMES)}")
         self.num_lines = num_lines
         self._line_count = LineCount(num_lines, weight=2.0)
         self._word_count = WordCount(self.PRIMES[:num_lines], tolerance=0, weight=2.0)

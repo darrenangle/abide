@@ -219,3 +219,8 @@
 - Added a direct regression for the reproduced six-line all-unique poem that previously scored perfectly but still failed canonically.
 - Verified the RF-045 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `664 passed, 1 skipped`.
 - Closed `RF-045` and released its lock.
+- Opened and claimed `RF-046` after reproducing that `PrimeVerse(num_lines=7)` reports `passed=True, score=1.0` by silently wrapping back to the 2-word prime pattern on line 7 via `WordCount` modulo behavior.
+- Added constructor validation to `PrimeVerse` so unsupported line counts fail fast instead of wrapping the prime sequence into an undocumented cyclic pattern.
+- Added a direct regression for the reproduced `num_lines=7` wraparound bug.
+- Verified the RF-046 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `665 passed, 1 skipped`.
+- Closed `RF-046` and released its lock.
