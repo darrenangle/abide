@@ -66,7 +66,7 @@ class TrainingArgs:
     batch_size: int = GEMMA_4_E4B_PROFILE.canary_batch_size
     num_generations: int = GEMMA_4_E4B_PROFILE.canary_num_generations
     learning_rate: float = GEMMA_4_E4B_PROFILE.canary_learning_rate
-    max_completion_length: int = 1536
+    max_completion_length: int = 1024
     max_prompt_length: int = 512
 
     # KL regularization - THE KEY ADDITION!
@@ -94,6 +94,7 @@ class TrainingArgs:
     wandb_project: str = "abide-grpo"
     use_wandb: bool = True
     telemetry_every: int = 256
+    use_vllm: bool = GEMMA_4_E4B_PROFILE.canary_use_vllm
 
 
 def get_forms() -> dict[str, object]:
@@ -372,6 +373,45 @@ def create_dataset(args: TrainingArgs, forms: dict[str, object]) -> Dataset:
     return dataset
 
 
+def create_grpo_config(training_args: TrainingArgs, *, max_steps: int):
+    from trl import GRPOConfig
+
+    config_kwargs: dict[str, Any] = {
+        "output_dir": training_args.output_dir,
+        "beta": training_args.beta,
+        "epsilon": training_args.epsilon,
+        "num_generations": training_args.num_generations,
+        "max_completion_length": training_args.max_completion_length,
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "learning_rate": training_args.learning_rate,
+        "per_device_train_batch_size": 1,
+        "gradient_accumulation_steps": training_args.batch_size,
+        "generation_batch_size": max(training_args.batch_size, training_args.num_generations),
+        "max_steps": max_steps,
+        "logging_steps": training_args.logging_steps,
+        "save_steps": training_args.save_steps,
+        "save_total_limit": 5,
+        "report_to": "wandb" if training_args.use_wandb else "none",
+        "run_name": f"grpo-trl-beta{training_args.beta}",
+        "gradient_checkpointing": True,
+        "bf16": True,
+        "loss_type": "dapo",
+        "mask_truncated_completions": False,
+        "seed": training_args.seed,
+        "use_vllm": training_args.use_vllm,
+    }
+    if training_args.use_vllm:
+        config_kwargs.update(
+            {
+                "vllm_mode": "server",
+                "vllm_server_host": training_args.vllm_host,
+                "vllm_server_port": training_args.vllm_port,
+            }
+        )
+    return GRPOConfig(**config_kwargs)
+
+
 def main():
     import argparse
 
@@ -396,6 +436,18 @@ def main():
         "--lr", type=float, default=TrainingArgs.learning_rate, help="Learning rate"
     )
     parser.add_argument(
+        "--max-completion-length",
+        type=int,
+        default=TrainingArgs.max_completion_length,
+        help="Maximum completion length in tokens",
+    )
+    parser.add_argument(
+        "--max-prompt-length",
+        type=int,
+        default=TrainingArgs.max_prompt_length,
+        help="Maximum prompt length in tokens",
+    )
+    parser.add_argument(
         "--beta",
         type=float,
         default=TrainingArgs.beta,
@@ -406,6 +458,8 @@ def main():
     parser.add_argument("--save-steps", type=int, default=50, help="Save every N steps")
     parser.add_argument("--port", type=int, default=8000, help="vLLM server port")
     parser.add_argument("--no-wandb", action="store_true", help="Disable wandb")
+    parser.add_argument("--use-vllm", action="store_true", help="Use a vLLM server for generation")
+    parser.add_argument("--no-vllm", action="store_true", help="Disable vLLM and generate locally")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument(
         "--telemetry-every",
@@ -414,6 +468,8 @@ def main():
         help="Emit aggregate reward telemetry every N scored samples",
     )
     args = parser.parse_args()
+    if args.use_vllm and args.no_vllm:
+        parser.error("--use-vllm and --no-vllm are mutually exclusive")
 
     # Check for env override
     if os.environ.get("ABIDE_MODEL"):
@@ -423,7 +479,7 @@ def main():
         import torch
         from peft import LoraConfig
         from transformers import AutoModelForCausalLM, AutoTokenizer
-        from trl import GRPOConfig, GRPOTrainer
+        from trl import GRPOTrainer
     except ModuleNotFoundError as exc:
         missing = exc.name or "training dependency"
         raise SystemExit(
@@ -431,12 +487,20 @@ def main():
             f"{missing!r}. Install training extras with `uv sync --extra training`."
         ) from exc
 
+    use_vllm = TrainingArgs.use_vllm
+    if args.use_vllm:
+        use_vllm = True
+    elif args.no_vllm:
+        use_vllm = False
+
     training_args = TrainingArgs(
         model_name=args.model,
         num_prompts=args.prompts,
         batch_size=args.batch_size,
         num_generations=args.num_generations,
         learning_rate=args.lr,
+        max_completion_length=args.max_completion_length,
+        max_prompt_length=args.max_prompt_length,
         beta=args.beta,
         epsilon=args.epsilon,
         output_dir=args.output,
@@ -445,6 +509,7 @@ def main():
         use_wandb=not args.no_wandb,
         seed=args.seed,
         telemetry_every=args.telemetry_every,
+        use_vllm=use_vllm,
     )
 
     print("=" * 60)
@@ -457,6 +522,7 @@ def main():
     print(f"Learning rate: {training_args.learning_rate}")
     print(f"Beta (KL coef): {training_args.beta}")
     print(f"Epsilon (clip): {training_args.epsilon}")
+    print(f"Generation backend: {'vLLM server' if training_args.use_vllm else 'local model'}")
     print(f"Output: {training_args.output_dir}")
     print("=" * 60)
 
@@ -485,45 +551,7 @@ def main():
     print(f"Max steps: {max_steps}")
 
     # Configure TRL GRPO
-    grpo_config = GRPOConfig(
-        output_dir=training_args.output_dir,
-        # KL regularization - THE KEY PARAMETER
-        beta=training_args.beta,
-        # Clipping
-        epsilon=training_args.epsilon,
-        # Generation
-        num_generations=training_args.num_generations,
-        max_completion_length=training_args.max_completion_length,
-        max_prompt_length=training_args.max_prompt_length,
-        temperature=0.7,
-        top_p=0.95,
-        # Training
-        learning_rate=training_args.learning_rate,
-        per_device_train_batch_size=1,  # Micro batch
-        gradient_accumulation_steps=training_args.batch_size,
-        max_steps=max_steps,
-        # vLLM integration
-        use_vllm=True,
-        vllm_mode="server",
-        vllm_server_host=training_args.vllm_host,
-        vllm_server_port=training_args.vllm_port,
-        # Logging & saving
-        logging_steps=training_args.logging_steps,
-        save_steps=training_args.save_steps,
-        save_total_limit=5,
-        report_to="wandb" if training_args.use_wandb else "none",
-        run_name=f"grpo-trl-beta{training_args.beta}",
-        # Memory optimization
-        gradient_checkpointing=True,
-        bf16=True,
-        # DAPO-style loss (recommended)
-        loss_type="dapo",
-        # WARNING: Do NOT mask truncated completions if most outputs hit max length!
-        # With mask_truncated_completions=True and clipped_ratio=1.0, loss becomes 0.
-        mask_truncated_completions=False,
-        # Seed
-        seed=training_args.seed,
-    )
+    grpo_config = create_grpo_config(training_args, max_steps=max_steps)
 
     model_profile = resolve_model_profile(training_args.model_name)
 
@@ -549,15 +577,7 @@ def main():
             r=training_args.lora_r,
             lora_alpha=training_args.lora_alpha,
             lora_dropout=training_args.lora_dropout,
-            target_modules=[
-                "q_proj",
-                "k_proj",
-                "v_proj",
-                "o_proj",
-                "gate_proj",
-                "up_proj",
-                "down_proj",
-            ],
+            target_modules=model_profile.lora_target_modules,
             bias="none",
             task_type="CAUSAL_LM",
         )

@@ -3,6 +3,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+DEFAULT_LORA_TARGET_MODULES: tuple[str, ...] = (
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "gate_proj",
+    "up_proj",
+    "down_proj",
+)
+
+GEMMA4_LORA_TARGET_MODULES = (
+    r"^model\.language_model\..*\.(q_proj|k_proj|v_proj|o_proj|gate_proj|up_proj|down_proj)$"
+)
+
 
 @dataclass(frozen=True)
 class ModelProfile:
@@ -21,6 +35,8 @@ class ModelProfile:
     vllm_gpu_memory_utilization: float = 0.9
     vllm_max_model_len: int = 4096
     startup_timeout_seconds: int = 300
+    canary_use_vllm: bool = True
+    lora_target_modules: tuple[str, ...] | str = DEFAULT_LORA_TARGET_MODULES
 
     def causal_lm_load_kwargs(self) -> dict[str, Any]:
         kwargs: dict[str, Any] = {}
@@ -54,6 +70,7 @@ GEMMA_PROFILE = ModelProfile(
 GEMMA_4_E2B_PROFILE = ModelProfile(
     family="gemma4_e2b",
     stop_tokens=("<end_of_turn>", "<eos>"),
+    attn_implementation="sdpa",
     canary_num_prompts=2000,
     canary_batch_size=10,
     canary_num_generations=8,
@@ -63,11 +80,14 @@ GEMMA_4_E2B_PROFILE = ModelProfile(
     vllm_gpu_memory_utilization=0.9,
     vllm_max_model_len=4096,
     startup_timeout_seconds=600,
+    canary_use_vllm=False,
+    lora_target_modules=GEMMA4_LORA_TARGET_MODULES,
 )
 
 GEMMA_4_E4B_PROFILE = ModelProfile(
     family="gemma4_e4b",
     stop_tokens=("<end_of_turn>", "<eos>"),
+    attn_implementation="sdpa",
     canary_num_prompts=2000,
     canary_batch_size=8,
     canary_num_generations=8,
@@ -77,6 +97,8 @@ GEMMA_4_E4B_PROFILE = ModelProfile(
     vllm_gpu_memory_utilization=0.88,
     vllm_max_model_len=4096,
     startup_timeout_seconds=600,
+    canary_use_vllm=False,
+    lora_target_modules=GEMMA4_LORA_TARGET_MODULES,
 )
 
 
@@ -99,7 +121,9 @@ def resolve_model_profile(model_name: str) -> ModelProfile:
 
 __all__ = [
     "BAGUETTOTRON_PROFILE",
+    "DEFAULT_LORA_TARGET_MODULES",
     "DEFAULT_PROFILE",
+    "GEMMA4_LORA_TARGET_MODULES",
     "GEMMA_4_E2B_PROFILE",
     "GEMMA_4_E4B_PROFILE",
     "GEMMA_PROFILE",

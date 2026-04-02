@@ -15,9 +15,10 @@ def test_resolve_gemma4_e4b_profile_has_canary_defaults() -> None:
     assert profile.canary_beta == 0.02
     assert profile.canary_output_dir == "models/grpo_trl_gemma4_e4b"
     assert profile.startup_timeout_seconds == 600
+    assert profile.canary_use_vllm is False
     assert profile.causal_lm_load_kwargs() == {
         "trust_remote_code": True,
-        "attn_implementation": "flash_attention_2",
+        "attn_implementation": "sdpa",
     }
 
 
@@ -37,3 +38,4 @@ def test_train_grpo_trl_defaults_align_with_gemma4_e4b_profile() -> None:
     assert defaults.learning_rate == profile.canary_learning_rate
     assert defaults.beta == profile.canary_beta
     assert defaults.output_dir == profile.canary_output_dir
+    assert defaults.use_vllm is profile.canary_use_vllm

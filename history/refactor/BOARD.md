@@ -75,3 +75,6 @@ Updated: 2026-04-02
 | RF-069 | P2 | done | | Add property-based mutation coverage for stable fixed-form fixture families | RF-068 |
 | RF-070 | P2 | done | | Add training-time reward telemetry and align stale Baguettotron reward routing | RF-069 |
 | RF-071 | P2 | done | | Add Gemma 4 E4B training profile and dedicated canary runner | RF-070 |
+| RF-072 | P2 | done | | Make `uv sync --extra training` reproducible for flash-attn build isolation | RF-071 |
+| RF-073 | P2 | done | | Move Gemma 4 runner off stale miniconda toolchain onto the project uv environment | RF-072 |
+| RF-074 | P2 | done | | Add no-vLLM TRL fallback for Gemma 4 canaries while vLLM lacks architecture support | RF-073 |
