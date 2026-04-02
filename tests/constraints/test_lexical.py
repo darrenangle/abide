@@ -176,3 +176,19 @@ def test_no_shared_letters_rejects_pairs_without_alphabetic_content() -> None:
 
     assert result.passed is False
     assert result.score == 0.0
+
+
+def test_no_consecutive_repeats_requires_meaningful_word_content() -> None:
+    assert NoConsecutiveRepeats().verify("").score == 0.0
+    assert NoConsecutiveRepeats().verify("alpha").score == 0.0
+
+    punct = NoConsecutiveRepeats().verify("!!!\n???\n...\n!!!\n???")
+    assert punct.passed is False
+    assert punct.score == 0.0
+
+
+def test_character_palindrome_rejects_punctuation_only_lines() -> None:
+    result = CharacterPalindrome().verify("!!!\n???")
+
+    assert result.passed is False
+    assert result.score == 0.0

@@ -723,22 +723,29 @@ class NoConsecutiveRepeats(Constraint):
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
-        text = " ".join(structure.lines).lower()
-        words = re.findall(r"\b[a-z]+\b", text)
+        words: list[str] = []
+        for line in structure.lines:
+            words.extend(tokenize_line(line))
 
         consecutive_repeats = 0
         for i in range(1, len(words)):
             if words[i] == words[i - 1]:
                 consecutive_repeats += 1
 
-        if len(words) <= 1:
-            score = 1.0
+        if len(words) < 2:
+            score = 0.0
+            line_adequacy = (
+                min(1.0, len(structure.lines) / self.min_lines) if self.min_lines else 0.0
+            )
         else:
             # Quadratic penalty for stricter GRPO training
-            linear_score = max(0, 1.0 - (consecutive_repeats / (len(words) - 1)))
-            score = linear_score**2
+            line_adequacy = min(1.0, len(structure.lines) / self.min_lines)
+            linear_score = max(0.0, 1.0 - (consecutive_repeats / (len(words) - 1)))
+            score = (linear_score * line_adequacy) ** 2
 
-        passed = consecutive_repeats == 0 and len(structure.lines) >= self.min_lines
+        passed = (
+            consecutive_repeats == 0 and len(structure.lines) >= self.min_lines and len(words) >= 2
+        )
 
         return VerificationResult(
             score=score,
@@ -746,7 +753,11 @@ class NoConsecutiveRepeats(Constraint):
             rubric=[],
             constraint_name=self.name,
             constraint_type=self.constraint_type,
-            details={"consecutive_repeats": consecutive_repeats, "total_words": len(words)},
+            details={
+                "consecutive_repeats": consecutive_repeats,
+                "total_words": len(words),
+                "line_adequacy": line_adequacy,
+            },
         )
 
     def describe(self) -> str:
@@ -1411,6 +1422,10 @@ class CharacterPalindrome(Constraint):
 
         for idx, line in lines_to_check:
             normalized = self._normalize(line)
+            if not normalized:
+                details.append(f"Line {idx + 1}: ✗ no alphanumeric content")
+                continue
+
             is_palindrome = normalized == normalized[::-1]
 
             if is_palindrome:

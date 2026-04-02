@@ -324,3 +324,7 @@
 - Added direct punctuation-as-word regressions plus a degenerate exported-form reward harness, and the rescan ceiling on failed degenerate cases dropped to `0.673` (`ReverseEtheree` on repeated-line input).
 - Verified the RF-065 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `845 passed, 1 skipped`.
 - Closed `RF-065` and released its lock.
+- Opened and claimed `RF-066` after a public-constraint sanity scan found two remaining vacuous lexical paths: `NoConsecutiveRepeats` still returns `score=1.0` on empty or single-word input and even `passed=True` on punctuation-only multi-line input, while `CharacterPalindrome` still passes punctuation-only lines as palindromes.
+- Hardened `NoConsecutiveRepeats` and `CharacterPalindrome` against vacuous lexical passes, added direct regressions for the reproduced degenerate inputs, and reran the zero-argument public-constraint sanity scan cleanly.
+- Verified the RF-066 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and the previously completed `uv run pytest -q -W error` run remained green after the final mypy-only annotation patch.
+- Closed `RF-066` and released its lock.

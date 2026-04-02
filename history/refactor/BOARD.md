@@ -69,3 +69,4 @@ Updated: 2026-04-01
 | RF-063 | P1 | done | | Eliminate Ghazal perfect-score leakage when qafiya evidence is missing | RF-062 |
 | RF-064 | P1 | done | | Penalize repeated-line overscore leakage in Triolet | RF-063 |
 | RF-065 | P1 | done | | Standardize word-count measurement on tokenizer-based word boundaries | RF-064 |
+| RF-066 | P1 | done | | Eliminate vacuous lexical passes in NoConsecutiveRepeats and CharacterPalindrome | RF-065 |
