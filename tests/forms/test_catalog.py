@@ -1,8 +1,10 @@
 """Tests for the form catalog helpers."""
 
+import abide.forms as forms_module
 from abide.forms.catalog import (
     RL_DEFAULT_FORM_NAMES,
     instantiate_form,
+    load_form_instances,
     load_rl_default_form_instances,
 )
 
@@ -25,3 +27,9 @@ def test_catalog_instantiates_positional_poem_without_runtime_exception() -> Non
     result = form.verify(poem)
 
     assert result.passed is True
+
+
+def test_load_form_instances_covers_all_exported_forms() -> None:
+    forms = load_form_instances()
+
+    assert set(forms) == set(forms_module.__all__)

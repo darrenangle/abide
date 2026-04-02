@@ -167,3 +167,8 @@
 - Refreshed the lockfile with `uv lock`, which removed `pronouncing` from the resolved dependency graph.
 - Verified the RF-033 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `611 passed, 1 skipped`.
 - Closed `RF-033` and released its lock.
+- Opened and claimed `RF-034` after a catalog sweep showed that 10 exported forms still fail `instantiate_form()` because `SPECIAL_FORM_KWARGS` contains stale parameter names and one malformed `PrecisionHaiku` default.
+- Corrected the stale `SPECIAL_FORM_KWARGS` entries so every exported form now instantiates through the catalog helpers, including the previously skipped hard and mathematical forms.
+- Added a regression that asserts `load_form_instances()` covers the full `abide.forms.__all__` export set.
+- Verified the RF-034 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `612 passed, 1 skipped`.
+- Closed `RF-034` and released its lock.

@@ -37,3 +37,4 @@ Updated: 2026-04-01
 | RF-031 | P1 | done | | Gate generic `Sonnet` canonical passes on the syllable proxy instead of line count alone | RF-030 |
 | RF-032 | P2 | done | | Make the test suite warning-clean under `pytest -W error` | RF-031 |
 | RF-033 | P1 | done | | Remove the `pronouncing` dependency and read CMU data directly from `cmudict` | RF-032 |
+| RF-034 | P1 | done | | Fix stale special-form kwargs so the catalog instantiates every exported form | RF-033 |
