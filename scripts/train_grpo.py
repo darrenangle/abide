@@ -48,7 +48,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import re
 
-from abide.forms.catalog import TRAINING_SAFE_FORM_NAMES, load_form_instances
+from abide.forms.catalog import RL_DEFAULT_FORM_NAMES, load_form_instances
 
 # Model paths
 BAGUETTOTRON_PATH = "/home/darren/10k-poems/models/baguettotron_sft/final"
@@ -294,9 +294,9 @@ def create_environment(forms: dict[str, object], config: TrainingConfig):
     """Create verifiers environment with generated prompts."""
     from prompt_generator import (
         generate_learnable_forms_verifiers_dataset,
+        generate_rl_default_verifiers_dataset,
         generate_single_form_verifiers_dataset,
         generate_traditional_verifiers_dataset,
-        generate_training_safe_verifiers_dataset,
         generate_verifiers_dataset,
         resolve_form_selection_mode,
     )
@@ -347,8 +347,8 @@ def create_environment(forms: dict[str, object], config: TrainingConfig):
             seed=config.seed,
         )
     else:
-        print("Using TRAINING-SAFE forms only (default)")
-        dataset = generate_training_safe_verifiers_dataset(
+        print("Using RL-DEFAULT forms only (current curated rollout set)")
+        dataset = generate_rl_default_verifiers_dataset(
             num_prompts=config.num_prompts,
             seed=config.seed,
         )
@@ -427,14 +427,14 @@ def train_with_retry(config: TrainingConfig) -> int:
     if single_form:
         forms = get_forms(
             [single_form],
-            training_profile=single_form in TRAINING_SAFE_FORM_NAMES,
+            training_profile=single_form in RL_DEFAULT_FORM_NAMES,
         )
     else:
         from prompt_generator import resolve_form_selection_mode
 
         form_mode = resolve_form_selection_mode()
-        if form_mode == "training_safe":
-            forms = get_forms(list(TRAINING_SAFE_FORM_NAMES), training_profile=True)
+        if form_mode == "rl_default":
+            forms = get_forms(list(RL_DEFAULT_FORM_NAMES), training_profile=True)
         else:
             forms = get_forms()
     print(f"Forms: {len(forms)} ({', '.join(forms.keys())})")

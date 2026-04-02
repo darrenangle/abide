@@ -27,3 +27,4 @@ Updated: 2026-04-01
 | RF-021 | P2 | done | | Align pre-commit Ruff hook with project Ruff version | RF-020 |
 | RF-022 | P1 | done | | Harden exact-count constrained forms and FreeVerse word-bound semantics | RF-021 |
 | RF-023 | P1 | done | | Harden Haiku and Tanka exact-structure pass semantics in lenient mode | RF-022 |
+| RF-024 | P2 | done | | Remove permanent trust-tier framing from the form catalog and RL defaults | RF-023 |

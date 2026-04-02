@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING, Any
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent))
 
-from abide.forms.catalog import TRAINING_SAFE_FORM_NAMES, load_form_instances
+from abide.forms.catalog import RL_DEFAULT_FORM_NAMES, load_form_instances
 
 if TYPE_CHECKING:
     from datasets import Dataset
@@ -253,8 +253,7 @@ def create_reward_function(forms: dict[str, object]):
                     if _call_count[0] <= 3:
                         prompt_text = extract_prompt_text(prompt)
                         print(
-                            "[DEBUG] Missing form_name metadata for prompt: "
-                            f"{prompt_text[:100]}..."
+                            f"[DEBUG] Missing form_name metadata for prompt: {prompt_text[:100]}..."
                         )
                     rewards.append(0.0)
                     continue
@@ -288,8 +287,8 @@ def create_dataset(args: TrainingArgs, forms: dict[str, object]) -> Dataset:
     from datasets import Dataset
     from prompt_generator import (
         generate_learnable_forms_verifiers_dataset,
+        generate_rl_default_verifiers_dataset,
         generate_traditional_verifiers_dataset,
-        generate_training_safe_verifiers_dataset,
         generate_verifiers_dataset,
         resolve_form_selection_mode,
     )
@@ -315,8 +314,8 @@ def create_dataset(args: TrainingArgs, forms: dict[str, object]) -> Dataset:
             seed=args.seed,
         )
     else:
-        print("Defaulting to TRAINING-SAFE forms for TRL experiment")
-        raw_dataset = generate_training_safe_verifiers_dataset(
+        print("Defaulting to the curated RL-default forms for this TRL experiment")
+        raw_dataset = generate_rl_default_verifiers_dataset(
             num_prompts=args.num_prompts,
             seed=args.seed,
         )
@@ -407,8 +406,8 @@ def main():
     from prompt_generator import resolve_form_selection_mode
 
     form_mode = resolve_form_selection_mode()
-    if form_mode == "training_safe":
-        forms = load_form_instances(list(TRAINING_SAFE_FORM_NAMES), training_profile=True)
+    if form_mode == "rl_default":
+        forms = load_form_instances(list(RL_DEFAULT_FORM_NAMES), training_profile=True)
     else:
         forms = get_forms()
     print(f"Loaded {len(forms)} forms")

@@ -1,4 +1,4 @@
-"""Generated adversarial checks for the training-safe form subset."""
+"""Generated adversarial checks for the curated RL-default form subset."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from abide import verify
-from abide.forms.catalog import load_training_safe_form_instances
+from abide.forms.catalog import load_rl_default_form_instances
 from tests.fixtures.poems import (
     BLUES_SYNTHETIC_PERFECT,
     CLERIHEW_SYNTHETIC_PERFECT,
@@ -113,7 +113,7 @@ def _blues_near_miss(poem: str) -> str:
     return "\n\n".join("\n".join(stanza) for stanza in stanzas)
 
 
-TRAINING_SAFE_FIXTURES: list[tuple[str, str, Callable[[str], str]]] = [
+RL_DEFAULT_FIXTURES: list[tuple[str, str, Callable[[str], str]]] = [
     ("Haiku", HAIKU_SYNTHETIC_PERFECT, _haiku_near_miss),
     ("Tanka", TANKA_SYNTHETIC_PERFECT, _tanka_near_miss),
     ("Limerick", LIMERICK_SYNTHETIC_PERFECT, _limerick_near_miss),
@@ -133,15 +133,15 @@ TRAINING_SAFE_FIXTURES: list[tuple[str, str, Callable[[str], str]]] = [
 
 @pytest.mark.parametrize(
     ("form_name", "positive_poem", "mutator"),
-    TRAINING_SAFE_FIXTURES,
-    ids=[item[0] for item in TRAINING_SAFE_FIXTURES],
+    RL_DEFAULT_FIXTURES,
+    ids=[item[0] for item in RL_DEFAULT_FIXTURES],
 )
-def test_training_safe_forms_pass_positive_fixture_and_fail_single_property_mutation(
+def test_rl_default_forms_pass_positive_fixture_and_fail_single_property_mutation(
     form_name: str,
     positive_poem: str,
     mutator: Callable[[str], str],
 ) -> None:
-    forms = load_training_safe_form_instances()
+    forms = load_rl_default_form_instances()
     form = forms[form_name]
 
     positive = verify(positive_poem, form)

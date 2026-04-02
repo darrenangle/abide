@@ -116,3 +116,9 @@
 - Tightened `Haiku` and `Tanka` so lenient mode keeps partial reward shaping but canonical `passed=True` now requires exact line count, exactly one stanza, and a compliant syllable pattern.
 - Verified the RF-023 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `597 passed, 1 skipped`.
 - Closed `RF-023` and released its lock.
+- Opened and claimed `RF-024` to remove the permanent `training_safe` / support-tier framing from the catalog and RL entrypoints, keeping the current curated RL default as a temporary rollout set instead of a future-facing trust taxonomy.
+- Replaced the public `training_safe` / support-tier catalog API with a neutral `rl_default` rollout-default catalog, keeping the same curated subset and tuned kwargs while removing the `best_effort` / `experimental` framing from active codepaths.
+- Updated prompt generation, both GRPO entrypoints, integration tests, and README examples to use the `rl_default` naming and the new catalog helpers.
+- Renamed the mutation harness for the curated RL-default subset and removed the obsolete support-tier tests that encoded the old trust taxonomy.
+- Verified the RF-024 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `595 passed, 1 skipped`.
+- Closed `RF-024` and released its lock.

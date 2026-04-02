@@ -174,7 +174,7 @@ experimental forms. Representative examples include:
 - `Diamante`, `Cinquain`, `Etheree`, plus many parameterized experimental forms
 
 The long-term goal is full-catalog reliability. While that convergence work is
-still in progress, the RL scripts default to a conservative subset from
+still in progress, the RL scripts use a curated rollout-default subset from
 `abide.forms.catalog` so training runs do not accidentally depend on form
 families that have not completed the same hardening pass yet.
 
@@ -197,11 +197,11 @@ def compute_reward(generated_poem: str) -> float:
 ### Current RL Default
 
 ```python
-from abide.forms.catalog import load_training_safe_form_instances
+from abide.forms.catalog import load_rl_default_form_instances
 
-# Current conservative default used by the RL scripts while
+# Current curated default used by the RL scripts while
 # the remaining form families are being brought up to the same bar.
-forms = load_training_safe_form_instances()
+forms = load_rl_default_form_instances()
 ```
 
 ### Prompt-Reward Alignment

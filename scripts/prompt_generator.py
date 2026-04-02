@@ -781,7 +781,7 @@ LEARNABLE_FORMS = [
     "Terzanelle",  # signal=0.191, mean=0.46, within_std=0.19
 ]
 
-SUPPORTED_FORM_SETS = {"all", "traditional", "learnable", "training_safe"}
+SUPPORTED_FORM_SETS = {"all", "traditional", "learnable", "rl_default"}
 
 
 def get_form_tier(form_name: str) -> int:
@@ -808,7 +808,7 @@ def resolve_form_selection_mode() -> str:
         return "learnable"
     if os.environ.get("ABIDE_TRADITIONAL", "").lower() in ("1", "true", "yes"):
         return "traditional"
-    return "training_safe"
+    return "rl_default"
 
 
 # =============================================================================
@@ -825,12 +825,12 @@ def get_forms() -> dict[str, object]:
     return load_form_instances()
 
 
-def get_training_safe_forms() -> dict[str, object]:
-    """Load only the conservative training-safe subset."""
+def get_rl_default_forms() -> dict[str, object]:
+    """Load only the current curated RL-default subset."""
     sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-    from abide.forms.catalog import load_training_safe_form_instances
+    from abide.forms.catalog import load_rl_default_form_instances
 
-    return load_training_safe_form_instances()
+    return load_rl_default_form_instances()
 
 
 # =============================================================================
@@ -1292,25 +1292,25 @@ def _generate_balanced_forms_dataset(
     return dataset
 
 
-def generate_training_safe_dataset(
+def generate_rl_default_dataset(
     num_prompts: int = 50000,
     seed: int = 42,
 ) -> list[dict]:
-    """Generate a balanced dataset over the trusted training-safe subset."""
-    forms = get_training_safe_forms()
+    """Generate a balanced dataset over the current curated RL-default subset."""
+    forms = get_rl_default_forms()
     return _generate_balanced_forms_dataset(
         forms,
         num_prompts=num_prompts,
         seed=seed,
-        label="Training-safe forms",
+        label="RL-default forms",
     )
 
 
-def generate_training_safe_verifiers_dataset(num_prompts: int = 50000, seed: int = 42):
-    """Generate training-safe dataset in verifiers-compatible format."""
+def generate_rl_default_verifiers_dataset(num_prompts: int = 50000, seed: int = 42):
+    """Generate RL-default dataset in verifiers-compatible format."""
     from datasets import Dataset
 
-    data = generate_training_safe_dataset(num_prompts=num_prompts, seed=seed)
+    data = generate_rl_default_dataset(num_prompts=num_prompts, seed=seed)
     return Dataset.from_list(data)
 
 
@@ -1387,7 +1387,7 @@ def main():
     # Show distribution
     counts = list(form_counts.values())
     print(
-        f"Prompts per form: min={min(counts)}, max={max(counts)}, avg={sum(counts)/len(counts):.1f}"
+        f"Prompts per form: min={min(counts)}, max={max(counts)}, avg={sum(counts) / len(counts):.1f}"
     )
 
     # Save
