@@ -54,3 +54,4 @@ Updated: 2026-04-01
 | RF-048 | P1 | done | | Reject unsupported Rispetto variants instead of silently falling back to Tuscan | RF-047 |
 | RF-049 | P1 | done | | Validate PalindromePoem levels and ModularVerse moduli explicitly | RF-048 |
 | RF-050 | P1 | done | | Reject empty or non-alphabetic target sequences in acrostic-like forms | RF-049 |
+| RF-051 | P1 | done | | Reject degenerate zero-valued hard-form configurations | RF-050 |

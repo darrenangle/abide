@@ -244,3 +244,8 @@
 - Added direct regressions for the reproduced degenerate-constructor cases.
 - Verified the RF-050 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `672 passed, 1 skipped`.
 - Closed `RF-050` and released its lock.
+- Opened and claimed `RF-051` after reproducing that several `hard.py` forms accept zero-valued or empty constructor args and create vacuous verifiers, including empty-input passes for `TotalCharacterPoem` and `ExactWordPoem`.
+- Added explicit positive-value validation across the degenerate hard-form constructors so zero-valued counts and empty acrostic words now fail fast instead of creating vacuous or nonsensical verifiers.
+- Added direct regressions for the reproduced zero-valued constructor cases across the hard-form family.
+- Verified the RF-051 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `686 passed, 1 skipped`.
+- Closed `RF-051` and released its lock.

@@ -49,6 +49,8 @@ class PrecisionVerse(Constraint):
 
     def __init__(self, chars_per_line: int = 30, weight: float = 1.0) -> None:
         super().__init__(weight)
+        if chars_per_line <= 0:
+            raise ValueError("chars_per_line must be positive")
         self.chars_per_line = chars_per_line
         self._constraint = And(
             [
@@ -87,6 +89,8 @@ class VowelBudgetPoem(Constraint):
 
     def __init__(self, vowel_count: int = 50, min_lines: int = 4, weight: float = 1.0) -> None:
         super().__init__(weight)
+        if min_lines <= 0:
+            raise ValueError("min_lines must be positive")
         self.vowel_count = vowel_count
         self.min_lines = min_lines
         self._constraint = And(
@@ -126,6 +130,8 @@ class StaircasePoem(Constraint):
 
     def __init__(self, num_words: int = 10, weight: float = 1.0) -> None:
         super().__init__(weight)
+        if num_words <= 0:
+            raise ValueError("num_words must be positive")
         self.num_words = num_words
         self._constraint = And(
             [
@@ -163,6 +169,8 @@ class DescendingStaircasePoem(Constraint):
 
     def __init__(self, num_words: int = 10, weight: float = 1.0) -> None:
         super().__init__(weight)
+        if num_words <= 0:
+            raise ValueError("num_words must be positive")
         self.num_words = num_words
         self._constraint = And(
             [
@@ -201,6 +209,10 @@ class ArithmeticVerse(Constraint):
 
     def __init__(self, num_lines: int = 5, start_words: int = 3, weight: float = 1.0) -> None:
         super().__init__(weight)
+        if num_lines <= 0:
+            raise ValueError("num_lines must be positive")
+        if start_words <= 0:
+            raise ValueError("start_words must be positive")
         self.num_lines = num_lines
         self.start_words = start_words
         self._constraint = And(
@@ -316,6 +328,8 @@ class CharacterPalindromePoem(Constraint):
 
     def __init__(self, num_lines: int = 3, weight: float = 1.0) -> None:
         super().__init__(weight)
+        if num_lines <= 0:
+            raise ValueError("num_lines must be positive")
         self.num_lines = num_lines
         self._constraint = And(
             [
@@ -355,6 +369,8 @@ class DoubleAcrosticPoem(Constraint):
     def __init__(
         self, first_word: str = "LOVE", last_word: str = "HATE", weight: float = 1.0
     ) -> None:
+        if not first_word or not first_word.isalpha() or not last_word or not last_word.isalpha():
+            raise ValueError("Words must contain at least one alphabetic character")
         if len(first_word) != len(last_word):
             raise ValueError("Words must have same length")
         super().__init__(weight)
@@ -398,6 +414,8 @@ class CharacterBudgetPoem(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        if min_lines <= 0:
+            raise ValueError("min_lines must be positive")
         self.character = character
         self.count = count
         self.min_lines = min_lines
@@ -437,6 +455,10 @@ class TotalCharacterPoem(Constraint):
 
     def __init__(self, total_chars: int = 100, min_lines: int = 3, weight: float = 1.0) -> None:
         super().__init__(weight)
+        if total_chars <= 0:
+            raise ValueError("total_chars must be positive")
+        if min_lines <= 0:
+            raise ValueError("min_lines must be positive")
         self.total_chars = total_chars
         self.min_lines = min_lines
         self._constraint = And(
@@ -531,6 +553,10 @@ class ExactWordPoem(Constraint):
 
     def __init__(self, word_count: int = 25, min_lines: int = 4, weight: float = 1.0) -> None:
         super().__init__(weight)
+        if word_count <= 0:
+            raise ValueError("word_count must be positive")
+        if min_lines <= 0:
+            raise ValueError("min_lines must be positive")
         self.word_count = word_count
         self.min_lines = min_lines
         self._constraint = And(
@@ -573,6 +599,8 @@ class PrecisionHaiku(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        if len(chars_per_line) != 3 or any(count <= 0 for count in chars_per_line):
+            raise ValueError("chars_per_line must contain exactly three positive integers")
         self.chars_per_line = chars_per_line
         self._constraint = And(
             [
@@ -616,6 +644,8 @@ class CombinedChallenge(Constraint):
 
     def __init__(self, num_words: int = 7, vowel_count: int = 20, weight: float = 1.0) -> None:
         super().__init__(weight)
+        if num_words <= 0:
+            raise ValueError("num_words must be positive")
         self.num_words = num_words
         self.vowel_count = vowel_count
         self._constraint = And(
