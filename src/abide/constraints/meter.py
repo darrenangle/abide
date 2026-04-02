@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from abide.constraints._validation import require_nonnegative, require_positive, require_probability
 from abide.constraints.base import Constraint
 from abide.constraints.types import (
     ConstraintType,
@@ -72,12 +73,39 @@ class Meter(Constraint):
         super().__init__(weight)
         self.meter_type = meter_type
         self.foot_count = foot_length.value if isinstance(foot_length, FootLength) else foot_length
+        require_positive(self.foot_count, "foot_length")
+        require_nonnegative(tolerance, "tolerance")
+        require_probability(min_score, "min_score")
+        if per_line is not None and any(feet <= 0 for _, feet in per_line):
+            raise ValueError("per_line foot counts must be positive")
         self.tolerance = tolerance
         self.min_score = min_score
         self.per_line = per_line
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
+        if not structure.lines:
+            return VerificationResult(
+                score=0.0,
+                passed=False,
+                rubric=[
+                    RubricItem(
+                        criterion="Poem has lines",
+                        expected="at least 1",
+                        actual="0",
+                        score=0.0,
+                        passed=False,
+                    )
+                ],
+                constraint_name=self.name,
+                constraint_type=self.constraint_type,
+                details={
+                    "meter_type": self.meter_type.value,
+                    "foot_count": self.foot_count,
+                    "tolerance": self.tolerance,
+                    "min_score": self.min_score,
+                },
+            )
         rubric: list[RubricItem] = []
         scores: list[float] = []
 
@@ -215,6 +243,10 @@ class MeterPattern(Constraint):
             weight: Relative weight for composition
         """
         super().__init__(weight)
+        if not foot_pattern or any(feet <= 0 for feet in foot_pattern):
+            raise ValueError("foot_pattern must contain at least one positive foot count")
+        require_nonnegative(tolerance, "tolerance")
+        require_probability(min_score, "min_score")
         self.meter_type = meter_type
         self.foot_pattern = foot_pattern
         self.tolerance = tolerance
@@ -222,6 +254,26 @@ class MeterPattern(Constraint):
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
+        if not structure.lines:
+            return VerificationResult(
+                score=0.0,
+                passed=False,
+                rubric=[
+                    RubricItem(
+                        criterion="Poem has lines",
+                        expected="at least 1",
+                        actual="0",
+                        score=0.0,
+                        passed=False,
+                    )
+                ],
+                constraint_name=self.name,
+                constraint_type=self.constraint_type,
+                details={
+                    "meter_type": self.meter_type.value,
+                    "foot_pattern": self.foot_pattern,
+                },
+            )
         rubric: list[RubricItem] = []
         scores: list[float] = []
 

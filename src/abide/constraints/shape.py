@@ -10,6 +10,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import TYPE_CHECKING
 
+from abide.constraints._validation import require_nonnegative, require_positive
 from abide.constraints.base import Constraint
 from abide.constraints.types import (
     ConstraintType,
@@ -88,6 +89,16 @@ class LineShape(Constraint):
             weight: Relative weight for composition
         """
         super().__init__(weight)
+        require_nonnegative(tolerance, "tolerance")
+        if lengths is not None:
+            if shape_type is not None or num_lines is not None:
+                raise ValueError("lengths cannot be combined with shape_type or num_lines")
+            if not lengths or any(length <= 0 for length in lengths):
+                raise ValueError("lengths must contain at least one positive length")
+        else:
+            if shape_type is None or num_lines is None:
+                raise ValueError("must specify lengths or shape_type with num_lines")
+            require_positive(num_lines, "num_lines")
         self.shape_type = shape_type
         self.num_lines = num_lines
         self.lengths = lengths
@@ -95,7 +106,6 @@ class LineShape(Constraint):
         self.tolerance = tolerance
         self.relative = relative
 
-        # Generate expected lengths from shape_type if not provided
         if lengths is None and shape_type is not None and num_lines is not None:
             self.lengths = self._generate_shape(shape_type, num_lines)
 
@@ -327,6 +337,14 @@ class LineLengthRange(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        if min_length is None and max_length is None:
+            raise ValueError("must specify min_length or max_length")
+        if min_length is not None:
+            require_positive(min_length, "min_length")
+        if max_length is not None:
+            require_positive(max_length, "max_length")
+        if min_length is not None and max_length is not None and max_length < min_length:
+            raise ValueError("max_length must be greater than or equal to min_length")
         self.min_length = min_length
         self.max_length = max_length
         self.mode = mode
@@ -345,6 +363,27 @@ class LineLengthRange(Constraint):
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
+        if not structure.lines:
+            return VerificationResult(
+                score=0.0,
+                passed=False,
+                rubric=[
+                    RubricItem(
+                        criterion="Poem has lines",
+                        expected="at least 1",
+                        actual="0",
+                        score=0.0,
+                        passed=False,
+                    )
+                ],
+                constraint_name=self.name,
+                constraint_type=self.constraint_type,
+                details={
+                    "min_length": self.min_length,
+                    "max_length": self.max_length,
+                    "mode": self.mode.value,
+                },
+            )
         rubric: list[RubricItem] = []
         scores: list[float] = []
 

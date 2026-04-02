@@ -1,5 +1,7 @@
 """Tests for meter constraints."""
 
+import pytest
+
 from abide.constraints import Meter, MeterPattern
 from abide.primitives import FootLength, MeterType
 
@@ -35,3 +37,46 @@ def test_meter_pattern_accepts_common_meter_excerpt() -> None:
 
     assert result.passed is True
     assert result.score >= 0.6
+
+
+@pytest.mark.parametrize(
+    ("factory", "message"),
+    [
+        (lambda: Meter(MeterType.IAMB, 0), "foot_length must be positive"),
+        (
+            lambda: Meter(MeterType.IAMB, FootLength.PENTAMETER, tolerance=-1),
+            "tolerance must be non-negative",
+        ),
+        (
+            lambda: Meter(MeterType.IAMB, FootLength.PENTAMETER, min_score=1.1),
+            "min_score must be between 0 and 1",
+        ),
+        (
+            lambda: MeterPattern(MeterType.IAMB, []),
+            "foot_pattern must contain at least one positive foot count",
+        ),
+        (
+            lambda: MeterPattern(MeterType.IAMB, [0]),
+            "foot_pattern must contain at least one positive foot count",
+        ),
+    ],
+)
+def test_meter_constraints_reject_invalid_constructor_values(factory, message: str) -> None:
+    with pytest.raises(ValueError, match=message):
+        factory()
+
+
+def test_meter_constraint_rejects_empty_poem() -> None:
+    constraint = Meter(MeterType.IAMB, FootLength.PENTAMETER)
+    result = constraint.verify("")
+
+    assert result.passed is False
+    assert result.score == 0.0
+
+
+def test_meter_pattern_rejects_empty_poem() -> None:
+    constraint = MeterPattern(MeterType.IAMB, [4, 3, 4, 3])
+    result = constraint.verify("")
+
+    assert result.passed is False
+    assert result.score == 0.0

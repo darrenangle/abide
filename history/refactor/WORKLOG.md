@@ -265,3 +265,8 @@
 - Patched dynamic form verifiers in `BlankVerse`, `Pantoum`, `BluesPoem`, and `TerzaRima` so malformed poem input now returns failed results instead of building invalid internal constraints after the primitive-layer hardening.
 - Verified the RF-054 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `755 passed, 1 skipped`.
 - Closed `RF-054` and released its lock.
+- Opened and claimed `RF-055` after reproducing that the remaining shape and meter primitives still accept degenerate configuration, including vacuous passes from `LineShape(lengths=[])`, `LineShape(shape_type=ShapeType.DIAMOND)`, `LineShape(shape_type=ShapeType.DIAMOND, num_lines=0)`, and `LineLengthRange(min_length=0, max_length=0)`, plus meaningless or crashing meter configs from `Meter(MeterType.IAMB, 0)` and `MeterPattern(MeterType.IAMB, [])`.
+- Hardened `LineShape`, `LineLengthRange`, `Meter`, and `MeterPattern` against empty, missing, zero-sized, and inverted constructor configuration, and added explicit empty-poem failure paths where those primitives previously returned vacuous `passed=True` results.
+- Added direct regressions covering the reproduced shape and meter misconfiguration cases plus empty-poem behavior for `LineLengthRange`, `Meter`, and `MeterPattern`.
+- Verified the RF-055 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `772 passed, 1 skipped`.
+- Closed `RF-055` and released its lock.
