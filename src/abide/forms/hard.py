@@ -481,11 +481,23 @@ class PositionalPoem(Constraint):
         super().__init__(weight)
         if positions is None:
             positions = [(1, "T"), (5, "e")]  # Default: T at start, e at position 5
-        self.positions = positions
+        normalized_positions: list[tuple[int, str]] = []
+        for entry in positions:
+            if not isinstance(entry, tuple) or len(entry) != 2:
+                raise ValueError(
+                    "positions must be a list of (position, character) tuples",
+                )
+            pos, character = entry
+            if not isinstance(pos, int) or pos < 1:
+                raise ValueError("position entries must use positive integer indices")
+            if not isinstance(character, str) or len(character) != 1:
+                raise ValueError("position entries must use single-character string targets")
+            normalized_positions.append((pos, character))
+        self.positions = normalized_positions
         self._constraint = And(
             [
                 LineCount(4, 8),
-                PositionalCharacter(positions, per_line=True),
+                PositionalCharacter(normalized_positions, per_line=True),
             ]
         )
 

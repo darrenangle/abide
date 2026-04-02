@@ -52,7 +52,6 @@ SPECIAL_FORM_KWARGS: dict[str, dict[str, Any]] = {
     "PiKu": {"num_lines": 5},
     "PrecisionHaiku": {"chars_per_line": 17},
     "ArithmeticVerse": {"start": 2, "diff": 2, "num_lines": 5},
-    "PositionalPoem": {"positions": [1, 2, 3]},
     "IsolatedCouplet": {"position": 3},
     "AlternatingIsolation": {"num_lines": 6},
     "DoubleAcrosticPoem": {"word": "POETRY"},

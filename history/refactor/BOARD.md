@@ -32,3 +32,4 @@ Updated: 2026-04-01
 | RF-026 | P2 | done | | Strip remaining unverified thematic claims from form docstrings and catalog summaries | RF-025 |
 | RF-027 | P1 | done | | Harden Epigram so 3-line prose blocks no longer pass as perfect fits | RF-026 |
 | RF-028 | P1 | done | | Stop Skeltonic from treating repeated identical end words as valid rhyme runs | RF-027 |
+| RF-029 | P1 | done | | Fix malformed `PositionalPoem` catalog defaults and fail early on invalid positions | RF-028 |

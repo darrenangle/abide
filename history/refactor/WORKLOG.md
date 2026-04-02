@@ -143,3 +143,8 @@
 - Added a direct regression for identical end-word repetition and corrected the positive Skeltonic fixture to use non-identical rhyming end words.
 - Verified the RF-028 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `605 passed, 1 skipped`.
 - Closed `RF-028` and released its lock.
+- Opened and claimed `RF-029` after a bulk adversarial sweep showed that `PositionalPoem` could be instantiated from the catalog with malformed defaults and then crash with `TypeError` during ordinary verification.
+- Removed the malformed `PositionalPoem` catalog override, restored safe default instantiation, and added constructor validation so invalid positions fail fast with `ValueError` instead of crashing deep in `PositionalCharacter.verify()`.
+- Added regressions for the catalog instantiation path and the early-validation path.
+- Verified the RF-029 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `607 passed, 1 skipped`.
+- Closed `RF-029` and released its lock.
