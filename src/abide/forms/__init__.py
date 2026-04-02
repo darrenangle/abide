@@ -22,14 +22,14 @@ Available forms:
 - Quatrain: 4-line stanza with various rhyme schemes
 - Couplet: 2 rhyming lines
 - Blank Verse: Unrhymed lines with roughly 10 syllables
-- Ode: Pindaric, Horatian, Irregular variants
+- Ode: Generic and stanzaic ode structure shells
 - Ballad: Narrative quatrains with ABCB rhyme
 - Diamante: 7-line diamond shape poem
 - Cinquain: 5-line syllabic poem
 - Ottava Rima: 8-line stanza with ABABABCC rhyme
 - Rhyme Royal: 7-line stanza with ABABBCC rhyme
 - Kyrielle: Quatrains with refrain
-- Epigram: Short witty poem
+- Epigram: Short-line structural proxy
 - Rubaiyat: Persian quatrains with AABA rhyme
 - Free Verse: Poetry without fixed meter
 """

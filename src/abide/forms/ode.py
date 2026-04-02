@@ -1,8 +1,9 @@
 """
 Ode form templates.
 
-Odes are lyric poems, typically addressed to a subject,
-with various structural patterns.
+These verifiers check structural shells for generic and stanzaic ode layouts.
+They do not attempt to verify lyrical address, praise, or other thematic
+qualities associated with historical odes.
 """
 
 from __future__ import annotations
@@ -29,12 +30,14 @@ if TYPE_CHECKING:
 
 class Ode(Constraint):
     """
-    Generic ode: lyric poem with varied structure.
+    Generic ode structural shell with configurable line-count bounds.
 
     This is a base ode class. Use specific variants:
     - HoratianOde: Regular stanzas
     - PindaricOde: Triadic structure (strophe, antistrophe, epode)
     - IrregularOde: Free form
+
+    This verifier checks only line-count range.
 
     Examples:
         >>> ode = Ode(min_lines=12)
@@ -97,7 +100,7 @@ class Ode(Constraint):
         )
 
     def describe(self) -> str:
-        return f"Ode: {self.min_lines}-{self.max_lines} lines"
+        return f"Ode: {self.min_lines}-{self.max_lines} lines (structural shell only)"
 
 
 class HoratianOde(Constraint):
@@ -207,10 +210,11 @@ class PindaricOde(Constraint):
     """
     Pindaric ode: Triadic structure with strophe, antistrophe, and epode.
 
-    Named after the Greek poet Pindar. Features:
+    Named after the Greek poet Pindar. Structural features:
     - Strophe and antistrophe have identical structure
     - Epode has different structure
-    - Often used for ceremonial/praise poetry
+
+    This verifier checks only the triadic stanza layout.
 
     Examples:
         >>> ode = PindaricOde()
@@ -295,13 +299,11 @@ class PindaricOde(Constraint):
 
 class IrregularOde(Constraint):
     """
-    Irregular ode: Free form with no fixed structure.
+    Irregular ode structural shell with minimum line and stanza counts.
 
-    Also called Cowleyan ode (after Abraham Cowley).
-    Features:
+    Also called Cowleyan ode (after Abraham Cowley). This verifier checks:
     - Variable line lengths
     - Variable stanza sizes
-    - No fixed rhyme scheme
     - Minimum line count only
 
     Examples:
@@ -347,4 +349,7 @@ class IrregularOde(Constraint):
         )
 
     def describe(self) -> str:
-        return f"Irregular Ode: at least {self.min_lines} lines in {self.min_stanzas}+ stanzas"
+        return (
+            f"Irregular Ode: at least {self.min_lines} lines in "
+            f"{self.min_stanzas}+ stanzas (structural shell only)"
+        )

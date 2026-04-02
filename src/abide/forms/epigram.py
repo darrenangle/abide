@@ -1,7 +1,7 @@
 """
 Epigram and other short forms.
 
-Short, witty poems often in couplet form.
+Structural proxies for epigrams and related short forms.
 """
 
 from __future__ import annotations
@@ -27,10 +27,10 @@ if TYPE_CHECKING:
 
 class Epigram(Constraint):
     """
-    Epigram: Short, witty poem, typically 2-4 lines.
+    Epigram structural proxy, typically 2-4 lines.
 
-    Classical epigrams were written in elegiac couplets.
-    Modern epigrams are often rhyming couplets with a pointed ending.
+    Historical epigrams are often witty or pointed, but this verifier checks
+    only line-count bounds plus rhyme on the 2-line and 4-line variants.
 
     Examples:
         >>> epigram = Epigram()
@@ -149,7 +149,10 @@ class Epigram(Constraint):
         )
 
     def describe(self) -> str:
-        return f"Epigram: {self.min_lines}-{self.max_lines} lines, witty/pointed"
+        return (
+            f"Epigram: {self.min_lines}-{self.max_lines} lines; "
+            "rhyme proxy on 2-line and 4-line variants"
+        )
 
 
 class Monostich(Constraint):

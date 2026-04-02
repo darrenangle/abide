@@ -122,3 +122,9 @@
 - Renamed the mutation harness for the curated RL-default subset and removed the obsolete support-tier tests that encoded the old trust taxonomy.
 - Verified the RF-024 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `595 passed, 1 skipped`.
 - Closed `RF-024` and released its lock.
+- Opened and claimed `RF-025` after confirming that generic forms like `Ode`, `IrregularOde`, `Aubade`, and `Epigram` still describe unverified thematic/literary properties even though their verifiers only check structural shells.
+- Narrowed the public descriptions and docstrings for `Ode`, `IrregularOde`, `Aubade`, and `Epigram` so they now advertise structural shells or proxies instead of unverified lyric, dawn, or wit semantics.
+- Updated the top-level form catalog summary and README to match that narrower structural framing for the intentionally generic families.
+- Added direct claim-alignment tests for representative generic forms and re-ran the full repository gates.
+- Verified the RF-025 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `598 passed, 1 skipped`.
+- Closed `RF-025` and released its lock.

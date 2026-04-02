@@ -178,6 +178,9 @@ still in progress, the RL scripts use a curated rollout-default subset from
 `abide.forms.catalog` so training runs do not accidentally depend on form
 families that have not completed the same hardening pass yet.
 
+Some intentionally generic families such as `Ode`, `IrregularOde`, and
+`Epigram` are structural shells or proxies rather than thematic verifiers.
+
 ---
 
 ## For LLM Training

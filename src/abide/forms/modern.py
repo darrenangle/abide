@@ -109,13 +109,13 @@ class Bop(Constraint):
 
 class Aubade(Constraint):
     """
-    Aubade: Dawn poem or morning song.
+    Aubade structural proxy for a common fixed-stanza shell.
 
-    Structure is flexible, but typically:
+    Historical aubades are dawn poems or morning songs, but this verifier
+    checks only a common stanza-count/rhyme proxy:
     - Multiple stanzas
-    - Often addresses a lover or the dawn itself
-    - May include refrain
-    - Usually moderate length (16-40 lines)
+    - Moderate length (default 24 lines)
+    - Repeated stanza rhyme pattern
 
     This implements a common 4-stanza version.
 
@@ -197,7 +197,7 @@ class Aubade(Constraint):
 
     def describe(self) -> str:
         total = self.stanza_count_val * self.lines_per_stanza
-        return f"Aubade: {total} lines in {self.stanza_count_val} stanzas (dawn poem)"
+        return f"Aubade: {total} lines in {self.stanza_count_val} stanzas (structural proxy only)"
 
 
 class Skeltonic(Constraint):
