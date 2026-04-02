@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-from hypothesis import settings
+from hypothesis import Verbosity, settings
 from hypothesis import strategies as st
 
 # ============================================================================
@@ -26,7 +26,7 @@ from hypothesis import strategies as st
 
 settings.register_profile("ci", max_examples=100, deadline=None)
 settings.register_profile("dev", max_examples=20, deadline=None)
-settings.register_profile("debug", max_examples=5, deadline=None, verbosity=2)
+settings.register_profile("debug", max_examples=5, deadline=None, verbosity=Verbosity.verbose)
 
 
 # ============================================================================

@@ -14,11 +14,19 @@ Rhyme Types:
 
 from __future__ import annotations
 
+import warnings
 from enum import Enum
 from functools import lru_cache
 
 import jellyfish
-import pronouncing
+
+with warnings.catch_warnings():
+    warnings.filterwarnings(
+        "ignore",
+        message=r"pkg_resources is deprecated as an API\..*",
+        category=Warning,
+    )
+    import pronouncing
 
 
 class RhymeType(Enum):

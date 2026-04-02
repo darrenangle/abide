@@ -158,3 +158,7 @@
 - Added direct regressions for a valid 10-syllable sonnet shell and the reproduced 7-syllable false positive.
 - Verified the RF-031 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `611 passed, 1 skipped`.
 - Closed `RF-031` and released its lock.
+- Opened and claimed `RF-032` after confirming the suite still emits two warnings on a green run: a Hypothesis deprecation caused by our own profile config and an upstream `pronouncing` `pkg_resources` warning that should be filtered explicitly in pytest.
+- Replaced the deprecated Hypothesis verbosity integer with `Verbosity.verbose` and localized the `pronouncing`/`pkg_resources` warning suppression to the import boundary in `phonetics.py`, leaving the suite clean under strict warning handling.
+- Verified the RF-032 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `611 passed, 1 skipped`.
+- Closed `RF-032` and released its lock.
