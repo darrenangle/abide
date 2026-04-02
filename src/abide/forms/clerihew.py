@@ -149,44 +149,25 @@ class Clerihew(Constraint):
 
     @staticmethod
     def _contains_name(line: str) -> bool:
-        """Check if line contains a proper name (capitalized word)."""
-        # Look for capitalized words that aren't at start of line
-        words = line.split()
+        """Check if line contains a plausible name-style phrase."""
+        words = [word.strip(".,;:!?\"'()[]{}") for word in line.split()]
+        words = [word for word in words if word]
         if not words:
             return False
 
-        # First word being capitalized is expected, look for others
-        # or check if first word looks like a name/title
-        capitalized = [w for w in words if w and w[0].isupper()]
+        capitalized_positions = [idx for idx, word in enumerate(words) if word[0].isupper()]
 
-        # Common name patterns: "Sir X", "Dr. X", "Name Name"
-        if len(capitalized) >= 2:
-            return True
-
-        # Check for title patterns
+        # Common title patterns: "Sir X", "Dr X"
         titles = ["sir", "dr", "mr", "mrs", "ms", "lord", "lady", "king", "queen"]
         first_word = words[0].lower().rstrip(".")
-        if first_word in titles and len(words) >= 2:
+        if first_word in titles and len(words) >= 2 and words[1][0].isupper():
             return True
 
-        # Single capitalized word that looks like a name
-        if len(words) >= 1 and words[0][0].isupper():
-            # Check if it's not just a common word
-            common_starters = [
-                "the",
-                "a",
-                "an",
-                "i",
-                "we",
-                "they",
-                "he",
-                "she",
-                "it",
-            ]
-            if words[0].lower() not in common_starters:
-                return True
-
-        return False
+        # A name later in the line or a multi-token capitalized phrase is a
+        # stronger proxy than bare sentence-start capitalization.
+        if len(capitalized_positions) >= 2:
+            return True
+        return any(position > 0 for position in capitalized_positions)
 
     def describe(self) -> str:
         return "Clerihew: 4 lines with AABB rhyme, first line contains a name"

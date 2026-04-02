@@ -371,6 +371,23 @@ class TestClerihewValidation:
         result = clerihew.verify(CLERIHEW_BENTLEY_DAVY)
         assert result.score >= 0.5
 
+    def test_rejects_bare_sentence_start_capitalization_as_name(self):
+        """A generic capitalized opener should not satisfy the clerihew name proxy."""
+        poem = "\n".join(
+            [
+                "Morning settled over the bay",
+                "and drifted softly through the day",
+                "Cold lanterns waited by the shore",
+                "while thin waves tapped the harbor door",
+            ]
+        )
+
+        clerihew = Clerihew(strict=False, rhyme_threshold=0.5)
+        result = clerihew.verify(poem)
+
+        assert result.score > 0.6
+        assert result.passed is False
+
 
 class TestBluesPoemValidation:
     """Validate Blues Poem form against examples."""

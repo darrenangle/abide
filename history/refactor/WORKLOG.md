@@ -204,3 +204,8 @@
 - Added a shared exact-structure mutation harness covering Japanese short forms, shape forms, the Fibonacci family, and `Naani`.
 - Verified the RF-042 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `661 passed, 1 skipped`.
 - Closed `RF-042` and released its lock.
+- Opened and claimed `RF-043` after reproducing that `Clerihew(strict=False)` reports `passed=True, score=1.0` for a non-name first line like `Morning settled over the bay` because the name proxy treated bare sentence-start capitalization as sufficient.
+- Tightened the clerihew name proxy so bare sentence-start capitalization no longer counts; the verifier now requires a title pattern or a stronger internal or multi-token capitalized name signal.
+- Added a direct regression for the reproduced non-name clerihew false positive.
+- Verified the RF-043 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `662 passed, 1 skipped`.
+- Closed `RF-043` and released its lock.
