@@ -2,7 +2,25 @@
 
 import pytest
 
-from abide.constraints import ForcedWords, WordCount, WordLengthPattern
+from abide.constraints import (
+    CrossLineVowelWordCount,
+    DoubleAcrostic,
+    ExactCharacterBudget,
+    ExactTotalCharacters,
+    ExactTotalVowels,
+    ExactWordCount,
+    ForcedWords,
+    LetterFrequency,
+    LineEndsWith,
+    LineStartsWith,
+    NoConsecutiveRepeats,
+    NoSharedLetters,
+    PositionalCharacter,
+    VowelConsonantPattern,
+    WordCount,
+    WordLengthPattern,
+    WordLengthStaircase,
+)
 
 
 @pytest.mark.parametrize(
@@ -22,6 +40,60 @@ from abide.constraints import ForcedWords, WordCount, WordLengthPattern
         (
             lambda: WordLengthPattern([[3, 3], []]),
             "pattern must contain at least one positive length",
+        ),
+        (lambda: LineStartsWith([]), "patterns must contain at least one non-empty pattern"),
+        (lambda: LineStartsWith(""), "patterns must contain at least one non-empty pattern"),
+        (lambda: LineEndsWith([]), "patterns must contain at least one non-empty pattern"),
+        (lambda: LineEndsWith(""), "patterns must contain at least one non-empty pattern"),
+        (
+            lambda: LetterFrequency("", min_percent=1),
+            "letter must be a single alphabetic character",
+        ),
+        (lambda: LetterFrequency("AB"), "letter must be a single alphabetic character"),
+        (
+            lambda: LetterFrequency("A", min_percent=60, max_percent=40),
+            "max_percent must be greater than or equal to min_percent",
+        ),
+        (lambda: NoConsecutiveRepeats(min_lines=0), "min_lines must be positive"),
+        (
+            lambda: VowelConsonantPattern(""),
+            "pattern must contain only V and C characters",
+        ),
+        (
+            lambda: VowelConsonantPattern("VX"),
+            "pattern must contain only V and C characters",
+        ),
+        (lambda: ExactTotalCharacters(0), "total must be positive"),
+        (lambda: ExactTotalVowels(0), "total must be positive"),
+        (lambda: WordLengthStaircase(max_words=0), "max_words must be positive"),
+        (lambda: CrossLineVowelWordCount(start_words=0), "start_words must be positive"),
+        (lambda: NoSharedLetters([]), "pairs must contain at least one line pair"),
+        (lambda: NoSharedLetters([(0, 1)]), "pair line numbers must be positive"),
+        (
+            lambda: NoSharedLetters("bogus"),
+            "pairs must be 'consecutive', 'alternating', or a list of line pairs",
+        ),
+        (lambda: ExactWordCount(0), "total must be positive"),
+        (
+            lambda: DoubleAcrostic("", ""),
+            "first_word must contain at least one alphabetic character",
+        ),
+        (lambda: ExactCharacterBudget("e", 0), "count must be positive"),
+        (
+            lambda: ExactCharacterBudget(["a"], 1),  # type: ignore[arg-type]
+            "character must be a single character string",
+        ),
+        (
+            lambda: PositionalCharacter([]),
+            "positions must contain at least one \\(position, character\\) pair",
+        ),
+        (
+            lambda: PositionalCharacter([(0, "a")]),
+            "positions must be 1-based positive integers",
+        ),
+        (
+            lambda: PositionalCharacter([(1, "ab")]),
+            "position characters must be a single character string",
         ),
     ],
 )

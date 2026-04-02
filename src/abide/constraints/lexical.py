@@ -11,8 +11,13 @@ import re
 from typing import TYPE_CHECKING, ClassVar, cast
 
 from abide.constraints._validation import (
+    require_alphabetic_text,
+    require_nonempty_patterns,
     require_nonnegative,
+    require_percentage,
     require_positive,
+    require_single_alphabetic_character,
+    require_single_character_string,
     require_word_list,
 )
 from abide.constraints.base import Constraint
@@ -488,10 +493,12 @@ class LineStartsWith(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        pattern_values: tuple[str, ...]
         if isinstance(patterns, str):
-            self.patterns = [patterns]
+            pattern_values = (patterns,)
         else:
-            self.patterns = patterns
+            pattern_values = tuple(patterns)
+        self.patterns = list(require_nonempty_patterns(pattern_values, "patterns"))
         self.case_sensitive = case_sensitive
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -549,10 +556,12 @@ class LineEndsWith(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        pattern_values: tuple[str, ...]
         if isinstance(patterns, str):
-            self.patterns = [patterns]
+            pattern_values = (patterns,)
         else:
-            self.patterns = patterns
+            pattern_values = tuple(patterns)
+        self.patterns = list(require_nonempty_patterns(pattern_values, "patterns"))
         self.case_sensitive = case_sensitive
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -611,6 +620,11 @@ class LetterFrequency(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        require_single_alphabetic_character(letter, "letter")
+        require_percentage(min_percent, "min_percent")
+        require_percentage(max_percent, "max_percent")
+        if max_percent < min_percent:
+            raise ValueError("max_percent must be greater than or equal to min_percent")
         self.letter = letter.upper()
         self.min_percent = min_percent
         self.max_percent = max_percent
@@ -681,6 +695,7 @@ class NoConsecutiveRepeats(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        require_positive(min_lines, "min_lines")
         self.min_lines = min_lines
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -736,6 +751,8 @@ class VowelConsonantPattern(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        if not pattern or any(char not in {"V", "C"} for char in pattern.upper()):
+            raise ValueError("pattern must contain only V and C characters")
         self.pattern = pattern.upper()
         self.per_line = per_line
 
@@ -879,6 +896,7 @@ class ExactTotalCharacters(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        require_positive(total, "total")
         self.total = total
         self.count_spaces = count_spaces
         self.count_newlines = count_newlines
@@ -945,6 +963,7 @@ class ExactTotalVowels(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        require_positive(total, "total")
         self.total = total
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -1003,6 +1022,7 @@ class WordLengthStaircase(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        require_positive(max_words, "max_words")
         self.max_words = max_words
         self.ascending = ascending
 
@@ -1076,6 +1096,7 @@ class CrossLineVowelWordCount(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        require_positive(start_words, "start_words")
         self.start_words = start_words  # First line must have this many words
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -1163,7 +1184,26 @@ class NoSharedLetters(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
-        self.pairs = pairs
+        self.pairs: str | list[tuple[int, int]]
+        if isinstance(pairs, str):
+            if pairs not in {"consecutive", "alternating"}:
+                raise ValueError(
+                    "pairs must be 'consecutive', 'alternating', or a list of line pairs"
+                )
+            self.pairs = pairs
+        else:
+            if not pairs:
+                raise ValueError("pairs must contain at least one line pair")
+            validated_pairs: list[tuple[int, int]] = []
+            for pair in pairs:
+                try:
+                    line_a, line_b = pair
+                except (TypeError, ValueError):
+                    raise ValueError("pairs must be a list of 1-based line pairs") from None
+                if line_a <= 0 or line_b <= 0:
+                    raise ValueError("pair line numbers must be positive")
+                validated_pairs.append((line_a, line_b))
+            self.pairs = validated_pairs
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
@@ -1175,7 +1215,8 @@ class NoSharedLetters(Constraint):
             pairs_to_check = [(i, i + 2) for i in range(len(structure.lines) - 2)]
         else:
             # Convert 1-indexed to 0-indexed
-            pairs_to_check = [(a - 1, b - 1) for a, b in self.pairs]  # type: ignore[misc]
+            pair_list = cast("list[tuple[int, int]]", self.pairs)
+            pairs_to_check = [(a - 1, b - 1) for a, b in pair_list]
 
         matches = 0
         details = []
@@ -1241,6 +1282,7 @@ class ExactWordCount(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        require_positive(total, "total")
         self.total = total
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -1383,10 +1425,12 @@ class DoubleAcrostic(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
-        self.first_word = first_word.upper()
-        self.last_word = last_word.upper()
+        require_alphabetic_text(first_word, "first_word")
+        require_alphabetic_text(last_word, "last_word")
+        self.first_word = "".join(char for char in first_word.upper() if char.isalpha())
+        self.last_word = "".join(char for char in last_word.upper() if char.isalpha())
 
-        if len(first_word) != len(last_word):
+        if len(self.first_word) != len(self.last_word):
             raise ValueError("First and last words must have same length")
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -1495,8 +1539,8 @@ class ExactCharacterBudget(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
-        if len(character) != 1:
-            raise ValueError("Must specify exactly one character")
+        require_single_character_string(character, "character")
+        require_positive(count, "count")
         self.character = character
         self.count = count
         self.case_sensitive = case_sensitive
@@ -1559,7 +1603,19 @@ class PositionalCharacter(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
-        self.positions = positions  # [(position, character), ...]
+        if not positions:
+            raise ValueError("positions must contain at least one (position, character) pair")
+        validated_positions: list[tuple[int, str]] = []
+        for item in positions:
+            try:
+                position, character = item
+            except (TypeError, ValueError):
+                raise ValueError("positions must be (position, character) pairs") from None
+            if position <= 0:
+                raise ValueError("positions must be 1-based positive integers")
+            require_single_character_string(character, "position characters")
+            validated_positions.append((position, character))
+        self.positions = validated_positions
         self.per_line = per_line
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:

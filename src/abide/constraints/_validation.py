@@ -85,6 +85,32 @@ def require_alphabetic_text(value: str, name: str) -> None:
         raise ValueError(f"{name} must contain at least one alphabetic character")
 
 
+def require_single_alphabetic_character(value: str, name: str) -> None:
+    """Reject non-letter or multi-character letter targets."""
+    if len(value) != 1 or not value.isalpha():
+        raise ValueError(f"{name} must be a single alphabetic character")
+
+
+def require_single_character_string(value: str, name: str) -> None:
+    """Reject non-string or multi-character string targets."""
+    if not isinstance(value, str) or len(value) != 1:
+        raise ValueError(f"{name} must be a single character string")
+
+
+def require_percentage(value: float, name: str) -> None:
+    """Reject percentage-like parameters outside [0, 100]."""
+    if not 0.0 <= value <= 100.0:
+        raise ValueError(f"{name} must be between 0 and 100")
+
+
+def require_nonempty_patterns(patterns: Sequence[str], name: str) -> tuple[str, ...]:
+    """Reject empty pattern collections and blank pattern entries."""
+    values = tuple(patterns)
+    if not values or any(pattern == "" for pattern in values):
+        raise ValueError(f"{name} must contain at least one non-empty pattern")
+    return values
+
+
 def require_word_list(words: Sequence[str], name: str) -> tuple[str, ...]:
     """Reject empty required-word lists and blank word entries."""
     values = tuple(words)
