@@ -22,12 +22,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-
-import torch
-from datasets import Dataset
-from peft import LoraConfig
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from trl import GRPOConfig, GRPOTrainer
+from typing import TYPE_CHECKING, Any
 
 # CRITICAL FIX: Monkey-patch TRL's GRPOTrainer to NOT skip special tokens
 # TRL hardcodes skip_special_tokens=True which strips </think> from output
@@ -44,6 +39,19 @@ def _patched_batch_decode(self, token_ids, skip_special_tokens=True, **kwargs):
 # Add src and scripts to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent))
+
+from reward_telemetry import (  # noqa: E402
+    RewardTelemetry,
+    bind_reward_telemetry,
+    extract_failure_reason,
+    extract_form_names_from_metadata,
+    flush_reward_telemetry,
+)
+
+from abide.forms.catalog import load_form_instances  # noqa: E402
+
+if TYPE_CHECKING:
+    from datasets import Dataset
 
 # ============================================================
 # BAGUETTOTRON CONFIGURATION
@@ -69,75 +77,9 @@ LORA_ALPHA = 128
 LORA_DROPOUT = 0.05
 
 
-def get_forms() -> dict[str, object]:
-    """Load all forms from abide."""
-    import abide.forms as forms_module
-
-    all_forms = {}
-    for name in forms_module.__all__:
-        try:
-            form_class = getattr(forms_module, name)
-            try:
-                all_forms[name] = form_class()
-            except TypeError:
-                # Forms needing params
-                if name == "StaircasePoem" or name == "DescendingStaircasePoem":
-                    all_forms[name] = form_class(num_words=7)
-                elif name == "VowelBudgetPoem":
-                    all_forms[name] = form_class(vowel_count=30)
-                elif name == "PrecisionVerse":
-                    all_forms[name] = form_class(chars_per_line=25)
-                elif name == "ExactWordPoem":
-                    all_forms[name] = form_class(word_count=20)
-                elif name == "CharacterBudgetPoem":
-                    all_forms[name] = form_class(character="e", count=10)
-                elif name == "TotalCharacterPoem":
-                    all_forms[name] = form_class(total_chars=100)
-                elif name == "FibonacciVerse":
-                    all_forms[name] = form_class(num_lines=5)
-                elif name == "TriangularVerse":
-                    all_forms[name] = form_class(num_lines=4)
-                elif name == "PiKu":
-                    all_forms[name] = form_class(num_lines=5)
-                elif name == "PrecisionHaiku":
-                    all_forms[name] = form_class(chars_per_line=17)
-                elif name == "ArithmeticVerse":
-                    all_forms[name] = form_class(start=2, diff=2, num_lines=5)
-                elif name == "PositionalPoem":
-                    all_forms[name] = form_class(positions=[1, 2, 3])
-                elif name == "IsolatedCouplet":
-                    all_forms[name] = form_class(position=3)
-                elif name == "AlternatingIsolation":
-                    all_forms[name] = form_class(num_lines=6)
-                elif name == "DoubleAcrosticPoem":
-                    all_forms[name] = form_class(word="POETRY")
-                elif name == "CombinedChallenge":
-                    all_forms[name] = form_class(num_lines=4)
-                elif name == "Lipogram":
-                    all_forms[name] = form_class(forbidden="e")
-                elif name == "Univocalic":
-                    all_forms[name] = form_class(vowel="a")
-                elif name == "Mesostic":
-                    all_forms[name] = form_class(spine="POEM")
-                elif name == "Anaphora":
-                    all_forms[name] = form_class(phrase="I am", num_lines=4)
-                elif name == "ModularVerse":
-                    all_forms[name] = form_class(modulus=3, num_lines=6)
-                elif name == "CoprimeVerse":
-                    all_forms[name] = form_class(base=6, num_lines=4)
-                elif name == "SquareStanzas":
-                    all_forms[name] = form_class(size=4)
-                elif name == "SelfReferential":
-                    all_forms[name] = form_class(num_lines=4)
-                elif name == "GoldenRatioVerse":
-                    all_forms[name] = form_class(num_lines=6)
-                elif name == "PythagoreanTercet":
-                    all_forms[name] = form_class(scale=2)
-                else:
-                    continue
-        except Exception:
-            continue
-    return all_forms
+def get_forms(form_names: list[str] | None = None) -> dict[str, object]:
+    """Load forms through the shared catalog."""
+    return load_form_instances(form_names)
 
 
 def extract_poem_from_completion(completion) -> tuple[str, bool]:
@@ -202,7 +144,12 @@ def extract_prompt_text(prompt) -> str:
     return " ".join(s for s in strings if s)
 
 
-def create_reward_function(forms: dict[str, object]):
+def create_reward_function(
+    forms: dict[str, object],
+    *,
+    telemetry_every: int = 256,
+    use_wandb: bool = True,
+):
     """Create reward function for Baguettotron.
 
     - Returns 0.0 if completion doesn't have </think> (bad format)
@@ -210,88 +157,80 @@ def create_reward_function(forms: dict[str, object]):
     - Returns form.verify(poem).score otherwise
     """
     _call_count = [0]
-    _format_errors = [0]
-    _short_poem_errors = [0]
-    _no_form_errors = [0]
-    _success_count = [0]
+    telemetry = RewardTelemetry(
+        label="baguettotron",
+        emit_every=telemetry_every,
+        use_wandb=use_wandb,
+    )
 
-    def reward_fn(completions: list, prompts: list, **kwargs) -> list[float]:
+    def reward_fn(completions: list, prompts: list, **kwargs: Any) -> list[float]:
         rewards = []
+        form_names = extract_form_names_from_metadata(kwargs, len(completions))
 
-        # Debug first few batches - write to file for guaranteed capture
-        if _call_count[0] < 3:
-            with Path("logs/reward_debug.txt").open("a") as f:
-                f.write(f"\n=== REWARD BATCH {_call_count[0]} ===\n")
-                f.write(f"completions len: {len(completions)}\n")
-
-                # Check how many have </think>
-                has_think = sum(1 for c in completions if "</think>" in str(c))
-                f.write(f"{has_think}/{len(completions)} completions have </think>\n")
-
-                # Show first completion details
-                if completions:
-                    c0 = completions[0]
-                    poem, valid = extract_poem_from_completion(c0)
-                    c0_str = str(c0)
-                    f.write("\n[COMPLETION 0]\n")
-                    f.write(f"  raw len: {len(c0_str)}\n")
-                    f.write(f"  has </think>: {'</think>' in c0_str}\n")
-                    f.write(f"  valid_format: {valid}\n")
-                    f.write(f"  poem len: {len(poem)}\n")
-                    if poem:
-                        f.write(f"  poem[:300]: {poem[:300]}\n")
-                    else:
-                        f.write(f"  content[:500]: {c0_str[:500]}\n")
-
-                f.flush()
-
-        for completion, prompt in zip(completions, prompts):
+        for completion, _prompt, form_name in zip(completions, prompts, form_names):
             _call_count[0] += 1
 
             try:
-                # Extract poem - REQUIRE </think>
                 poem, valid_format = extract_poem_from_completion(completion)
 
                 if not valid_format:
-                    _format_errors[0] += 1
-                    if _format_errors[0] <= 10:
-                        print(f"[FORMAT ERROR #{_format_errors[0]}] Missing </think>", flush=True)
                     rewards.append(0.0)
+                    telemetry.record(
+                        form_name,
+                        reward=0.0,
+                        passed=False,
+                        failure_reason="missing </think>",
+                    )
+                    telemetry.emit()
                     continue
 
                 if not poem or len(poem.strip()) < 10:
-                    _short_poem_errors[0] += 1
-                    if _short_poem_errors[0] <= 5:
-                        print(f"[SHORT POEM] len={len(poem.strip()) if poem else 0}")
                     rewards.append(0.0)
+                    telemetry.record(
+                        form_name,
+                        reward=0.0,
+                        passed=False,
+                        failure_reason="short completion",
+                    )
+                    telemetry.emit()
                     continue
 
-                # Find form from prompt
-                prompt_text = extract_prompt_text(prompt)
-                form_name = None
-                for name in forms:
-                    if name.lower() in prompt_text.lower() or name in prompt_text:
-                        form_name = name
-                        break
-
                 if not form_name:
-                    _no_form_errors[0] += 1
-                    if _no_form_errors[0] <= 5:
-                        print(f"[NO FORM] prompt: {prompt_text[:100]}")
                     rewards.append(0.0)
+                    telemetry.record(
+                        None,
+                        reward=0.0,
+                        passed=False,
+                        failure_reason="missing form_name metadata",
+                    )
+                    telemetry.emit()
                     continue
 
                 form_instance = forms.get(form_name)
                 if form_instance is None:
                     rewards.append(0.0)
+                    telemetry.record(
+                        form_name,
+                        reward=0.0,
+                        passed=False,
+                        failure_reason="unknown form",
+                    )
+                    telemetry.emit()
                     continue
 
                 result = form_instance.verify(poem)
-                rewards.append(float(result.score))
-                _success_count[0] += 1
+                reward = float(result.score)
+                rewards.append(reward)
+                telemetry.record(
+                    form_name,
+                    reward=reward,
+                    passed=bool(getattr(result, "passed", False)),
+                    failure_reason=extract_failure_reason(result),
+                )
+                telemetry.emit()
 
-                if _success_count[0] <= 5:
-                    print(f"[SUCCESS #{_success_count[0]}] {form_name} score={result.score:.3f}")
+                if _call_count[0] <= 5:
+                    print(f"[DEBUG] {form_name}: score={result.score:.3f}", flush=True)
 
             except Exception as e:
                 import traceback
@@ -299,18 +238,17 @@ def create_reward_function(forms: dict[str, object]):
                 print(f"[reward error: {e}]")
                 traceback.print_exc()
                 rewards.append(0.0)
-
-        # Summary every 1000 calls
-        if _call_count[0] % 1000 == 0:
-            print(f"\n[REWARD SUMMARY @ {_call_count[0]} calls]")
-            print(f"  format_errors: {_format_errors[0]}")
-            print(f"  short_poems: {_short_poem_errors[0]}")
-            print(f"  no_form: {_no_form_errors[0]}")
-            print(f"  successes: {_success_count[0]}")
+                telemetry.record(
+                    form_name,
+                    reward=0.0,
+                    passed=False,
+                    failure_reason=f"reward error: {type(e).__name__}",
+                )
+                telemetry.emit()
 
         return rewards
 
-    return reward_fn
+    return bind_reward_telemetry(reward_fn, telemetry)
 
 
 def load_learnable_forms_from_results(results_file: str, top_n: int = 10) -> list[str]:
@@ -347,9 +285,11 @@ def create_dataset(
     num_prompts: int, seed: int = 42, learnable_forms: list[str] | None = None
 ) -> Dataset:
     """Create training dataset with learnable forms only."""
-    from prompt_generator import generate_learnable_forms_dataset
+    from datasets import Dataset
+    from prompt_generator import generate_learnable_forms_verifiers_dataset
 
     # Use custom learnable forms if provided
+    prompt_generator = None
     if learnable_forms:
         # Temporarily override LEARNABLE_FORMS in prompt_generator
         import prompt_generator
@@ -358,23 +298,36 @@ def create_dataset(
         prompt_generator.LEARNABLE_FORMS = learnable_forms
         print(f"Using custom learnable forms: {learnable_forms}")
 
-    raw_dataset = generate_learnable_forms_dataset(num_prompts=num_prompts, seed=seed)
+    try:
+        raw_dataset = generate_learnable_forms_verifiers_dataset(num_prompts=num_prompts, seed=seed)
+    finally:
+        if learnable_forms and prompt_generator is not None:
+            prompt_generator.LEARNABLE_FORMS = original_forms
 
-    if learnable_forms:
-        prompt_generator.LEARNABLE_FORMS = original_forms
-
-    # Convert to TRL format
     prompts = []
+    form_names = []
     for item in raw_dataset:
-        prompts.append([{"role": "user", "content": [{"type": "text", "text": item["prompt"]}]}])
+        prompt_text = extract_prompt_text(item["prompt"])
+        form_info = item.get("info", {})
+        form_name = form_info.get("form_name") if isinstance(form_info, dict) else None
+        if not isinstance(form_name, str) or not form_name:
+            raise ValueError(f"Dataset item is missing info.form_name: {item}")
 
-    dataset = Dataset.from_dict({"prompt": prompts})
+        prompts.append([{"role": "user", "content": [{"type": "text", "text": prompt_text}]}])
+        form_names.append(form_name)
+
+    dataset = Dataset.from_dict({"prompt": prompts, "form_name": form_names})
     print(f"Created dataset with {len(dataset)} prompts")
     return dataset
 
 
 def main():
     import argparse
+
+    import torch
+    from peft import LoraConfig
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from trl import GRPOConfig, GRPOTrainer
 
     parser = argparse.ArgumentParser(description="GRPO training for Baguettotron")
     parser.add_argument("--prompts", type=int, default=NUM_PROMPTS)
@@ -396,6 +349,12 @@ def main():
         "--top-n", type=int, default=10, help="Number of top learnable forms to use"
     )
     parser.add_argument("--no-lora", action="store_true", help="Disable LoRA (full model training)")
+    parser.add_argument(
+        "--telemetry-every",
+        type=int,
+        default=256,
+        help="Emit aggregate reward telemetry every N scored samples",
+    )
     args = parser.parse_args()
 
     print("=" * 60)
@@ -422,14 +381,18 @@ def main():
     print("=" * 60)
 
     # Load forms
-    forms = get_forms()
+    forms = get_forms(learnable_forms)
     print(f"Loaded {len(forms)} forms")
 
     # Create dataset with learnable forms
     dataset = create_dataset(args.prompts, args.seed, learnable_forms)
 
     # Create reward function
-    reward_fn = create_reward_function(forms)
+    reward_fn = create_reward_function(
+        forms,
+        telemetry_every=args.telemetry_every,
+        use_wandb=not args.no_wandb,
+    )
 
     # Compute max_steps
     max_steps = args.prompts // args.batch_size
@@ -535,7 +498,10 @@ def main():
     print("\nStarting training...")
     print("=" * 60)
 
-    trainer.train()
+    try:
+        trainer.train()
+    finally:
+        flush_reward_telemetry(reward_fn)
 
     # Save
     final_path = Path(args.output) / "final"

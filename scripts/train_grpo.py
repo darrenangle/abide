@@ -31,6 +31,7 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import re
 import shutil
 import signal
 import sys
@@ -45,8 +46,12 @@ import wandb
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent))
 
-
-import re
+from reward_telemetry import (
+    RewardTelemetry,
+    bind_reward_telemetry,
+    extract_failure_reason,
+    flush_reward_telemetry,
+)
 
 from abide.forms.catalog import RL_DEFAULT_FORM_NAMES, load_form_instances
 
@@ -98,6 +103,7 @@ class TrainingConfig:
 
     # Resume
     resume_from: str | None = None
+    telemetry_every: int = 256
 
 
 class BestModelTracker:
@@ -243,7 +249,13 @@ def get_completion_text(completion, require_think_close: bool = True) -> str:
     return text.strip()
 
 
-def create_reward_function(forms: dict[str, object], require_think_close: bool = True):
+def create_reward_function(
+    forms: dict[str, object],
+    require_think_close: bool = True,
+    *,
+    telemetry_every: int = 256,
+    use_wandb: bool = True,
+):
     """Create reward function closure over forms.
 
     Args:
@@ -252,13 +264,24 @@ def create_reward_function(forms: dict[str, object], require_think_close: bool =
     """
 
     _call_count = [0]  # Mutable to track calls
+    telemetry = RewardTelemetry(
+        label="verifiers",
+        emit_every=telemetry_every,
+        use_wandb=use_wandb,
+    )
 
     def abide_reward(completion, **kwargs) -> float:
         """Score poem against the target form. Returns 0-1 score."""
         _call_count[0] += 1
+        form_name: str | None = None
         try:
             poem = get_completion_text(completion, require_think_close=require_think_close)
             if not poem or len(poem.strip()) < 10:
+                reason = "short completion"
+                if require_think_close and "</think>" not in str(completion):
+                    reason = "missing </think>"
+                telemetry.record(None, reward=0.0, passed=False, failure_reason=reason)
+                telemetry.emit()
                 return 0.0
 
             # form_name is in the 'info' dict (set in dataset)
@@ -268,12 +291,26 @@ def create_reward_function(forms: dict[str, object], require_think_close: bool =
             if not form_name:
                 if _call_count[0] <= 3:
                     print(f"[DEBUG] No form_name in info: {info}")
+                telemetry.record(
+                    None,
+                    reward=0.0,
+                    passed=False,
+                    failure_reason="missing form_name metadata",
+                )
+                telemetry.emit()
                 return 0.0
 
             form_instance = forms.get(form_name)
             if form_instance is None:
                 if _call_count[0] <= 3:
                     print(f"[DEBUG] Form not found: {form_name}")
+                telemetry.record(
+                    form_name,
+                    reward=0.0,
+                    passed=False,
+                    failure_reason="unknown form",
+                )
+                telemetry.emit()
                 return 0.0
 
             result = form_instance.verify(poem)
@@ -282,12 +319,27 @@ def create_reward_function(forms: dict[str, object], require_think_close: bool =
                 poem_preview = poem.replace("\n", "\\n")[:200]
                 print(f"[DEBUG] {form_name}: score={result.score:.3f}")
                 print(f"[DEBUG] poem: {poem_preview}...")
-            return result.score
+            reward = float(result.score)
+            telemetry.record(
+                form_name,
+                reward=reward,
+                passed=bool(getattr(result, "passed", False)),
+                failure_reason=extract_failure_reason(result),
+            )
+            telemetry.emit()
+            return reward
         except Exception as e:
             print(f"[reward error: {e}]")
+            telemetry.record(
+                form_name,
+                reward=0.0,
+                passed=False,
+                failure_reason=f"reward error: {type(e).__name__}",
+            )
+            telemetry.emit()
             return 0.0
 
-    return abide_reward
+    return bind_reward_telemetry(abide_reward, telemetry)
 
 
 def create_environment(forms: dict[str, object], config: TrainingConfig):
@@ -354,11 +406,16 @@ def create_environment(forms: dict[str, object], config: TrainingConfig):
         )
     print(f"Generated {len(dataset)} prompts")
 
-    reward_fn = create_reward_function(forms, require_think_close=is_thinking_model)
+    reward_fn = create_reward_function(
+        forms,
+        require_think_close=is_thinking_model,
+        telemetry_every=config.telemetry_every,
+        use_wandb=config.use_wandb,
+    )
     rubric = vf.Rubric(funcs=[reward_fn], weights=[1.0])
     env = vf.SingleTurnEnv(dataset=dataset, rubric=rubric)
 
-    return env
+    return env, reward_fn
 
 
 def setup_signal_handlers(trainer):
@@ -440,7 +497,7 @@ def train_with_retry(config: TrainingConfig) -> int:
     print(f"Forms: {len(forms)} ({', '.join(forms.keys())})")
 
     # Create environment
-    env = create_environment(forms, config)
+    env, reward_fn = create_environment(forms, config)
 
     # Best model tracker
     best_tracker = BestModelTracker(config.output_dir, keep_n=config.keep_best_n)
@@ -568,6 +625,7 @@ def train_with_retry(config: TrainingConfig) -> int:
             print("=" * 60)
 
             trainer.train()
+            flush_reward_telemetry(reward_fn)
 
             print("\n" + "=" * 60)
             print("Training Complete!")
@@ -591,6 +649,7 @@ def train_with_retry(config: TrainingConfig) -> int:
 
         except KeyboardInterrupt:
             print("\nTraining interrupted by user.")
+            flush_reward_telemetry(reward_fn)
             if wandb_enabled:
                 with contextlib.suppress(Exception):
                     wandb.finish()
@@ -599,6 +658,7 @@ def train_with_retry(config: TrainingConfig) -> int:
         except Exception as e:
             print(f"\nError during training: {e}")
             traceback.print_exc()
+            flush_reward_telemetry(reward_fn)
 
             if attempt < config.max_retries - 1:
                 print(f"Retrying in {config.retry_delay}s...")
@@ -643,6 +703,12 @@ def main() -> int:
     parser.add_argument("--port", type=int, default=8000, help="vLLM port")
     parser.add_argument("--no-wandb", action="store_true", help="Disable wandb")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser.add_argument(
+        "--telemetry-every",
+        type=int,
+        default=256,
+        help="Emit aggregate reward telemetry every N scored samples",
+    )
     args = parser.parse_args()
 
     config = TrainingConfig(
@@ -656,6 +722,7 @@ def main() -> int:
         vllm_port=args.port,
         use_wandb=not args.no_wandb,
         seed=args.seed,
+        telemetry_every=args.telemetry_every,
     )
 
     if args.model:

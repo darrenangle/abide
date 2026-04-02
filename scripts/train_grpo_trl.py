@@ -36,6 +36,14 @@ from typing import TYPE_CHECKING, Any
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent))
 
+from reward_telemetry import (
+    RewardTelemetry,
+    bind_reward_telemetry,
+    extract_failure_reason,
+    extract_form_names_from_metadata,
+    flush_reward_telemetry,
+)
+
 from abide.forms.catalog import RL_DEFAULT_FORM_NAMES, load_form_instances
 
 if TYPE_CHECKING:
@@ -84,6 +92,7 @@ class TrainingArgs:
     # Wandb
     wandb_project: str = "abide-grpo"
     use_wandb: bool = True
+    telemetry_every: int = 256
 
 
 def get_forms() -> dict[str, object]:
@@ -182,7 +191,12 @@ def extract_prompt_text(prompt) -> str:
     return extract_text_recursive(prompt)
 
 
-def create_reward_function(forms: dict[str, object]):
+def create_reward_function(
+    forms: dict[str, object],
+    *,
+    telemetry_every: int = 256,
+    use_wandb: bool = True,
+):
     """Create reward function for TRL.
 
     TRL's reward functions receive:
@@ -192,36 +206,16 @@ def create_reward_function(forms: dict[str, object]):
     """
     _call_count = [0]
     _debug_printed = [False]
-
-    def extract_form_names(metadata: dict[str, Any], expected_count: int) -> list[str | None]:
-        """Extract exact form names from TRL dataset metadata."""
-
-        def normalize_name(value: Any) -> str | None:
-            if isinstance(value, str) and value:
-                return value
-            if isinstance(value, dict):
-                form_name = value.get("form_name")
-                if isinstance(form_name, str) and form_name:
-                    return form_name
-            return None
-
-        for key in ("form_name", "info"):
-            values = metadata.get(key)
-            if isinstance(values, list):
-                names = [normalize_name(value) for value in values[:expected_count]]
-                if len(names) < expected_count:
-                    names.extend([None] * (expected_count - len(names)))
-                return names
-            normalized = normalize_name(values)
-            if normalized is not None:
-                return [normalized] + [None] * (expected_count - 1)
-
-        return [None] * expected_count
+    telemetry = RewardTelemetry(
+        label="trl",
+        emit_every=telemetry_every,
+        use_wandb=use_wandb,
+    )
 
     def reward_fn(completions: list, prompts: list, **kwargs: Any) -> list[float]:
         """Score completions against their target forms."""
         rewards = []
-        form_names = extract_form_names(kwargs, len(completions))
+        form_names = extract_form_names_from_metadata(kwargs, len(completions))
 
         # Debug: print structure once when it changes
         if not _debug_printed[0] and _call_count[0] > 100:
@@ -247,6 +241,13 @@ def create_reward_function(forms: dict[str, object]):
 
                 if not poem or len(poem.strip()) < 10:
                     rewards.append(0.0)
+                    telemetry.record(
+                        form_name,
+                        reward=0.0,
+                        passed=False,
+                        failure_reason="short completion",
+                    )
+                    telemetry.emit()
                     continue
 
                 if not form_name:
@@ -256,15 +257,37 @@ def create_reward_function(forms: dict[str, object]):
                             f"[DEBUG] Missing form_name metadata for prompt: {prompt_text[:100]}..."
                         )
                     rewards.append(0.0)
+                    telemetry.record(
+                        None,
+                        reward=0.0,
+                        passed=False,
+                        failure_reason="missing form_name metadata",
+                    )
+                    telemetry.emit()
                     continue
 
                 form_instance = forms.get(form_name)
                 if form_instance is None:
                     rewards.append(0.0)
+                    telemetry.record(
+                        form_name,
+                        reward=0.0,
+                        passed=False,
+                        failure_reason="unknown form",
+                    )
+                    telemetry.emit()
                     continue
 
                 result = form_instance.verify(poem)
-                rewards.append(float(result.score))
+                reward = float(result.score)
+                rewards.append(reward)
+                telemetry.record(
+                    form_name,
+                    reward=reward,
+                    passed=bool(getattr(result, "passed", False)),
+                    failure_reason=extract_failure_reason(result),
+                )
+                telemetry.emit()
 
                 if _call_count[0] <= 3:
                     print(f"[DEBUG] {form_name}: score={result.score:.3f}")
@@ -276,10 +299,17 @@ def create_reward_function(forms: dict[str, object]):
                 if _call_count[0] < 200:
                     traceback.print_exc()
                 rewards.append(0.0)
+                telemetry.record(
+                    form_name,
+                    reward=0.0,
+                    passed=False,
+                    failure_reason=f"reward error: {type(e).__name__}",
+                )
+                telemetry.emit()
 
         return rewards
 
-    return reward_fn
+    return bind_reward_telemetry(reward_fn, telemetry)
 
 
 def create_dataset(args: TrainingArgs, forms: dict[str, object]) -> Dataset:
@@ -368,6 +398,12 @@ def main():
     parser.add_argument("--port", type=int, default=8000, help="vLLM server port")
     parser.add_argument("--no-wandb", action="store_true", help="Disable wandb")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser.add_argument(
+        "--telemetry-every",
+        type=int,
+        default=256,
+        help="Emit aggregate reward telemetry every N scored samples",
+    )
     args = parser.parse_args()
 
     # Check for env override
@@ -387,6 +423,7 @@ def main():
         vllm_port=args.port,
         use_wandb=not args.no_wandb,
         seed=args.seed,
+        telemetry_every=args.telemetry_every,
     )
 
     print("=" * 60)
@@ -416,7 +453,11 @@ def main():
     dataset = create_dataset(training_args, forms)
 
     # Create reward function
-    reward_fn = create_reward_function(forms)
+    reward_fn = create_reward_function(
+        forms,
+        telemetry_every=training_args.telemetry_every,
+        use_wandb=training_args.use_wandb,
+    )
 
     # Compute max_steps
     max_steps = training_args.num_prompts // training_args.batch_size
@@ -515,7 +556,10 @@ def main():
     print("=" * 60)
 
     # Train
-    trainer.train()
+    try:
+        trainer.train()
+    finally:
+        flush_reward_telemetry(reward_fn)
 
     # Save final model
     final_path = Path(training_args.output_dir) / "final"

@@ -337,3 +337,9 @@
 - Opened and claimed `RF-069` to add generated mutation coverage on top of the stable fixture-backed fixed-form harnesses without creating a second parallel testing strategy.
 - Added a Hypothesis-backed fixture mutation harness covering generated line insertion, content deletion, and stanza-break collapse over stable fixed-form families, and verified the expanded suite with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `879 passed, 1 skipped`.
 - Closed `RF-069` and released its lock.
+- Opened and claimed `RF-070` to add training-time reward telemetry for canary RL runs and align the stale Baguettotron TRL script with the exact `form_name` metadata path already used by the main training entrypoints.
+- Added `scripts/reward_telemetry.py` and wired per-form reward telemetry into the verifiers, TRL, and Baguettotron training scripts, including periodic mean/pass/zero-rate summaries, compact failure-reason reporting, and explicit end-of-run flushes.
+- Moved `train_grpo_baguettotron.py` off prompt substring guessing onto exact dataset `form_name` metadata, updated its learnable-form dataset builder to preserve `info.form_name`, and made the module importable without the full TRL stack so it can stay covered by tests.
+- Added integration coverage for telemetry aggregation plus the Baguettotron metadata path in `tests/integration/test_reward_telemetry.py` and `tests/integration/test_train_grpo_baguettotron.py`.
+- Verified the RF-070 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `884 passed, 1 skipped`.
+- Closed `RF-070` and released its lock.
