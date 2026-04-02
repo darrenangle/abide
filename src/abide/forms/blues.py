@@ -92,7 +92,7 @@ class BluesPoem(Constraint):
                 GroupedStanzas(
                     3,
                     self.min_stanzas,
-                    allow_single_block_chunking=True,
+                    allow_single_block_chunking=False,
                     weight=1.5,
                 ),
                 1.5,

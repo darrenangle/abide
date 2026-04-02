@@ -1,6 +1,7 @@
 import pytest
 
 from abide.forms import (
+    BluesPoem,
     Haiku,
     Limerick,
     Pantoum,
@@ -12,6 +13,7 @@ from abide.forms import (
     Villanelle,
 )
 from tests.fixtures.poems import (
+    BLUES_SYNTHETIC_PERFECT,
     HAIKU_SYNTHETIC_PERFECT,
     LIMERICK_SYNTHETIC_PERFECT,
     PANTOUM_SYNTHETIC_PERFECT,
@@ -62,6 +64,7 @@ CASES = [
 ]
 
 FLATTENING_CASES = [
+    ("blues", BluesPoem(strict=False), BLUES_SYNTHETIC_PERFECT),
     (
         "villanelle",
         Villanelle(strict=False, rhyme_threshold=0.5, refrain_threshold=0.8),

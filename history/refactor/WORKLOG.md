@@ -192,3 +192,7 @@
 - Expanded the shared add-line/drop-line mutation harness to cover stable `Limerick` and generic `Sonnet` fixtures in addition to the earlier core set.
 - Verified the RF-039 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `635 passed, 1 skipped`.
 - Closed `RF-039` and released its lock.
+- Opened and claimed `RF-040` after reproducing that `BluesPoem(strict=False)` still reports `passed=True` for a fully flattened single-block poem because it chunked the lines back into synthetic tercets.
+- Removed synthetic single-block chunking from `BluesPoem` and extended the shared flattening harness so blues stanza-layout regressions are enforced alongside villanelle, sestina, and pantoum.
+- Verified the RF-040 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `636 passed, 1 skipped`.
+- Closed `RF-040` and released its lock.
