@@ -172,3 +172,7 @@
 - Added a regression that asserts `load_form_instances()` covers the full `abide.forms.__all__` export set.
 - Verified the RF-034 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `612 passed, 1 skipped`.
 - Closed `RF-034` and released its lock.
+- Opened and claimed `RF-035` to broaden edge-case coverage with a mutation harness over canonical fixed-form fixtures, focusing on the recurring regression class where extra or missing lines used to keep blended-score passes alive.
+- Added a fixture-driven mutation harness for core fixed forms that asserts baseline canonical passes, then rejects both trailing-line additions and last-line deletions.
+- Verified the RF-035 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `626 passed, 1 skipped`.
+- Closed `RF-035` and released its lock.
