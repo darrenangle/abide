@@ -302,3 +302,9 @@
 - Added direct regressions for the reproduced underlength one-line and short-input cases across the affected forms.
 - Verified the RF-061 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `833 passed, 1 skipped`.
 - Closed `RF-061` and released its lock.
+- Opened and claimed `RF-062` after reproducing that comparison-based forms and primitives still treated missing evidence as success: `NoSharedLetters("consecutive")` returned `passed=True, score=1.0` on punctuation-only input, `AlternatingIsolation` leaked `0.882`, `EchoEnd("alpha")` leaked `0.914`, `ConsonantCascade` leaked `0.901` on two lines and `0.932` on punctuation-only input, and `SandwichSonnet` leaked `0.932` on punctuation-only input.
+- Hardened `NoSharedLetters` so pairs without alphabetic content fail instead of passing vacuously, which also removes the punctuation-only `AlternatingIsolation` leak.
+- Hardened `EchoEnd`, `ConsonantCascade`, and `SandwichSonnet` so they require meaningful comparison samples and pay for underlength or punctuation-only input instead of granting near-perfect reward.
+- Added direct regressions for the reproduced comparison-based vacuity cases across the primitive, novel-form, and hard-form surfaces.
+- Verified the RF-062 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `839 passed, 1 skipped`.
+- Closed `RF-062` and released its lock.

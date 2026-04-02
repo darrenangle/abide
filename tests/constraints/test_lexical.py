@@ -162,3 +162,10 @@ def test_monosyllabic_only_penalizes_inputs_below_minimum_sample_size() -> None:
     assert result.score == pytest.approx(0.04)
     assert result.details["adequacy"] == pytest.approx(0.2)
     assert result.details["linear_score"] == pytest.approx(0.2)
+
+
+def test_no_shared_letters_rejects_pairs_without_alphabetic_content() -> None:
+    result = NoSharedLetters("consecutive").verify("!!!\n???\n...\n!!!\n???")
+
+    assert result.passed is False
+    assert result.score == 0.0

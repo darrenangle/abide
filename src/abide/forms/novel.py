@@ -1439,35 +1439,33 @@ class ConsonantCascade(Constraint):
                 if first_letter not in self.VOWELS:
                     first_consonants.append(first_letter)
                 else:
-                    first_consonants.append(None)  # Vowel, no constraint
+                    first_consonants.append("")  # Vowel, valid comparison but unconstrained
             else:
                 first_consonants.append(None)
 
         # Check no consecutive consonants match
-        violations = 0
+        pair_matches = 0
         details = []
 
         for i in range(1, len(first_consonants)):
             prev = first_consonants[i - 1]
             curr = first_consonants[i]
 
-            if prev is not None and curr is not None and prev == curr:
-                violations += 1
+            if prev is None or curr is None:
+                details.append(f"Lines {i}/{i + 1}: ✗ missing word-start comparison")
+            elif prev and curr and prev == curr:
                 details.append(f"Lines {i}/{i + 1}: ✗ both start with '{prev}'")
             else:
+                pair_matches += 1
                 details.append(f"Lines {i}/{i + 1}: ✓ no consonant repeat")
 
-        # Steep penalties for GRPO training: 0 violations = 1.0, 1-2 = partial, 3+ = near zero
-        if len(first_consonants) <= 1:
-            cascade_score = 0.0
-        elif violations == 0:
-            cascade_score = 1.0
-        elif violations == 1:
-            cascade_score = 0.5
-        elif violations == 2:
-            cascade_score = 0.25
-        else:
-            cascade_score = 0.05
+        actual_pairs = max(0, len(first_consonants) - 1)
+        pair_requirement = max(0, self.min_lines - 1)
+        violations, cascade_score = _steep_empty_safe_score(
+            actual_pairs,
+            pair_matches,
+            required_items=pair_requirement if pair_requirement > 0 else None,
+        )
 
         score = line_result.score * 0.1 + cascade_score * 0.9
         passed = violations == 0 and line_result.passed
@@ -1522,10 +1520,18 @@ class SandwichSonnet(Constraint):
             matches = 0
         else:
             # Compare first two with last two
-            first_couplet = [line.strip().lower() for line in structure.lines[:2]]
-            last_couplet = [line.strip().lower() for line in structure.lines[-2:]]
+            def normalize(line: str) -> str | None:
+                words = re.findall(r"\b[a-zA-Z]+\b", line.lower())
+                if not words:
+                    return None
+                return " ".join(words)
 
-            matches = sum(1 for a, b in zip(first_couplet, last_couplet) if a == b)
+            first_couplet = [normalize(line) for line in structure.lines[:2]]
+            last_couplet = [normalize(line) for line in structure.lines[-2:]]
+
+            matches = sum(
+                1 for a, b in zip(first_couplet, last_couplet) if a is not None and a == b
+            )
             # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
             violations = 2 - matches
 
@@ -1540,6 +1546,9 @@ class SandwichSonnet(Constraint):
 
             else:
                 sandwich_score = 0.05
+
+            adequacy = min(1.0, n / self.min_lines)
+            sandwich_score *= adequacy**2
 
         score = line_result.score * 0.1 + sandwich_score * 0.9
         passed = violations == 0 and line_result.passed
@@ -1784,21 +1793,11 @@ class EchoEnd(Constraint):
             target = Counter(last_word_firsts).most_common(1)[0][0]
 
         matches = sum(1 for ltr in last_word_firsts if ltr == target)
-        # Steep penalty for GRPO training: 0 errors=1.0, 1 error=0.5, 2 errors=0.25, 3+=0.05
-
-        violations = len(last_word_firsts) - matches
-
-        if violations == 0:
-            echo_score = 1.0
-
-        elif violations == 1:
-            echo_score = 0.5
-
-        elif violations == 2:
-            echo_score = 0.25
-
-        else:
-            echo_score = 0.05
+        violations, echo_score = _steep_empty_safe_score(
+            len(structure.lines),
+            matches,
+            required_items=self.min_lines,
+        )
 
         score = line_result.score * 0.1 + echo_score * 0.9
         passed = violations == 0 and line_result.passed

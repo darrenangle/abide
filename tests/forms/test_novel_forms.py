@@ -4,6 +4,7 @@ from abide.forms.novel import (
     AlphabeticTerminus,
     BinaryBeat,
     ColorSpectrum,
+    ConsonantCascade,
     DescendingStaircase,
     EchoEnd,
     ElementalVerse,
@@ -212,6 +213,26 @@ def test_monotone_mountain_does_not_reward_short_monosyllabic_prefixes() -> None
 
     assert result.passed is False
     assert result.score < 0.2
+
+
+@pytest.mark.parametrize(
+    ("form", "poem", "max_score"),
+    [
+        (EchoEnd(), "alpha", 0.2),
+        (ConsonantCascade(), "alpha\nbravo", 0.2),
+        (ConsonantCascade(), "!!!\n???\n...\n!!!\n???", 0.2),
+        (SandwichSonnet(), "!!!\n???\n...\n!!!\n???", 0.2),
+    ],
+)
+def test_comparison_novel_forms_do_not_reward_vacuous_or_punctuation_only_samples(
+    form,
+    poem: str,
+    max_score: float,
+) -> None:
+    result = form.verify(poem)
+
+    assert result.passed is False
+    assert result.score < max_score
 
 
 def test_prime_verse_rejects_unsupported_line_counts_instead_of_wrapping_pattern() -> None:

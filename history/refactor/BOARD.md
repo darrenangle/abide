@@ -65,3 +65,4 @@ Updated: 2026-04-01
 | RF-059 | P1 | done | | Penalize short-prefix leaks in non-uniform word-count patterns | RF-058 |
 | RF-060 | P1 | done | | Penalize low-sample semantic reward leaks in uniqueness and monosyllabic checks | RF-059 |
 | RF-061 | P1 | done | | Penalize underlength line-match reward leaks in manual novel forms | RF-060 |
+| RF-062 | P1 | done | | Reject vacuous comparison passes and punctuation-only reward leaks | RF-061 |

@@ -1260,6 +1260,11 @@ class NoSharedLetters(Constraint):
 
             letters_a = {c for c in line_a if c.isalpha()}
             letters_b = {c for c in line_b if c.isalpha()}
+            if not letters_a or not letters_b:
+                details.append(
+                    f"Lines {line_a_idx + 1} & {line_b_idx + 1}: ✗ missing alphabetic content"
+                )
+                continue
 
             shared = letters_a & letters_b
 

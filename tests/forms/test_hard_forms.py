@@ -1,6 +1,7 @@
 import pytest
 
 from abide.forms.hard import (
+    AlternatingIsolation,
     ArithmeticVerse,
     CharacterPalindromePoem,
     CombinedChallenge,
@@ -49,3 +50,10 @@ def test_positional_poem_rejects_malformed_positions_early() -> None:
 def test_hard_forms_reject_degenerate_constructor_values(factory, message: str) -> None:
     with pytest.raises(ValueError, match=message):
         factory()
+
+
+def test_alternating_isolation_does_not_reward_punctuation_only_lines() -> None:
+    result = AlternatingIsolation().verify("!!!\n???\n...\n!!!\n???")
+
+    assert result.passed is False
+    assert result.score < 0.2
