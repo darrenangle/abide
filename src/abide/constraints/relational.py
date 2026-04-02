@@ -230,6 +230,30 @@ class EndRhymeDensity(Constraint):
         structure = self._ensure_structure(poem)
         end_words = extract_end_words(structure)
 
+        if len(end_words) == 0:
+            return VerificationResult(
+                score=0.0,
+                passed=False,
+                rubric=[
+                    RubricItem(
+                        criterion="End-rhyme density",
+                        expected=f"at most {self.max_density:.0%} of lines use end rhyme",
+                        actual="no lines to evaluate",
+                        score=0.0,
+                        passed=False,
+                    )
+                ],
+                constraint_name=self.name,
+                constraint_type=self.constraint_type,
+                details={
+                    "max_density": self.max_density,
+                    "threshold": self.threshold,
+                    "rhyme_density": 0.0,
+                    "rhyming_line_count": 0,
+                    "rhyming_pairs": [],
+                    "end_words": list(end_words),
+                },
+            )
         if len(end_words) < 2:
             return VerificationResult(
                 score=1.0,

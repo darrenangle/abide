@@ -6,11 +6,17 @@ from abide.forms.novel import (
     DescendingStaircase,
     EchoEnd,
     ElementalVerse,
+    ExclamationEcho,
     NumberWord,
+    OddEvenDance,
     PrimeVerse,
+    QuestionQuest,
     SandwichSonnet,
+    TemporalVerse,
+    ThunderVerse,
     UniqueUtterance,
     VowelPilgrimage,
+    WhisperPoem,
 )
 
 
@@ -99,6 +105,25 @@ def test_elemental_verse_requires_whole_element_words() -> None:
 
     assert result.passed is False
     assert result.score < 0.2
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        QuestionQuest,
+        WhisperPoem,
+        ThunderVerse,
+        OddEvenDance,
+        ElementalVerse,
+        TemporalVerse,
+        ExclamationEcho,
+    ],
+)
+def test_empty_poem_does_not_receive_high_score_in_line_match_novel_forms(factory) -> None:
+    result = factory().verify("")
+
+    assert result.passed is False
+    assert result.score <= 0.2
 
 
 def test_sandwich_sonnet_short_input_fails_instead_of_throwing() -> None:

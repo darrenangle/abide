@@ -280,3 +280,8 @@
 - Added direct regressions for the reproduced `CharacterCount([])`, `CharacterCount(0)`, `Alliteration(letter=\"S\", min_words=0)`, `Alliteration(min_consecutive=0)`, `MonosyllabicOnly(min_words=0)`, and `CharacterPalindrome(lines=[0])` constructor holes.
 - Verified the RF-057 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `803 passed, 1 skipped`.
 - Closed `RF-057` and released its lock.
+- Opened and claimed `RF-058` after a catalog-wide empty-input scan found remaining reward leaks: several exported forms still score above `0.9` on `\"\"` despite `passed=False`, including `ElementalVerse`, `ExclamationEcho`, `OddEvenDance`, `QuestionQuest`, `TemporalVerse`, `ThunderVerse`, and `WhisperPoem`, while `EndRhymeDensity` still returns `passed=True, score=1.0` on empty input.
+- Hardened the remaining empty-input reward leaks by making the affected novel-form scorers empty-safe and by forcing `EndRhymeDensity` to fail on truly empty poems instead of passing vacuously.
+- Added direct regressions covering the reproduced empty-input cases for `QuestionQuest`, `WhisperPoem`, `ThunderVerse`, `OddEvenDance`, `ElementalVerse`, `TemporalVerse`, `ExclamationEcho`, and `EndRhymeDensity`.
+- Verified the RF-058 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `811 passed, 1 skipped`.
+- Closed `RF-058` and released its lock.

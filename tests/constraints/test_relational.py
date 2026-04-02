@@ -345,6 +345,13 @@ class TestEndRhymeDensity:
         assert result.passed is True
         assert result.score == 1.0
 
+    def test_empty_poem_fails_instead_of_passing_vacuously(self) -> None:
+        constraint = EndRhymeDensity(max_density=0.25, threshold=0.8)
+        result = constraint.verify("")
+
+        assert result.passed is False
+        assert result.score == 0.0
+
     def test_systematic_rhyme_fails(self) -> None:
         poem = "The road grows dim at night\nA lantern wakes to light\nThe east begins to bright\nWe listen through the sight"
         constraint = EndRhymeDensity(max_density=0.25, threshold=0.8)
