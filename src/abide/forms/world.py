@@ -490,13 +490,16 @@ class Rispetto(Constraint):
             strict: If True, all constraints must pass
         """
         super().__init__(weight)
+        if variant not in self.RHYME_SCHEMES:
+            options = ", ".join(sorted(self.RHYME_SCHEMES))
+            raise ValueError(f"variant must be one of: {options}")
         self.variant = variant
         self.syllables_per_line = syllables_per_line
         self.syllable_tolerance = syllable_tolerance
         self.rhyme_threshold = rhyme_threshold
         self.strict_mode = strict
 
-        rhyme_scheme = self.RHYME_SCHEMES.get(variant, "ABABABCC")
+        rhyme_scheme = self.RHYME_SCHEMES[variant]
 
         self._line_count = LineCount(8, weight=2.0)
         self._stanza_count = StanzaCount(1, weight=0.5)
@@ -540,5 +543,5 @@ class Rispetto(Constraint):
         )
 
     def describe(self) -> str:
-        scheme = self.RHYME_SCHEMES.get(self.variant, "ABABABCC")
+        scheme = self.RHYME_SCHEMES[self.variant]
         return f"Rispetto ({self.variant}): 8 lines of {self.syllables_per_line} syllables, {scheme} rhyme"

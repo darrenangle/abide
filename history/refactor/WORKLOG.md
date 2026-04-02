@@ -229,3 +229,8 @@
 - Added direct regressions for the reproduced `NumberWord(12)`, `PiKu(25)`, and `SelfReferential(12)` silent-clamp cases.
 - Verified the RF-047 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `667 passed, 1 skipped`.
 - Closed `RF-047` and released its lock.
+- Opened and claimed `RF-048` after reproducing that `Rispetto(variant=\"bogus\")` silently behaves like the Tuscan variant while describing itself as `Rispetto (bogus)`.
+- Added explicit variant validation to `Rispetto` so unsupported variants fail fast instead of silently falling back to Tuscan behavior.
+- Added a direct regression for the reproduced invalid-variant case.
+- Verified the RF-048 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `668 passed, 1 skipped`.
+- Closed `RF-048` and released its lock.

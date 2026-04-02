@@ -1,5 +1,7 @@
+import pytest
+
 from abide.forms.modern import Skeltonic
-from abide.forms.world import Naani
+from abide.forms.world import Naani, Rispetto
 
 
 def test_naani_accepts_valid_four_line_example() -> None:
@@ -96,3 +98,8 @@ def test_skeltonic_rejects_identical_end_word_repetition() -> None:
 
     assert result.passed is False
     assert result.score >= 0.55
+
+
+def test_rispetto_rejects_unsupported_variants_instead_of_falling_back() -> None:
+    with pytest.raises(ValueError, match="variant must be one of: sicilian, tuscan"):
+        Rispetto(variant="bogus")
