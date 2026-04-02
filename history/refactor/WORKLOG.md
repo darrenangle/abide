@@ -188,3 +188,7 @@
 - Added a full-surface smoke test that instantiates every exported form, asserts `describe()` is non-empty, and verifies generic inputs produce sane `VerificationResult` objects without runtime exceptions.
 - Verified the RF-038 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `631 passed, 1 skipped`.
 - Closed `RF-038` and released its lock.
+- Opened and claimed `RF-039` after confirming that `Limerick` and the generic `Sonnet` shell both have stable fixtures and already reject add-line/drop-line mutations cleanly, making them good candidates to fold into the shared mutation harness.
+- Expanded the shared add-line/drop-line mutation harness to cover stable `Limerick` and generic `Sonnet` fixtures in addition to the earlier core set.
+- Verified the RF-039 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `635 passed, 1 skipped`.
+- Closed `RF-039` and released its lock.

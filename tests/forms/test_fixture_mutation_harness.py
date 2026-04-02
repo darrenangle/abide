@@ -1,11 +1,23 @@
 import pytest
 
-from abide.forms import Haiku, Pantoum, Rondeau, Sestina, Tanka, Triolet, Villanelle
+from abide.forms import (
+    Haiku,
+    Limerick,
+    Pantoum,
+    Rondeau,
+    Sestina,
+    Sonnet,
+    Tanka,
+    Triolet,
+    Villanelle,
+)
 from tests.fixtures.poems import (
     HAIKU_SYNTHETIC_PERFECT,
+    LIMERICK_SYNTHETIC_PERFECT,
     PANTOUM_SYNTHETIC_PERFECT,
     RONDEAU_MCCRAE_FLANDERS,
     SESTINA_SYNTHETIC_PERFECT,
+    SONNET_SHAKESPEARE_18,
     TANKA_SYNTHETIC_PERFECT,
     TRIOLET_SYNTHETIC_PERFECT,
     VILLANELLE_SYNTHETIC_PERFECT,
@@ -45,6 +57,8 @@ CASES = [
         Rondeau(strict=False, rhyme_threshold=0.5, refrain_threshold=0.7),
         RONDEAU_MCCRAE_FLANDERS,
     ),
+    ("limerick", Limerick(strict=False, rhyme_threshold=0.5), LIMERICK_SYNTHETIC_PERFECT),
+    ("sonnet", Sonnet(strict=False, syllable_tolerance=2), SONNET_SHAKESPEARE_18),
 ]
 
 FLATTENING_CASES = [
