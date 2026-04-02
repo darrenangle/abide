@@ -117,11 +117,10 @@ class Haiku(Constraint):
         total_weight = sum(w for _, w in scores)
         score = sum(s * w for s, w in scores) / total_weight
 
-        passed = (
-            score >= 0.7
-            if not self.strict
-            else (violations == 0 and line_result.passed and stanza_result.passed)
+        canonical_requirements_passed = (
+            line_result.passed and stanza_result.passed and syllables_result.passed
         )
+        passed = canonical_requirements_passed
 
         return VerificationResult(
             score=score,
@@ -129,7 +128,10 @@ class Haiku(Constraint):
             rubric=line_result.rubric + stanza_result.rubric + syllables_result.rubric,
             constraint_name=self.name,
             constraint_type=self.constraint_type,
-            details={"violations": violations},
+            details={
+                "violations": violations,
+                "canonical_requirements_passed": canonical_requirements_passed,
+            },
         )
 
     def describe(self) -> str:
@@ -221,11 +223,10 @@ class Tanka(Constraint):
         total_weight = sum(w for _, w in scores)
         score = sum(s * w for s, w in scores) / total_weight
 
-        passed = (
-            score >= 0.7
-            if not self.strict
-            else (violations == 0 and line_result.passed and stanza_result.passed)
+        canonical_requirements_passed = (
+            line_result.passed and stanza_result.passed and syllables_result.passed
         )
+        passed = canonical_requirements_passed
 
         return VerificationResult(
             score=score,
@@ -233,7 +234,10 @@ class Tanka(Constraint):
             rubric=line_result.rubric + stanza_result.rubric + syllables_result.rubric,
             constraint_name=self.name,
             constraint_type=self.constraint_type,
-            details={"violations": violations},
+            details={
+                "violations": violations,
+                "canonical_requirements_passed": canonical_requirements_passed,
+            },
         )
 
     def describe(self) -> str:

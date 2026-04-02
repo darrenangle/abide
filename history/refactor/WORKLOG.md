@@ -111,3 +111,8 @@
 - Tightened `FreeVerse` so configured per-line word-count violations are surfaced in `issues` and force canonical `passed=False` even when the blended score remains high.
 - Verified the RF-022 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `591 passed, 1 skipped`.
 - Closed `RF-022` and released its lock.
+- Opened and claimed `RF-023` after reproducing that non-strict `Haiku` and `Tanka` can still report `passed=True` with an extra line or when split into multiple stanzas because their manual `passed` logic only gates on score.
+- Added direct Haiku/Tanka regressions for valid examples plus the reproduced extra-line and multi-stanza false positives.
+- Tightened `Haiku` and `Tanka` so lenient mode keeps partial reward shaping but canonical `passed=True` now requires exact line count, exactly one stanza, and a compliant syllable pattern.
+- Verified the RF-023 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `597 passed, 1 skipped`.
+- Closed `RF-023` and released its lock.
