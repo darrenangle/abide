@@ -254,3 +254,8 @@
 - Added direct regressions for the reproduced silent-fallback cases.
 - Verified the RF-052 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `688 passed, 1 skipped`.
 - Closed `RF-052` and released its lock.
+- Opened and claimed `RF-053` after reproducing that multiple generic shell forms still accept zero-sized or inverted bounds, including empty-input passes from `Ode(min_lines=0)`, `IrregularOde(min_lines=0, min_stanzas=0)`, `PindaricOde(triads=0)`, `Aubade(stanza_count=0)`, `FreeVerse(min_lines=0, min_stanzas=0)`, `ProsePoem(min_paragraphs=0, max_paragraphs=0, min_sentences=0)`, and `BlankVerse(min_lines=0)`.
+- Added shared shell-form constructor validation helpers and used them to reject zero-sized, inverted, and silently truncated configurations across the ode, free-verse, blank-verse, and modern shell families.
+- Added direct constructor-contract regressions for the reproduced empty-pass cases plus inconsistent stanza/rhyme layout parameters such as `HoratianOde(stanza_size=4, rhyme_scheme=\"AB\")` and `Aubade(lines_per_stanza=7)`.
+- Verified the RF-053 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `716 passed, 1 skipped`.
+- Closed `RF-053` and released its lock.

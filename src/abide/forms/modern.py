@@ -21,6 +21,10 @@ from abide.constraints import (
     VerificationResult,
     WeightedSum,
 )
+from abide.forms._validation import (
+    require_at_most,
+    require_positive,
+)
 
 if TYPE_CHECKING:
     from abide.primitives import PoemStructure
@@ -146,6 +150,9 @@ class Aubade(Constraint):
             strict: If True, all constraints must pass
         """
         super().__init__(weight)
+        require_positive(stanza_count, "stanza_count")
+        require_positive(lines_per_stanza, "lines_per_stanza")
+        require_at_most(lines_per_stanza, 6, "lines_per_stanza")
         self.stanza_count_val = stanza_count
         self.lines_per_stanza = lines_per_stanza
         self.rhyme_threshold = rhyme_threshold
@@ -237,6 +244,8 @@ class Skeltonic(Constraint):
             strict: If True, all constraints must pass
         """
         super().__init__(weight)
+        require_positive(min_lines, "min_lines")
+        require_positive(max_syllables_per_line, "max_syllables_per_line")
         self.min_lines = min_lines
         self.max_syllables = max_syllables_per_line
         self.strict_mode = strict

@@ -21,6 +21,7 @@ from abide.constraints import (
     VerificationResult,
     WeightedSum,
 )
+from abide.forms._validation import require_nonnegative, require_ordered_bounds, require_positive
 from abide.primitives import FootLength, MeterType
 
 if TYPE_CHECKING:
@@ -78,6 +79,9 @@ class BlankVerse(Constraint):
             strict: If True, all constraints must pass
         """
         super().__init__(weight)
+        require_positive(min_lines, "min_lines")
+        require_ordered_bounds("max_lines", max_lines, "min_lines", min_lines)
+        require_nonnegative(syllable_tolerance, "syllable_tolerance")
         self.min_lines = min_lines
         self.max_lines = max_lines
         self.syllable_tolerance = syllable_tolerance
@@ -167,10 +171,7 @@ class BlankVerse(Constraint):
         if self.strict_meter:
             desc = f"Blank Verse: unrhymed iambic pentameter (min {self.min_lines} lines)"
         else:
-            desc = (
-                f"Blank Verse: unrhymed lines of about 10 syllables "
-                f"(min {self.min_lines} lines)"
-            )
+            desc = f"Blank Verse: unrhymed lines of about 10 syllables (min {self.min_lines} lines)"
         if self.strict_meter:
             desc += " [strict meter]"
         return desc

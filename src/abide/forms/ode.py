@@ -23,6 +23,7 @@ from abide.constraints import (
     VerificationResult,
     WeightedSum,
 )
+from abide.forms._validation import require_ordered_bounds, require_positive
 
 if TYPE_CHECKING:
     from abide.primitives import PoemStructure
@@ -64,6 +65,9 @@ class Ode(Constraint):
             strict: If True, line constraints must pass
         """
         super().__init__(weight)
+        require_positive(min_lines, "min_lines")
+        require_positive(max_lines, "max_lines")
+        require_ordered_bounds("max_lines", max_lines, "min_lines", min_lines)
         self.min_lines = min_lines
         self.max_lines = max_lines
         self.strict_mode = strict
@@ -145,6 +149,11 @@ class HoratianOde(Constraint):
             strict: If True, all constraints must pass
         """
         super().__init__(weight)
+        require_positive(stanza_count, "stanza_count")
+        require_positive(stanza_size, "stanza_size")
+        require_positive(syllables_per_line, "syllables_per_line")
+        if len(rhyme_scheme) != stanza_size:
+            raise ValueError("rhyme_scheme length must match stanza_size")
         self.stanza_count_val = stanza_count
         self.stanza_size = stanza_size
         self.rhyme_scheme_str = rhyme_scheme
@@ -245,6 +254,9 @@ class PindaricOde(Constraint):
             strict: If True, all constraints must pass
         """
         super().__init__(weight)
+        require_positive(triads, "triads")
+        require_positive(strophe_lines, "strophe_lines")
+        require_positive(epode_lines, "epode_lines")
         self.triads = triads
         self.strophe_lines = strophe_lines
         self.epode_lines = epode_lines
@@ -329,6 +341,8 @@ class IrregularOde(Constraint):
             weight: Relative weight for composition
         """
         super().__init__(weight)
+        require_positive(min_lines, "min_lines")
+        require_positive(min_stanzas, "min_stanzas")
         self.min_lines = min_lines
         self.min_stanzas = min_stanzas
 

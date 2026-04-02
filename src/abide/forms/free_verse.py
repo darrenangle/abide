@@ -15,6 +15,11 @@ from abide.constraints import (
     ConstraintType,
     VerificationResult,
 )
+from abide.forms._validation import (
+    require_nonnegative,
+    require_ordered_bounds,
+    require_positive,
+)
 
 if TYPE_CHECKING:
     from abide.primitives import PoemStructure
@@ -59,6 +64,17 @@ class FreeVerse(Constraint):
             weight: Relative weight for composition
         """
         super().__init__(weight)
+        require_positive(min_lines, "min_lines")
+        require_positive(min_stanzas, "min_stanzas")
+        require_nonnegative(min_words_per_line, "min_words_per_line")
+        require_ordered_bounds("max_lines", max_lines, "min_lines", min_lines)
+        require_ordered_bounds("max_stanzas", max_stanzas, "min_stanzas", min_stanzas)
+        if max_words_per_line is not None:
+            require_positive(max_words_per_line, "max_words_per_line")
+            if max_words_per_line < min_words_per_line:
+                raise ValueError(
+                    "max_words_per_line must be greater than or equal to min_words_per_line"
+                )
         self.min_lines = min_lines
         self.max_lines = max_lines
         self.min_stanzas = min_stanzas
@@ -164,6 +180,21 @@ class ProsePoem(Constraint):
             weight: Relative weight for composition
         """
         super().__init__(weight)
+        require_positive(min_paragraphs, "min_paragraphs")
+        require_positive(max_paragraphs, "max_paragraphs")
+        require_positive(min_sentences, "min_sentences")
+        require_ordered_bounds(
+            "max_paragraphs",
+            max_paragraphs,
+            "min_paragraphs",
+            min_paragraphs,
+        )
+        require_ordered_bounds(
+            "max_sentences",
+            max_sentences,
+            "min_sentences",
+            min_sentences,
+        )
         self.min_paragraphs = min_paragraphs
         self.max_paragraphs = max_paragraphs
         self.min_sentences = min_sentences
