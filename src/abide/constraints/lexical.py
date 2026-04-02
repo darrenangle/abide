@@ -1172,9 +1172,14 @@ class CrossLineVowelWordCount(Constraint):
             else:
                 # Subsequent lines: word count should equal prev line's vowel count
                 prev_line = structure.lines[i - 1]
+                prev_word_count = len(tokenize_line(prev_line))
                 prev_vowels = sum(1 for c in prev_line if c in self.VOWELS)
 
-                if word_count == prev_vowels:
+                if prev_word_count == 0 or prev_vowels == 0:
+                    details.append(f"Line {i + 1}: ✗ previous line has no meaningful vowel target")
+                elif word_count == 0:
+                    details.append(f"Line {i + 1}: ✗ 0 words (prev line had {prev_vowels} vowels)")
+                elif word_count == prev_vowels:
                     matches += 1
                     details.append(
                         f"Line {i + 1}: ✓ {word_count} words (prev line had {prev_vowels} vowels)"

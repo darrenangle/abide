@@ -192,3 +192,10 @@ def test_character_palindrome_rejects_punctuation_only_lines() -> None:
 
     assert result.passed is False
     assert result.score == 0.0
+
+
+def test_cross_line_vowel_word_count_rejects_punctuation_only_lines() -> None:
+    result = CrossLineVowelWordCount().verify("!!!\n???\n...\n!!!\n???")
+
+    assert result.passed is False
+    assert result.score == 0.0

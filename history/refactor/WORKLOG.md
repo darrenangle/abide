@@ -328,3 +328,6 @@
 - Hardened `NoConsecutiveRepeats` and `CharacterPalindrome` against vacuous lexical passes, added direct regressions for the reproduced degenerate inputs, and reran the zero-argument public-constraint sanity scan cleanly.
 - Verified the RF-066 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and the previously completed `uv run pytest -q -W error` run remained green after the final mypy-only annotation patch.
 - Closed `RF-066` and released its lock.
+- Opened and claimed `RF-067` to turn the zero-argument public-constraint sanity scan into a permanent test and eliminate the remaining `CrossLineVowelWordCount` punctuation-only outlier before tightening the next score ceiling.
+- Added a committed zero-argument public-constraint degenerate harness, hardened `CrossLineVowelWordCount` so punctuation-only input no longer produces a near-pass, and verified the constraint sweep with `uv run pytest -q tests/constraints/test_lexical.py tests/constraints/test_degenerate_constraint_surface.py` -> `51 passed`, `uv run ruff check src/abide tests scripts` -> clean, and `uv run mypy src/abide` -> clean.
+- Closed `RF-067` and released its lock.
