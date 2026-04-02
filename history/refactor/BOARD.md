@@ -44,3 +44,4 @@ Updated: 2026-04-01
 | RF-038 | P2 | done | | Add exported-form surface smoke tests for instantiate/describe/verify stability | RF-037 |
 | RF-039 | P2 | done | | Expand the fixed-form mutation harness to additional stable fixture families | RF-038 |
 | RF-040 | P1 | done | | Reject flattened single-block Blues layouts instead of chunking them back into tercets | RF-039 |
+| RF-041 | P1 | done | | Reject flattened single-block Terza Rima layouts instead of chunking them back into tercets | RF-040 |

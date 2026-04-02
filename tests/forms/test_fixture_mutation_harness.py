@@ -9,6 +9,7 @@ from abide.forms import (
     Sestina,
     Sonnet,
     Tanka,
+    TerzaRima,
     Triolet,
     Villanelle,
 )
@@ -21,6 +22,7 @@ from tests.fixtures.poems import (
     SESTINA_SYNTHETIC_PERFECT,
     SONNET_SHAKESPEARE_18,
     TANKA_SYNTHETIC_PERFECT,
+    TERZA_RIMA_SYNTHETIC_PERFECT,
     TRIOLET_SYNTHETIC_PERFECT,
     VILLANELLE_SYNTHETIC_PERFECT,
 )
@@ -72,6 +74,7 @@ FLATTENING_CASES = [
     ),
     ("sestina", Sestina(strict=False), SESTINA_SYNTHETIC_PERFECT),
     ("pantoum", Pantoum(strict=False), PANTOUM_SYNTHETIC_PERFECT),
+    ("terza-rima", TerzaRima(strict=False, rhyme_threshold=0.5), TERZA_RIMA_SYNTHETIC_PERFECT),
 ]
 
 

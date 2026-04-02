@@ -196,3 +196,7 @@
 - Removed synthetic single-block chunking from `BluesPoem` and extended the shared flattening harness so blues stanza-layout regressions are enforced alongside villanelle, sestina, and pantoum.
 - Verified the RF-040 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `636 passed, 1 skipped`.
 - Closed `RF-040` and released its lock.
+- Opened and claimed `RF-041` after reproducing that `TerzaRima(strict=False)` still reports `passed=True, score=1.0` for a fully flattened single-block poem because it chunked the lines back into synthetic tercets.
+- Removed synthetic single-block chunking from `TerzaRima` and extended the shared flattening harness so terza-rima stanza-layout regressions are enforced alongside villanelle, sestina, pantoum, and blues.
+- Verified the RF-041 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `637 passed, 1 skipped`.
+- Closed `RF-041` and released its lock.

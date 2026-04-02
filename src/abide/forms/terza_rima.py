@@ -98,7 +98,7 @@ class TerzaRima(Constraint):
                 GroupedStanzas(
                     3,
                     self.min_tercets,
-                    allow_single_block_chunking=True,
+                    allow_single_block_chunking=False,
                     allowed_tail_sizes=(1, 2),
                     weight=1.5,
                 ),
