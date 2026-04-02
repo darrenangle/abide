@@ -46,6 +46,7 @@ import wandb
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent))
 
+from model_profiles import resolve_model_profile
 from reward_telemetry import (
     RewardTelemetry,
     bind_reward_telemetry,
@@ -60,7 +61,6 @@ BAGUETTOTRON_PATH = "/home/darren/10k-poems/models/baguettotron_sft/final"
 DEEPSEEK_R1_PATH = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
 OLMO_THINK_PATH = "allenai/OLMo-3-7B-Think-DPO"
 OLMO_INSTRUCT_PATH = "allenai/OLMo-3-7B-Instruct"
-GEMMA_3N_E4B_PATH = "google/gemma-3n-E4B-it"
 
 
 @dataclass
@@ -542,17 +542,10 @@ def train_with_retry(config: TrainingConfig) -> int:
                 use_lora=True,
             )
 
-            # Inject stop tokens based on model type
-            model_lower = config.model_name.lower()
-            if "baguettotron" in model_lower:
-                rl_config.sampling_args["stop"] = ["<|im_end|>"]
-                print("Added stop token: <|im_end|>")
-            elif "gemma" in model_lower:
-                rl_config.sampling_args["stop"] = ["<end_of_turn>", "<eos>"]
-                print("Added stop tokens: <end_of_turn>, <eos>")
-            elif "qwen" in model_lower or "deepseek" in model_lower or "olmo" in model_lower:
-                rl_config.sampling_args["stop"] = ["<|im_end|>", "<|endoftext|>"]
-                print("Added stop tokens: <|im_end|>, <|endoftext|>")
+            model_profile = resolve_model_profile(config.model_name)
+            if model_profile.stop_tokens:
+                rl_config.sampling_args["stop"] = list(model_profile.stop_tokens)
+                print(f"Added stop tokens: {', '.join(model_profile.stop_tokens)}")
 
             # Load model
             import torch
@@ -561,49 +554,17 @@ def train_with_retry(config: TrainingConfig) -> int:
             model_path = config.resume_from or config.model_name
             print(f"Loading model: {model_path}")
 
-            model_lower = model_path.lower()
+            model_profile = resolve_model_profile(model_path)
+            model = AutoModelForCausalLM.from_pretrained(
+                model_path,
+                torch_dtype=torch.bfloat16,
+                **model_profile.causal_lm_load_kwargs(),
+            )
 
-            # Configure model loading based on architecture
-            if "baguettotron" in model_lower:
-                # Baguettotron is llama-based, no flash_attention needed
-                model = AutoModelForCausalLM.from_pretrained(
-                    model_path,
-                    torch_dtype=torch.bfloat16,
-                    trust_remote_code=True,
-                )
-            elif "qwen" in model_lower or "deepseek" in model_lower:
-                # Qwen/DeepSeek works with flash_attention_2
-                model = AutoModelForCausalLM.from_pretrained(
-                    model_path,
-                    torch_dtype=torch.bfloat16,
-                    trust_remote_code=True,
-                    attn_implementation="flash_attention_2",
-                )
-            elif "olmo" in model_lower:
-                # OLMo works with flash_attention_2
-                model = AutoModelForCausalLM.from_pretrained(
-                    model_path,
-                    torch_dtype=torch.bfloat16,
-                    trust_remote_code=True,
-                    attn_implementation="flash_attention_2",
-                )
-            elif "gemma" in model_lower:
-                # Gemma 3 - use flash_attention_2 for efficiency
-                model = AutoModelForCausalLM.from_pretrained(
-                    model_path,
-                    torch_dtype=torch.bfloat16,
-                    trust_remote_code=True,
-                    attn_implementation="flash_attention_2",
-                )
-            else:
-                # Default: use flash_attention_2
-                model = AutoModelForCausalLM.from_pretrained(
-                    model_path,
-                    torch_dtype=torch.bfloat16,
-                    attn_implementation="flash_attention_2",
-                )
-
-            tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_path,
+                trust_remote_code=model_profile.trust_remote_code,
+            )
 
             # Ensure pad token is set (Baguettotron uses [PAD])
             if tokenizer.pad_token is None:

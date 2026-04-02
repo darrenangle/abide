@@ -343,3 +343,10 @@
 - Added integration coverage for telemetry aggregation plus the Baguettotron metadata path in `tests/integration/test_reward_telemetry.py` and `tests/integration/test_train_grpo_baguettotron.py`.
 - Verified the RF-070 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `884 passed, 1 skipped`.
 - Closed `RF-070` and released its lock.
+- Opened and claimed `RF-071` to add first-class Gemma 4 E4B training support with a dedicated canary runner and shared model-profile defaults instead of another hard-coded shell wrapper.
+- Added `scripts/model_profiles.py` and switched the main verifiers/TRL training entrypoints onto shared model-profile resolution for stop tokens, attention/loading settings, and Gemma 4 canary defaults.
+- Added `scripts/run_grpo_gemma4_e4b.sh` as a conservative TRL canary runner for `google/gemma-4-E4B-it`, using the current reward telemetry path and RL-default form set by default.
+- Fixed `train_grpo_trl.py` so `--help` no longer imports optional training dependencies before argparse can exit, and added subprocess smoke coverage for that CLI path.
+- Added integration coverage for the Gemma 4 profile defaults in `tests/integration/test_model_profiles.py` and the `train_grpo_trl.py --help` smoke path in `tests/integration/test_train_grpo_trl.py`.
+- Verified the RF-071 sweep with `bash -n scripts/run_grpo_gemma4_e4b.sh`, `uv run python scripts/train_grpo_trl.py --help`, `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `888 passed, 1 skipped`.
+- Closed `RF-071` and released its lock.

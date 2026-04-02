@@ -74,3 +74,4 @@ Updated: 2026-04-02
 | RF-068 | P1 | done | | Tighten structural-count decay and lower the failed-score ceiling across exported forms | RF-067 |
 | RF-069 | P2 | done | | Add property-based mutation coverage for stable fixed-form fixture families | RF-068 |
 | RF-070 | P2 | done | | Add training-time reward telemetry and align stale Baguettotron reward routing | RF-069 |
+| RF-071 | P2 | done | | Add Gemma 4 E4B training profile and dedicated canary runner | RF-070 |

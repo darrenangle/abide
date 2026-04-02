@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import subprocess
 import sys
+from pathlib import Path
 from types import ModuleType, SimpleNamespace
 
 from scripts import train_grpo_trl
@@ -94,3 +96,18 @@ def test_create_dataset_defaults_to_rl_default_mode(monkeypatch) -> None:
 
     assert calls == ["rl_default"]
     assert dataset[0]["form_name"] == "Haiku"
+
+
+def test_train_grpo_trl_help_smoke() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    result = subprocess.run(
+        [sys.executable, "scripts/train_grpo_trl.py", "--help"],
+        cwd=repo_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    assert "--model" in result.stdout
+    assert "--telemetry-every" in result.stdout

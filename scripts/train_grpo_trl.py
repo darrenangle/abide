@@ -14,7 +14,7 @@ Key differences from verifiers-based training:
 
 Usage:
     # Start trl vllm server on GPU 1 first (in separate terminal):
-    CUDA_VISIBLE_DEVICES=1 trl vllm-serve --model google/gemma-3-4b-it --port 8000
+    CUDA_VISIBLE_DEVICES=1 trl vllm-serve --model google/gemma-4-E4B-it --port 8000
 
     # Then run training on GPU 0:
     CUDA_VISIBLE_DEVICES=0 python scripts/train_grpo_trl.py
@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING, Any
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 sys.path.insert(0, str(Path(__file__).parent))
 
+from model_profiles import GEMMA_4_E4B_PROFILE, resolve_model_profile
 from reward_telemetry import (
     RewardTelemetry,
     bind_reward_telemetry,
@@ -55,27 +56,27 @@ class TrainingArgs:
     """Training configuration."""
 
     # Model
-    model_name: str = "google/gemma-3-4b-it"
+    model_name: str = "google/gemma-4-E4B-it"
 
     # Dataset
     num_prompts: int = 50000
     seed: int = 42
 
     # Training hyperparameters
-    batch_size: int = 16
-    num_generations: int = 16  # TRL calls this num_generations (equivalent to rollouts)
-    learning_rate: float = 5e-5
+    batch_size: int = GEMMA_4_E4B_PROFILE.canary_batch_size
+    num_generations: int = GEMMA_4_E4B_PROFILE.canary_num_generations
+    learning_rate: float = GEMMA_4_E4B_PROFILE.canary_learning_rate
     max_completion_length: int = 1536
     max_prompt_length: int = 512
 
     # KL regularization - THE KEY ADDITION!
-    beta: float = 0.04  # KL coefficient. DeepSeek uses 0.001, some papers use 0.04
+    beta: float = GEMMA_4_E4B_PROFILE.canary_beta
 
     # Clipping
     epsilon: float = 0.2  # PPO-style clipping
 
     # Output
-    output_dir: str = "models/grpo_trl"
+    output_dir: str = GEMMA_4_E4B_PROFILE.canary_output_dir
     save_steps: int = 50
     logging_steps: int = 10
 
@@ -374,26 +375,34 @@ def create_dataset(args: TrainingArgs, forms: dict[str, object]) -> Dataset:
 def main():
     import argparse
 
-    import torch
-    from peft import LoraConfig
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-    from trl import GRPOConfig, GRPOTrainer
-
     parser = argparse.ArgumentParser(
         description="GRPO training with TRL (includes KL regularization)"
     )
-    parser.add_argument("--model", default="google/gemma-3-4b-it", help="Model name")
+    parser.add_argument("--model", default=TrainingArgs.model_name, help="Model name")
     parser.add_argument("--prompts", type=int, default=50000, help="Number of prompts")
-    parser.add_argument("--batch-size", type=int, default=16, help="Batch size")
     parser.add_argument(
-        "--num-generations", type=int, default=16, help="Generations per prompt (rollouts)"
+        "--batch-size",
+        type=int,
+        default=TrainingArgs.batch_size,
+        help="Batch size",
     )
-    parser.add_argument("--lr", type=float, default=5e-5, help="Learning rate")
     parser.add_argument(
-        "--beta", type=float, default=0.04, help="KL coefficient (0.001-0.04 typical)"
+        "--num-generations",
+        type=int,
+        default=TrainingArgs.num_generations,
+        help="Generations per prompt (rollouts)",
+    )
+    parser.add_argument(
+        "--lr", type=float, default=TrainingArgs.learning_rate, help="Learning rate"
+    )
+    parser.add_argument(
+        "--beta",
+        type=float,
+        default=TrainingArgs.beta,
+        help="KL coefficient (0.001-0.04 typical)",
     )
     parser.add_argument("--epsilon", type=float, default=0.2, help="Clipping epsilon")
-    parser.add_argument("--output", default="models/grpo_trl", help="Output directory")
+    parser.add_argument("--output", default=TrainingArgs.output_dir, help="Output directory")
     parser.add_argument("--save-steps", type=int, default=50, help="Save every N steps")
     parser.add_argument("--port", type=int, default=8000, help="vLLM server port")
     parser.add_argument("--no-wandb", action="store_true", help="Disable wandb")
@@ -409,6 +418,18 @@ def main():
     # Check for env override
     if os.environ.get("ABIDE_MODEL"):
         args.model = os.environ["ABIDE_MODEL"]
+
+    try:
+        import torch
+        from peft import LoraConfig
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        from trl import GRPOConfig, GRPOTrainer
+    except ModuleNotFoundError as exc:
+        missing = exc.name or "training dependency"
+        raise SystemExit(
+            "Missing optional training dependency "
+            f"{missing!r}. Install training extras with `uv sync --extra training`."
+        ) from exc
 
     training_args = TrainingArgs(
         model_name=args.model,
@@ -504,18 +525,19 @@ def main():
         seed=training_args.seed,
     )
 
+    model_profile = resolve_model_profile(training_args.model_name)
+
     # Load model
     print(f"Loading model: {training_args.model_name}")
     model = AutoModelForCausalLM.from_pretrained(
         training_args.model_name,
         torch_dtype=torch.bfloat16,
-        trust_remote_code=True,
-        attn_implementation="flash_attention_2",
+        **model_profile.causal_lm_load_kwargs(),
     )
 
     tokenizer = AutoTokenizer.from_pretrained(
         training_args.model_name,
-        trust_remote_code=True,
+        trust_remote_code=model_profile.trust_remote_code,
     )
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
