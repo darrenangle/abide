@@ -8,8 +8,13 @@ that go beyond traditional poetic structures.
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, cast
 
+from abide.constraints._validation import (
+    require_nonnegative,
+    require_positive,
+    require_word_list,
+)
 from abide.constraints.base import Constraint
 from abide.constraints.types import ConstraintType, VerificationResult
 
@@ -36,12 +41,17 @@ class WordCount(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        require_nonnegative(tolerance, "tolerance")
+        values: tuple[int, ...]
         if isinstance(words_per_line, int):
-            self.words_per_line = [words_per_line]
+            values = (words_per_line,)
             self.uniform = True
         else:
-            self.words_per_line = words_per_line
+            values = tuple(words_per_line)
             self.uniform = False
+        if not values or any(count <= 0 for count in values):
+            raise ValueError("words_per_line must contain at least one positive count")
+        self.words_per_line = list(values)
         self.tolerance = tolerance
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -101,7 +111,8 @@ class ForcedWords(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
-        self.required_words = required_words
+        self.required_words = list(require_word_list(required_words, "required_words"))
+        require_positive(min_occurrences, "min_occurrences")
         self.min_occurrences = min_occurrences
         self.case_sensitive = case_sensitive
 
@@ -220,15 +231,27 @@ class WordLengthPattern(Constraint):
         weight: float = 1.0,
     ) -> None:
         super().__init__(weight)
+        require_nonnegative(tolerance, "tolerance")
         # If flat list, each number is a word length in sequence
         # If nested list, each inner list is word lengths for a line
         self.line_patterns: list[list[int]] = []
         self.word_pattern: list[int] = []
-        if pattern and isinstance(pattern[0], list):
-            self.line_patterns = pattern  # type: ignore[assignment]
+        if not pattern:
+            raise ValueError("pattern must contain at least one positive length")
+        if isinstance(pattern[0], list):
+            nested_pattern = cast("list[list[int]]", pattern)
+            self.line_patterns = [list(line_pattern) for line_pattern in nested_pattern]
+            if any(
+                not line_pattern or any(length <= 0 for length in line_pattern)
+                for line_pattern in self.line_patterns
+            ):
+                raise ValueError("pattern must contain at least one positive length")
             self.flat = False
         else:
-            self.word_pattern = pattern  # type: ignore[assignment]
+            flat_pattern = cast("list[int]", pattern)
+            self.word_pattern = list(flat_pattern)
+            if any(length <= 0 for length in self.word_pattern):
+                raise ValueError("pattern must contain at least one positive length")
             self.flat = True
         self.tolerance = tolerance
 

@@ -123,6 +123,17 @@ class BlankVerse(Constraint):
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
+
+        if structure.line_count == 0:
+            return VerificationResult(
+                score=0.0,
+                passed=False,
+                rubric=[],
+                constraint_name=self.name,
+                constraint_type=self.constraint_type,
+                details={"error": "Poem has no lines"},
+            )
+
         constraints = list(self._base_constraints)
 
         # Add syllable constraint based on actual line count

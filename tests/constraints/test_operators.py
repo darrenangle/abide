@@ -471,7 +471,7 @@ class TestCompositionNesting:
         poem = "Line one\nLine two\nLine three"
         level1 = And([LineCount(3), StanzaCount(1)])
         level2 = Or([level1, LineCount(100)])
-        level3 = And([level2, Not(LineCount(0))])
+        level3 = And([level2, Not(LineCount(1))])
         result = level3.verify(poem)
         assert result.passed is True
 

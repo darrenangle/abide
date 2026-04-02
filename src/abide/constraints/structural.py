@@ -9,6 +9,11 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING
 
+from abide.constraints._validation import (
+    require_nonnegative,
+    require_positive,
+    require_positive_numeric_bound,
+)
 from abide.constraints.base import Constraint, NumericConstraint
 from abide.constraints.types import (
     ConstraintType,
@@ -44,6 +49,7 @@ class LineCount(NumericConstraint):
     ) -> None:
         if isinstance(bound, int):
             bound = NumericBound.exact(bound)
+        require_positive_numeric_bound(bound, "line count")
         super().__init__(bound, weight, sigma)
 
     def _get_actual_value(self, structure: PoemStructure) -> int:
@@ -77,6 +83,7 @@ class StanzaCount(NumericConstraint):
     ) -> None:
         if isinstance(bound, int):
             bound = NumericBound.exact(bound)
+        require_positive_numeric_bound(bound, "stanza count")
         super().__init__(bound, weight, sigma)
 
     def _get_actual_value(self, structure: PoemStructure) -> int:
@@ -110,6 +117,9 @@ class StanzaSizes(Constraint):
     ) -> None:
         super().__init__(weight)
         self.expected_sizes = tuple(expected_sizes)
+        if not self.expected_sizes or any(size <= 0 for size in self.expected_sizes):
+            raise ValueError("expected_sizes must contain at least one positive stanza size")
+        require_positive(sigma, "sigma")
         self.sigma = sigma
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -372,6 +382,10 @@ class SyllablesPerLine(Constraint):
         """
         super().__init__(weight)
         self.expected_syllables = tuple(expected_syllables)
+        if not self.expected_syllables or any(count <= 0 for count in self.expected_syllables):
+            raise ValueError("expected_syllables must contain at least one positive syllable count")
+        require_positive(sigma, "sigma")
+        require_nonnegative(tolerance, "tolerance")
         self.sigma = sigma
         self.tolerance = tolerance
 

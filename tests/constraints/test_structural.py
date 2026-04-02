@@ -1,5 +1,7 @@
 """Tests for structural constraints."""
 
+import pytest
+
 from abide.constraints import (
     GroupedStanzas,
     LineCount,
@@ -85,6 +87,21 @@ class TestLineCount:
         assert "2" in result.rubric[0].actual
         assert "3" in result.rubric[0].expected
 
+    @pytest.mark.parametrize(
+        ("factory", "message"),
+        [
+            (lambda: LineCount(0), "line count bound must be positive"),
+            (
+                lambda: LineCount(NumericBound.at_least(0)),
+                "line count bound must be positive",
+            ),
+            (lambda: LineCount(3, sigma=0), "sigma must be positive"),
+        ],
+    )
+    def test_rejects_invalid_constructor_values(self, factory, message: str) -> None:
+        with pytest.raises(ValueError, match=message):
+            factory()
+
 
 class TestStanzaCount:
     """Tests for StanzaCount constraint."""
@@ -131,6 +148,20 @@ class TestStanzaCount:
         desc = constraint.describe()
         assert "6" in desc
         assert "stanza" in desc.lower()
+
+    @pytest.mark.parametrize(
+        ("factory", "message"),
+        [
+            (lambda: StanzaCount(0), "stanza count bound must be positive"),
+            (
+                lambda: StanzaCount(NumericBound.at_least(0)),
+                "stanza count bound must be positive",
+            ),
+        ],
+    )
+    def test_rejects_invalid_constructor_values(self, factory, message: str) -> None:
+        with pytest.raises(ValueError, match=message):
+            factory()
 
 
 class TestStanzaSizes:
@@ -197,6 +228,24 @@ class TestStanzaSizes:
         assert "3" in desc
         assert "4" in desc
 
+    @pytest.mark.parametrize(
+        ("factory", "message"),
+        [
+            (
+                lambda: StanzaSizes([]),
+                "expected_sizes must contain at least one positive stanza size",
+            ),
+            (
+                lambda: StanzaSizes([3, 0]),
+                "expected_sizes must contain at least one positive stanza size",
+            ),
+            (lambda: StanzaSizes([3], sigma=0), "sigma must be positive"),
+        ],
+    )
+    def test_rejects_invalid_constructor_values(self, factory, message: str) -> None:
+        with pytest.raises(ValueError, match=message):
+            factory()
+
 
 class TestSyllablesPerLine:
     """Tests for SyllablesPerLine constraint."""
@@ -238,6 +287,25 @@ class TestSyllablesPerLine:
         constraint = SyllablesPerLine([5, 7, 5])
         desc = constraint.describe()
         assert "5" in desc or "syllable" in desc.lower()
+
+    @pytest.mark.parametrize(
+        ("factory", "message"),
+        [
+            (
+                lambda: SyllablesPerLine([]),
+                "expected_syllables must contain at least one positive syllable count",
+            ),
+            (
+                lambda: SyllablesPerLine([5, 0]),
+                "expected_syllables must contain at least one positive syllable count",
+            ),
+            (lambda: SyllablesPerLine([5], sigma=0), "sigma must be positive"),
+            (lambda: SyllablesPerLine([5], tolerance=-1), "tolerance must be non-negative"),
+        ],
+    )
+    def test_rejects_invalid_constructor_values(self, factory, message: str) -> None:
+        with pytest.raises(ValueError, match=message):
+            factory()
 
 
 class TestGroupedStanzas:

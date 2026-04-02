@@ -87,7 +87,7 @@ class BluesPoem(Constraint):
                     ]
                 )
 
-        constraints = [
+        constraints: list[tuple[Constraint, float]] = [
             (
                 GroupedStanzas(
                     3,
@@ -97,23 +97,29 @@ class BluesPoem(Constraint):
                 ),
                 1.5,
             ),
-            (
-                LinePairSimilarity(
-                    repetition_pairs,
-                    threshold=self.repetition_threshold,
-                    weight=2.0,
-                ),
-                2.0,
-            ),
-            (
-                EndRhymePairs(
-                    rhyme_pairs,
-                    threshold=self.rhyme_threshold,
-                    weight=2.0,
-                ),
-                2.0,
-            ),
         ]
+        if repetition_pairs:
+            constraints.append(
+                (
+                    LinePairSimilarity(
+                        repetition_pairs,
+                        threshold=self.repetition_threshold,
+                        weight=2.0,
+                    ),
+                    2.0,
+                )
+            )
+        if rhyme_pairs:
+            constraints.append(
+                (
+                    EndRhymePairs(
+                        rhyme_pairs,
+                        threshold=self.rhyme_threshold,
+                        weight=2.0,
+                    ),
+                    2.0,
+                )
+            )
 
         constraint: Constraint
         if self.strict:

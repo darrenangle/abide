@@ -101,27 +101,31 @@ class Pantoum(Constraint):
                     weight=2.0,
                 ),
                 2.0,
-            ),
-            (
-                LinePairSimilarity(
-                    interlock_pairs,
-                    threshold=self.refrain_threshold,
-                    weight=2.0,
-                ),
-                2.0,
-            ),
+            )
         ]
-        if self.check_circular:
+        if interlock_pairs:
             constraints.append(
                 (
                     LinePairSimilarity(
-                        circular_pairs,
+                        interlock_pairs,
                         threshold=self.refrain_threshold,
-                        weight=1.5,
+                        weight=2.0,
                     ),
-                    1.5,
+                    2.0,
                 )
             )
+        if self.check_circular:
+            if circular_pairs:
+                constraints.append(
+                    (
+                        LinePairSimilarity(
+                            circular_pairs,
+                            threshold=self.refrain_threshold,
+                            weight=1.5,
+                        ),
+                        1.5,
+                    )
+                )
 
         constraint: Constraint
         if self.strict:

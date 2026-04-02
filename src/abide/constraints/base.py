@@ -12,6 +12,7 @@ import math
 from abc import ABC, abstractmethod
 from typing import Any
 
+from abide.constraints._validation import require_positive
 from abide.constraints.types import (
     BoundType,
     ConstraintType,
@@ -121,6 +122,7 @@ class NumericConstraint(Constraint):
             sigma: Standard deviation for Gaussian decay scoring
         """
         super().__init__(weight)
+        require_positive(sigma, "sigma")
         self.bound = bound
         self.sigma = sigma
 

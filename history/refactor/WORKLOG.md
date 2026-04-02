@@ -259,3 +259,9 @@
 - Added direct constructor-contract regressions for the reproduced empty-pass cases plus inconsistent stanza/rhyme layout parameters such as `HoratianOde(stanza_size=4, rhyme_scheme=\"AB\")` and `Aubade(lines_per_stanza=7)`.
 - Verified the RF-053 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `716 passed, 1 skipped`.
 - Closed `RF-053` and released its lock.
+- Opened and claimed `RF-054` after reproducing that public constraint constructors still accept empty patterns and invalid indices, including vacuous passes from `RhymeScheme(\"\")`, `Refrain(..., repeat_at=[])`, `LinePairSimilarity([])`, `ForcedWords([])`, `Acrostic(\"\")`, `StanzaSizes([])`, and `SyllablesPerLine([])`, plus runtime failures from `EndWordPattern(num_words=0, num_stanzas=0)`, `WordCount([])`, and `WordLengthPattern([])`.
+- Added shared primitive-level constructor validation helpers and used them to reject empty patterns, invalid thresholds, negative indices, and malformed rotations across the structural, lexical, and relational constraint families.
+- Added direct regression tests for the reproduced vacuous-pass and runtime-error cases, including `RhymeScheme(\"\")`, `Refrain(..., repeat_at=[])`, `LinePairSimilarity([])`, `EndWordPattern(num_words=3)`, `WordCount([])`, `ForcedWords([])`, `WordLengthPattern([])`, `StanzaSizes([])`, and `SyllablesPerLine([])`.
+- Patched dynamic form verifiers in `BlankVerse`, `Pantoum`, `BluesPoem`, and `TerzaRima` so malformed poem input now returns failed results instead of building invalid internal constraints after the primitive-layer hardening.
+- Verified the RF-054 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `755 passed, 1 skipped`.
+- Closed `RF-054` and released its lock.

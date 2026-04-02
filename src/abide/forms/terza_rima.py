@@ -93,7 +93,7 @@ class TerzaRima(Constraint):
             if group_sizes[-1] == 2:
                 rhyme_pairs.append((previous_middle, tail_offset + 1))
 
-        constraints = [
+        constraints: list[tuple[Constraint, float]] = [
             (
                 GroupedStanzas(
                     3,
@@ -103,16 +103,19 @@ class TerzaRima(Constraint):
                     weight=1.5,
                 ),
                 1.5,
-            ),
-            (
-                EndRhymePairs(
-                    rhyme_pairs,
-                    threshold=self.rhyme_threshold,
-                    weight=2.0,
-                ),
-                2.0,
-            ),
+            )
         ]
+        if rhyme_pairs:
+            constraints.append(
+                (
+                    EndRhymePairs(
+                        rhyme_pairs,
+                        threshold=self.rhyme_threshold,
+                        weight=2.0,
+                    ),
+                    2.0,
+                )
+            )
 
         constraint: Constraint
         if self.strict:

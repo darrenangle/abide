@@ -10,6 +10,15 @@ import re
 from collections import defaultdict
 from typing import TYPE_CHECKING, ClassVar
 
+from abide.constraints._validation import (
+    require_alphabetic_text,
+    require_line_indices,
+    require_line_pairs,
+    require_nonnegative,
+    require_positive,
+    require_probability,
+    require_rotation,
+)
 from abide.constraints.base import Constraint
 from abide.constraints.types import (
     ConstraintType,
@@ -88,6 +97,9 @@ class RhymeScheme(Constraint):
         super().__init__(weight)
         # Extract only letters, uppercase
         self.scheme = "".join(c.upper() for c in scheme if c.isalpha())
+        if not self.scheme:
+            raise ValueError("scheme must contain at least one alphabetic character")
+        require_probability(threshold, "threshold")
         self.threshold = threshold
         self.allow_identical = allow_identical
         self.binary_scoring = binary_scoring
@@ -341,8 +353,10 @@ class Refrain(Constraint):
             threshold: Minimum similarity for match (default 0.9 for near-exact)
         """
         super().__init__(weight)
+        require_nonnegative(reference_line, "reference_line")
+        require_probability(threshold, "threshold")
         self.reference_line = reference_line
-        self.repeat_at = tuple(repeat_at)
+        self.repeat_at = require_line_indices(repeat_at, "repeat_at")
         self.threshold = threshold
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -458,7 +472,8 @@ class LinePairSimilarity(Constraint):
         threshold: float = 0.9,
     ) -> None:
         super().__init__(weight)
-        self.line_pairs = tuple(line_pairs)
+        require_probability(threshold, "threshold")
+        self.line_pairs = require_line_pairs(line_pairs)
         self.threshold = threshold
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -544,8 +559,14 @@ class OpeningPhraseRefrain(Constraint):
         threshold: float = 0.8,
     ) -> None:
         super().__init__(weight)
+        require_nonnegative(reference_line, "reference_line")
+        self.repeat_at = require_line_indices(repeat_at, "repeat_at")
+        require_positive(num_words, "num_words")
+        require_positive(min_words, "min_words")
+        if min_words > num_words:
+            raise ValueError("min_words must be less than or equal to num_words")
+        require_probability(threshold, "threshold")
         self.reference_line = reference_line
-        self.repeat_at = tuple(repeat_at)
         self.num_words = num_words
         self.min_words = min_words
         self.threshold = threshold
@@ -655,7 +676,8 @@ class EndRhymePairs(Constraint):
         allow_identical: bool = False,
     ) -> None:
         super().__init__(weight)
-        self.line_pairs = tuple(line_pairs)
+        require_probability(threshold, "threshold")
+        self.line_pairs = require_line_pairs(line_pairs)
         self.threshold = threshold
         self.allow_identical = allow_identical
 
@@ -759,9 +781,13 @@ class EndWordPattern(Constraint):
             threshold: Similarity threshold for fuzzy matching
         """
         super().__init__(weight)
+        require_positive(num_words, "num_words")
+        require_positive(num_stanzas, "num_stanzas")
+        require_probability(threshold, "threshold")
+        rotation_values = tuple(rotation) if rotation is not None else tuple(self.SESTINA_ROTATION)
+        self.rotation = require_rotation(rotation_values, num_words)
         self.num_words = num_words
         self.num_stanzas = num_stanzas
-        self.rotation = tuple(rotation) if rotation else tuple(self.SESTINA_ROTATION)
         self.threshold = threshold
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -948,12 +974,16 @@ class Acrostic(Constraint):
     def __init__(
         self,
         word: str,
-        position: str = "first",  # "first", "last", or "middle"
+        position: str = "first",  # "first" or "last"
         weight: float = 1.0,
         case_sensitive: bool = False,
     ) -> None:
         super().__init__(weight)
+        require_alphabetic_text(word, "word")
+        if position not in {"first", "last"}:
+            raise ValueError("position must be 'first' or 'last'")
         self.word = word
+        self._target_letters = "".join(char for char in word if char.isalpha())
         self.position = position
         self.case_sensitive = case_sensitive
 
@@ -963,7 +993,9 @@ class Acrostic(Constraint):
         rubric: list[RubricItem] = []
         scores: list[float] = []
 
-        expected_word = self.word if self.case_sensitive else self.word.upper()
+        expected_word = (
+            self._target_letters if self.case_sensitive else self._target_letters.upper()
+        )
 
         for i, letter in enumerate(expected_word):
             if i >= len(structure.lines):

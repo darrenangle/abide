@@ -57,3 +57,4 @@ Updated: 2026-04-01
 | RF-051 | P1 | done | | Reject degenerate zero-valued hard-form configurations | RF-050 |
 | RF-052 | P1 | done | | Reject empty explicit target strings in Anaphora and EchoEnd | RF-051 |
 | RF-053 | P1 | done | | Reject degenerate shell-form bounds and empty generic-form constructors | RF-052 |
+| RF-054 | P1 | done | | Harden public constraint constructors against empty patterns and invalid indices | RF-053 |

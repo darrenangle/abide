@@ -1,5 +1,7 @@
 """Tests for relational constraints."""
 
+import pytest
+
 from abide.constraints import (
     Acrostic,
     EndRhymeDensity,
@@ -114,6 +116,17 @@ And as for the bucket, Nantucket"""
         assert "ABAB" in desc
         assert "rhyme" in desc.lower()
 
+    @pytest.mark.parametrize(
+        ("factory", "message"),
+        [
+            (lambda: RhymeScheme(""), "scheme must contain at least one alphabetic character"),
+            (lambda: RhymeScheme("AA", threshold=1.5), "threshold must be between 0 and 1"),
+        ],
+    )
+    def test_rejects_invalid_constructor_values(self, factory, message: str) -> None:
+        with pytest.raises(ValueError, match=message):
+            factory()
+
 
 class TestRefrain:
     """Tests for Refrain constraint."""
@@ -195,6 +208,27 @@ class TestRefrain:
         assert "1" in desc  # 1-indexed reference
         assert "6" in desc or "12" in desc or "18" in desc
 
+    @pytest.mark.parametrize(
+        ("factory", "message"),
+        [
+            (
+                lambda: Refrain(reference_line=-1, repeat_at=[1]),
+                "reference_line must be non-negative",
+            ),
+            (
+                lambda: Refrain(reference_line=0, repeat_at=[]),
+                "repeat_at must contain at least one line index",
+            ),
+            (
+                lambda: Refrain(reference_line=0, repeat_at=[-1]),
+                "repeat_at indices must be non-negative",
+            ),
+        ],
+    )
+    def test_rejects_invalid_constructor_values(self, factory, message: str) -> None:
+        with pytest.raises(ValueError, match=message):
+            factory()
+
 
 class TestLinePairSimilarity:
     """Tests for LinePairSimilarity constraint."""
@@ -212,6 +246,17 @@ class TestLinePairSimilarity:
         result = constraint.verify(poem)
         assert result.passed is False
         assert result.score == 0.0
+
+    @pytest.mark.parametrize(
+        ("factory", "message"),
+        [
+            (lambda: LinePairSimilarity([]), "line_pairs must contain at least one pair"),
+            (lambda: LinePairSimilarity([(-1, 0)]), "line pair indices must be non-negative"),
+        ],
+    )
+    def test_rejects_invalid_constructor_values(self, factory, message: str) -> None:
+        with pytest.raises(ValueError, match=message):
+            factory()
 
 
 class TestOpeningPhraseRefrain:
@@ -231,6 +276,28 @@ class TestOpeningPhraseRefrain:
         assert result.passed is True
         assert result.score >= 0.85
 
+    @pytest.mark.parametrize(
+        ("factory", "message"),
+        [
+            (
+                lambda: OpeningPhraseRefrain(reference_line=0, repeat_at=[]),
+                "repeat_at must contain at least one line index",
+            ),
+            (
+                lambda: OpeningPhraseRefrain(
+                    reference_line=0,
+                    repeat_at=[3],
+                    min_words=5,
+                    num_words=4,
+                ),
+                "min_words must be less than or equal to num_words",
+            ),
+        ],
+    )
+    def test_rejects_invalid_constructor_values(self, factory, message: str) -> None:
+        with pytest.raises(ValueError, match=message):
+            factory()
+
 
 class TestEndRhymePairs:
     """Tests for EndRhymePairs constraint."""
@@ -248,6 +315,17 @@ class TestEndRhymePairs:
         result = constraint.verify(poem)
         assert result.passed is False
         assert result.score == 0.5
+
+    @pytest.mark.parametrize(
+        ("factory", "message"),
+        [
+            (lambda: EndRhymePairs([]), "line_pairs must contain at least one pair"),
+            (lambda: EndRhymePairs([(0, -1)]), "line pair indices must be non-negative"),
+        ],
+    )
+    def test_rejects_invalid_constructor_values(self, factory, message: str) -> None:
+        with pytest.raises(ValueError, match=message):
+            factory()
 
 
 class TestEndRhymeDensity:
@@ -362,6 +440,29 @@ Final line ends stone"""
         assert "6" in desc  # 6 words
         assert "rotation" in desc.lower() or "pattern" in desc.lower()
 
+    @pytest.mark.parametrize(
+        ("factory", "message"),
+        [
+            (lambda: EndWordPattern(num_words=0), "num_words must be positive"),
+            (lambda: EndWordPattern(num_stanzas=0), "num_stanzas must be positive"),
+            (
+                lambda: EndWordPattern(num_words=3),
+                "rotation must contain exactly num_words indices",
+            ),
+            (
+                lambda: EndWordPattern(num_words=2, num_stanzas=2, rotation=[0]),
+                "rotation must contain exactly num_words indices",
+            ),
+            (
+                lambda: EndWordPattern(num_words=2, num_stanzas=2, rotation=[0, 0]),
+                "rotation must be a permutation of 0..num_words-1",
+            ),
+        ],
+    )
+    def test_rejects_invalid_constructor_values(self, factory, message: str) -> None:
+        with pytest.raises(ValueError, match=message):
+            factory()
+
 
 class TestAcrostic:
     """Tests for Acrostic constraint."""
@@ -433,3 +534,14 @@ Every day it starts anew"""
         assert len(result.rubric) == 4
         for i, item in enumerate(result.rubric):
             assert f"Letter {i + 1}" in item.criterion
+
+    @pytest.mark.parametrize(
+        ("factory", "message"),
+        [
+            (lambda: Acrostic(""), "word must contain at least one alphabetic character"),
+            (lambda: Acrostic("LOVE", position="middle"), "position must be 'first' or 'last'"),
+        ],
+    )
+    def test_rejects_invalid_constructor_values(self, factory, message: str) -> None:
+        with pytest.raises(ValueError, match=message):
+            factory()
