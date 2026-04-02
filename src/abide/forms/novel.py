@@ -1748,7 +1748,14 @@ class EchoEnd(Constraint):
 
     def __init__(self, letter: str | None = None, min_lines: int = 5, weight: float = 1.0) -> None:
         super().__init__(weight)
-        self.letter = letter.upper() if letter else None
+        self.letter: str | None
+        if letter is not None:
+            normalized = letter.strip()
+            if len(normalized) != 1 or not normalized.isalpha():
+                raise ValueError("letter must be a single alphabetic character")
+            self.letter = normalized.upper()
+        else:
+            self.letter = None
         self.min_lines = min_lines
         self._line_count = LineCount(NumericBound.at_least(min_lines), weight=1.0)
 

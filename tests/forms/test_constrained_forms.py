@@ -64,6 +64,11 @@ def test_anaphora_explicit_phrase_requires_whole_word_prefix_match() -> None:
     assert result.details["repeats"] == 0
 
 
+def test_anaphora_rejects_empty_explicit_phrase_instead_of_falling_back() -> None:
+    with pytest.raises(ValueError, match="phrase must contain at least one word"):
+        Anaphora(phrase="")
+
+
 def test_palindrome_poem_supports_word_and_letter_levels() -> None:
     word_result = PalindromePoem(level="word", min_lines=4).verify("alpha\nbeta\nbeta\nalpha")
     letter_result = PalindromePoem(level="letter", min_lines=3).verify("level\nrotor\ncivic")

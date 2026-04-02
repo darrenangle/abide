@@ -419,7 +419,9 @@ class Anaphora(Constraint):
             weight: Relative weight for composition
         """
         super().__init__(weight)
-        self.target_phrase = phrase.lower() if phrase else None
+        if phrase is not None and not self._tokenize(phrase):
+            raise ValueError("phrase must contain at least one word")
+        self.target_phrase = phrase.lower() if phrase is not None else None
         self.min_repeats = min_repeats
         self.min_lines = min_lines
 

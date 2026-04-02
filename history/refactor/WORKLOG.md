@@ -249,3 +249,8 @@
 - Added direct regressions for the reproduced zero-valued constructor cases across the hard-form family.
 - Verified the RF-051 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `686 passed, 1 skipped`.
 - Closed `RF-051` and released its lock.
+- Opened and claimed `RF-052` after reproducing that `Anaphora(phrase=\"\")` and `EchoEnd(letter=\"\")` silently fall back to auto-detect mode instead of rejecting invalid explicit targets.
+- Added explicit target validation to `Anaphora` and `EchoEnd` so empty strings and invalid letters fail fast instead of silently toggling the verifier into auto-detect mode.
+- Added direct regressions for the reproduced silent-fallback cases.
+- Verified the RF-052 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `688 passed, 1 skipped`.
+- Closed `RF-052` and released its lock.

@@ -4,6 +4,7 @@ from abide.forms.novel import (
     AlphabeticTerminus,
     ColorSpectrum,
     DescendingStaircase,
+    EchoEnd,
     ElementalVerse,
     NumberWord,
     PrimeVerse,
@@ -141,3 +142,8 @@ def test_novel_target_sequence_forms_reject_degenerate_constructor_values() -> N
 
     with pytest.raises(ValueError, match="start_words must be positive"):
         DescendingStaircase(start_words=0)
+
+
+def test_echo_end_rejects_invalid_explicit_target_letters() -> None:
+    with pytest.raises(ValueError, match="letter must be a single alphabetic character"):
+        EchoEnd(letter="")
