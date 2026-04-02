@@ -133,3 +133,8 @@
 - Added direct docstring-alignment tests so those source-level claims stay structural and do not drift back toward unverified theme assertions.
 - Verified the RF-026 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `601 passed, 1 skipped`.
 - Closed `RF-026` and released its lock.
+- Opened and claimed `RF-027` after reproducing that `Epigram()` currently gives `passed=True, score=1.0` to an essay-like 3-line block because the 3-line branch only checks line count and ignores line length entirely.
+- Added a short-line word-count proxy to `Epigram` across all supported line counts so 3-line prose blocks no longer pass as perfect fits while the 2-line and 4-line rhyme behavior stays intact.
+- Added direct epigram regressions for the reproduced three-line essay false positive plus compact and non-rhyming baseline examples.
+- Verified the RF-027 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `604 passed, 1 skipped`.
+- Closed `RF-027` and released its lock.

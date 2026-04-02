@@ -44,6 +44,8 @@ class Epigram(Constraint):
         self,
         min_lines: int = 2,
         max_lines: int = 4,
+        min_words_per_line: int = 2,
+        max_words_per_line: int = 12,
         weight: float = 1.0,
         syllable_tolerance: int = 2,
         rhyme_threshold: float = 0.6,
@@ -63,9 +65,17 @@ class Epigram(Constraint):
         super().__init__(weight)
         self.min_lines = min_lines
         self.max_lines = max_lines
+        self.min_words_per_line = min_words_per_line
+        self.max_words_per_line = max_words_per_line
         self.syllable_tolerance = syllable_tolerance
         self.rhyme_threshold = rhyme_threshold
         self.strict_mode = strict
+        self._line_length = LineLengthRange(
+            min_length=min_words_per_line,
+            max_length=max_words_per_line,
+            mode=MeasureMode.WORDS,
+            weight=1.0,
+        )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
@@ -109,17 +119,24 @@ class Epigram(Constraint):
                 },
             )
 
+        length_result = self._line_length.verify(poem)
+
         # For 2-line epigrams, check couplet rhyme
         if structure.line_count == 2:
             rhyme = RhymeScheme("AA", threshold=self.rhyme_threshold)
-            result = rhyme.verify(poem)
+            rhyme_result = rhyme.verify(poem)
             return VerificationResult(
-                score=result.score,
-                passed=result.passed,
-                rubric=result.rubric,
+                score=(length_result.score + (2 * rhyme_result.score)) / 3,
+                passed=length_result.passed and rhyme_result.passed,
+                rubric=length_result.rubric + rhyme_result.rubric,
                 constraint_name=self.name,
                 constraint_type=self.constraint_type,
-                details=result.details,
+                details={
+                    "line_count": structure.line_count,
+                    "min_words_per_line": self.min_words_per_line,
+                    "max_words_per_line": self.max_words_per_line,
+                    **rhyme_result.details,
+                },
             )
 
         # For 4-line epigrams, check AABB or ABAB
@@ -130,27 +147,37 @@ class Epigram(Constraint):
             result_abab = rhyme_abab.verify(poem)
             best = result_aabb if result_aabb.score > result_abab.score else result_abab
             return VerificationResult(
-                score=best.score,
-                passed=best.passed,
-                rubric=best.rubric,
+                score=(length_result.score + (2 * best.score)) / 3,
+                passed=length_result.passed and best.passed,
+                rubric=length_result.rubric + best.rubric,
                 constraint_name=self.name,
                 constraint_type=self.constraint_type,
-                details=best.details,
+                details={
+                    "line_count": structure.line_count,
+                    "min_words_per_line": self.min_words_per_line,
+                    "max_words_per_line": self.max_words_per_line,
+                    **best.details,
+                },
             )
 
-        # For 3 lines or other, just pass if in range
+        # For 3 lines, enforce the short-line proxy without a rhyme requirement.
         return VerificationResult(
-            score=1.0,
-            passed=True,
-            rubric=[],
+            score=length_result.score,
+            passed=length_result.passed,
+            rubric=length_result.rubric,
             constraint_name=self.name,
             constraint_type=self.constraint_type,
-            details={"line_count": structure.line_count},
+            details={
+                "line_count": structure.line_count,
+                "min_words_per_line": self.min_words_per_line,
+                "max_words_per_line": self.max_words_per_line,
+            },
         )
 
     def describe(self) -> str:
         return (
             f"Epigram: {self.min_lines}-{self.max_lines} lines; "
+            f"{self.min_words_per_line}-{self.max_words_per_line} words per line; "
             "rhyme proxy on 2-line and 4-line variants"
         )
 
