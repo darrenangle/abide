@@ -71,6 +71,7 @@ class Sonnet(Constraint):
             self._constraint = WeightedSum(
                 [(self._line_count, 2.0), (self._syllables, 1.5)],
                 threshold=0.6,
+                required_indices=[0, 1],
             )
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:

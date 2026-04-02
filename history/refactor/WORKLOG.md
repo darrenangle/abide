@@ -153,3 +153,8 @@
 - Added direct regressions for a valid multi-stanza literary ballad and the reproduced single-stanza false positive.
 - Verified the RF-030 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `609 passed, 1 skipped`.
 - Closed `RF-030` and released its lock.
+- Opened and claimed `RF-031` after reproducing that the generic `Sonnet` shell still reports `passed=True` for 14 lines of 7-syllable text because its lenient `WeightedSum` lets line count overpower a fully failed syllable rubric.
+- Added required-child gating to the generic `Sonnet` shell so canonical passes now require both 14 lines and the 10-syllable proxy, while preserving partial credit for near misses.
+- Added direct regressions for a valid 10-syllable sonnet shell and the reproduced 7-syllable false positive.
+- Verified the RF-031 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `611 passed, 1 skipped`.
+- Closed `RF-031` and released its lock.
