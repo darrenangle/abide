@@ -3,6 +3,7 @@ import pytest
 from abide.forms.novel import (
     ColorSpectrum,
     ElementalVerse,
+    NumberWord,
     PrimeVerse,
     SandwichSonnet,
     UniqueUtterance,
@@ -125,3 +126,8 @@ def test_unique_utterance_does_not_hide_an_undocumented_min_word_threshold() -> 
 def test_prime_verse_rejects_unsupported_line_counts_instead_of_wrapping_pattern() -> None:
     with pytest.raises(ValueError, match="num_lines must be between 1 and 6"):
         PrimeVerse(num_lines=7)
+
+
+def test_number_word_rejects_unsupported_line_counts_instead_of_clamping() -> None:
+    with pytest.raises(ValueError, match="num_lines must be between 1 and 10"):
+        NumberWord(num_lines=12)

@@ -1008,7 +1008,9 @@ class NumberWord(Constraint):
 
     def __init__(self, num_lines: int = 10, weight: float = 1.0) -> None:
         super().__init__(weight)
-        self.num_lines = min(num_lines, 10)
+        if not 1 <= num_lines <= len(self.NUMBERS):
+            raise ValueError(f"num_lines must be between 1 and {len(self.NUMBERS)}")
+        self.num_lines = num_lines
         self._line_count = LineCount(self.num_lines, weight=2.0)
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:

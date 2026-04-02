@@ -1,6 +1,9 @@
+import pytest
+
 from abide.forms.mathematical import (
     CoprimeVerse,
     GoldenRatioVerse,
+    PiKu,
     PythagoreanTercet,
     SelfReferential,
     SquareStanzas,
@@ -116,3 +119,11 @@ def test_self_referential_counts_whole_number_tokens_only() -> None:
 
     assert result.passed is False
     assert result.score == 0.05
+
+
+def test_bounded_mathematical_forms_reject_unsupported_line_counts_instead_of_clamping() -> None:
+    with pytest.raises(ValueError, match="num_lines must be between 1 and 20"):
+        PiKu(num_lines=25)
+
+    with pytest.raises(ValueError, match="num_lines must be between 1 and 9"):
+        SelfReferential(num_lines=12)

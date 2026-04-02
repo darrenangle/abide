@@ -470,7 +470,9 @@ class PiKu(Constraint):
 
     def __init__(self, num_lines: int = 5, weight: float = 1.0) -> None:
         super().__init__(weight)
-        self.num_lines = min(num_lines, len(self.PI_DIGITS))
+        if not 1 <= num_lines <= len(self.PI_DIGITS):
+            raise ValueError(f"num_lines must be between 1 and {len(self.PI_DIGITS)}")
+        self.num_lines = num_lines
         self.expected = self.PI_DIGITS[: self.num_lines]
 
     def _count_syllables(self, word: str) -> int:
@@ -637,7 +639,9 @@ class SelfReferential(Constraint):
 
     def __init__(self, num_lines: int = 5, weight: float = 1.0) -> None:
         super().__init__(weight)
-        self.num_lines = min(num_lines, 9)  # Only 1-9 make sense
+        if not 1 <= num_lines <= 9:
+            raise ValueError("num_lines must be between 1 and 9")
+        self.num_lines = num_lines
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)

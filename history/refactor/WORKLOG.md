@@ -224,3 +224,8 @@
 - Added a direct regression for the reproduced `num_lines=7` wraparound bug.
 - Verified the RF-046 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `665 passed, 1 skipped`.
 - Closed `RF-046` and released its lock.
+- Opened and claimed `RF-047` after confirming that `NumberWord(12)`, `PiKu(25)`, and `SelfReferential(12)` silently clamp to smaller internal line counts instead of rejecting unsupported configurations.
+- Replaced silent line-count clamps with early validation in `NumberWord`, `PiKu`, and `SelfReferential` so callers can no longer request one verifier and quietly get another.
+- Added direct regressions for the reproduced `NumberWord(12)`, `PiKu(25)`, and `SelfReferential(12)` silent-clamp cases.
+- Verified the RF-047 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `667 passed, 1 skipped`.
+- Closed `RF-047` and released its lock.
