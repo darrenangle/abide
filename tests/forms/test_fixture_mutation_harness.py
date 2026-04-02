@@ -66,3 +66,14 @@ def test_fixture_mutation_harness_rejects_missing_line(name: str, form, poem: st
     mutated = form.verify(_drop_last_nonempty_line(poem))
 
     assert mutated.passed is False
+
+
+def test_pantoum_rejects_flattened_single_block_layout() -> None:
+    form = Pantoum(strict=False)
+
+    baseline = form.verify(PANTOUM_SYNTHETIC_PERFECT)
+    assert baseline.passed is True
+
+    flattened = form.verify(PANTOUM_SYNTHETIC_PERFECT.replace("\n\n", "\n"))
+
+    assert flattened.passed is False

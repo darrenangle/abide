@@ -97,7 +97,7 @@ class Pantoum(Constraint):
                 GroupedStanzas(
                     4,
                     self.min_stanzas,
-                    allow_single_block_chunking=True,
+                    allow_single_block_chunking=False,
                     weight=2.0,
                 ),
                 2.0,

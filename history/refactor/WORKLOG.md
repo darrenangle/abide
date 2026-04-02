@@ -176,3 +176,7 @@
 - Added a fixture-driven mutation harness for core fixed forms that asserts baseline canonical passes, then rejects both trailing-line additions and last-line deletions.
 - Verified the RF-035 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `626 passed, 1 skipped`.
 - Closed `RF-035` and released its lock.
+- Opened and claimed `RF-036` after reproducing that `Pantoum(strict=False)` still reports `passed=True` for a fully flattened single-block poem because the verifier re-chunks one stanza into quatrains with `allow_single_block_chunking=True`.
+- Removed synthetic single-block chunking from `Pantoum` and added a direct regression asserting that flattened pantoum layouts no longer pass canonically.
+- Verified the RF-036 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `627 passed, 1 skipped`.
+- Closed `RF-036` and released its lock.

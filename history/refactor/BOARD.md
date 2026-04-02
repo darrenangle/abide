@@ -39,3 +39,4 @@ Updated: 2026-04-01
 | RF-033 | P1 | done | | Remove the `pronouncing` dependency and read CMU data directly from `cmudict` | RF-032 |
 | RF-034 | P1 | done | | Fix stale special-form kwargs so the catalog instantiates every exported form | RF-033 |
 | RF-035 | P1 | done | | Add fixture-driven line-add/drop mutation regressions for core fixed forms | RF-034 |
+| RF-036 | P1 | done | | Reject flattened single-block Pantoum layouts instead of chunking them back into quatrains | RF-035 |
