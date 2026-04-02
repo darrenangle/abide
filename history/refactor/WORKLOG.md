@@ -162,3 +162,8 @@
 - Replaced the deprecated Hypothesis verbosity integer with `Verbosity.verbose` and localized the `pronouncing`/`pkg_resources` warning suppression to the import boundary in `phonetics.py`, leaving the suite clean under strict warning handling.
 - Verified the RF-032 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `611 passed, 1 skipped`.
 - Closed `RF-032` and released its lock.
+- Opened and claimed `RF-033` after confirming that `phonetics.py` only uses `pronouncing` for CMU dictionary lookup and that `cmudict` is already present in the environment, making the dependency removable without changing rhyme/scansion behavior.
+- Replaced `pronouncing` with direct `cmudict` lookup in `phonetics.py`, removed the temporary warning-suppression workaround, and dropped the extra `pronouncing` runtime dependency from project metadata.
+- Refreshed the lockfile with `uv lock`, which removed `pronouncing` from the resolved dependency graph.
+- Verified the RF-033 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `611 passed, 1 skipped`.
+- Closed `RF-033` and released its lock.

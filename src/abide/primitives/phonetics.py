@@ -14,19 +14,11 @@ Rhyme Types:
 
 from __future__ import annotations
 
-import warnings
 from enum import Enum
 from functools import lru_cache
 
+import cmudict
 import jellyfish
-
-with warnings.catch_warnings():
-    warnings.filterwarnings(
-        "ignore",
-        message=r"pkg_resources is deprecated as an API\..*",
-        category=Warning,
-    )
-    import pronouncing
 
 
 class RhymeType(Enum):
@@ -38,6 +30,13 @@ class RhymeType(Enum):
     CONSONANCE = "consonance"  # Matching final consonants
     FAMILY = "family"  # Same consonant ending, different vowel
     NONE = "none"  # No detectable rhyme
+
+
+@lru_cache(maxsize=1)
+def _cmu_dict() -> dict[str, list[list[str]]]:
+    """Load the CMU pronunciation dictionary once for phoneme lookups."""
+    pronunciations: dict[str, list[list[str]]] = cmudict.dict()
+    return pronunciations
 
 
 # ============================================================================
@@ -222,11 +221,11 @@ def get_phonemes(word: str) -> tuple[tuple[str, ...], ...]:
     if not word:
         return ()
 
-    phones_list = pronouncing.phones_for_word(word.lower())
+    phones_list = _cmu_dict().get(word.lower())
     if not phones_list:
         return ()
 
-    return tuple(tuple(phones.split()) for phones in phones_list)
+    return tuple(tuple(phones) for phones in phones_list)
 
 
 def get_rhyme_part(phonemes: tuple[str, ...]) -> tuple[str, ...]:

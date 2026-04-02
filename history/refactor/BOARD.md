@@ -36,3 +36,4 @@ Updated: 2026-04-01
 | RF-030 | P1 | done | | Gate `LiteraryBallad` canonical passes on stanza count instead of blended score alone | RF-029 |
 | RF-031 | P1 | done | | Gate generic `Sonnet` canonical passes on the syllable proxy instead of line count alone | RF-030 |
 | RF-032 | P2 | done | | Make the test suite warning-clean under `pytest -W error` | RF-031 |
+| RF-033 | P1 | done | | Remove the `pronouncing` dependency and read CMU data directly from `cmudict` | RF-032 |

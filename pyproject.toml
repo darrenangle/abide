@@ -23,8 +23,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "pronouncing>=0.2.0", # CMU Pronouncing Dictionary wrapper
-    "setuptools", # Required by pronouncing for pkg_resources
+    "cmudict>=1.1.2", # CMU Pronouncing Dictionary data
     "numpy>=1.24.0", # Numerical operations
     "jellyfish>=1.0.0", # Phonetic encodings (Soundex, Metaphone, etc.)
     "pyphen>=0.14.0", # Hyphenation for syllable fallback
@@ -118,7 +117,6 @@ markers = [
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",
-    "ignore:pkg_resources is deprecated as an API\\.:UserWarning:pkg_resources",
 ]
 
 # ============================================================================
@@ -162,7 +160,8 @@ show_column_numbers = true
 
 [[tool.mypy.overrides]]
 module = [
-    "pronouncing.*",
+    "cmudict",
+    "cmudict.*",
     "jellyfish.*",
     "pyphen.*",
     "hypothesis.*",

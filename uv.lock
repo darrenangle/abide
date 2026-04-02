@@ -15,12 +15,11 @@ name = "abide"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "cmudict" },
     { name = "flashinfer-python" },
     { name = "jellyfish" },
     { name = "numpy" },
-    { name = "pronouncing" },
     { name = "pyphen" },
-    { name = "setuptools" },
 ]
 
 [package.optional-dependencies]
@@ -85,6 +84,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "abide", extras = ["nn", "nlp", "evals", "dev", "training"], marker = "extra == 'all'" },
+    { name = "cmudict", specifier = ">=1.1.2" },
     { name = "datasets", marker = "extra == 'evals'", specifier = ">=2.0.0" },
     { name = "datasets", marker = "extra == 'training'", specifier = ">=2.0.0" },
     { name = "flashinfer-python", specifier = ">=0.5.3" },
@@ -97,12 +97,10 @@ requires-dist = [
     { name = "openai", marker = "extra == 'evals'", specifier = ">=1.0.0" },
     { name = "peft", marker = "extra == 'training'", specifier = ">=0.13.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.6.0" },
-    { name = "pronouncing", specifier = ">=0.2.0" },
     { name = "pyphen", specifier = ">=0.14.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3.0" },
-    { name = "setuptools" },
     { name = "torch", marker = "extra == 'nn'", specifier = ">=2.0.0" },
     { name = "torch", marker = "extra == 'training'", specifier = ">=2.0.0" },
     { name = "transformers", marker = "extra == 'training'", specifier = ">=4.45.0" },
@@ -3597,15 +3595,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/69/6d/24d53033cf93826aa
 wheels = [
     { url = "https://files.pythonhosted.org/packages/27/72/0824c18f3bc75810f55dacc2dd933f6ec829771180245ae3cc976195dec0/prometheus_fastapi_instrumentator-7.1.0-py3-none-any.whl", hash = "sha256:978130f3c0bb7b8ebcc90d35516a6fe13e02d2eb358c8f83887cdef7020c31e9", size = 19296, upload-time = "2025-03-19T19:35:04.323Z" },
 ]
-
-[[package]]
-name = "pronouncing"
-version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cmudict" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/7f/c6/9dc74a3ddca71c492e224116b6654592bfe5717b4a78582e4d9c3345d153/pronouncing-0.2.0.tar.gz", hash = "sha256:ff7856e1d973b3e16ff490c5cf1abdb52f08f45e2c35e463249b75741331e7c4", size = 17562, upload-time = "2018-07-02T04:13:05.37Z" }
 
 [[package]]
 name = "propcache"

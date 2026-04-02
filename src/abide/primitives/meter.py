@@ -2,7 +2,7 @@
 Meter and scansion analysis for poetry.
 
 Provides heuristic meter type detection, approximate foot counting, and scansion scoring
-using CMU pronouncing dictionary stress patterns.
+using CMU dictionary stress patterns.
 
 Metrical Feet:
 - Iamb: unstressed-stressed (u/)
