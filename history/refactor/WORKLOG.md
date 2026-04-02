@@ -234,3 +234,8 @@
 - Added a direct regression for the reproduced invalid-variant case.
 - Verified the RF-048 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `668 passed, 1 skipped`.
 - Closed `RF-048` and released its lock.
+- Opened and claimed `RF-049` after confirming that `PalindromePoem(level=\"bogus\")` silently falls back to word-level mode and `ModularVerse(n=0)` crashes with `ZeroDivisionError` instead of rejecting invalid input cleanly.
+- Added explicit validation to `PalindromePoem` and `ModularVerse` so unsupported `level` values and nonpositive moduli fail with clear `ValueError`s instead of silently falling back or crashing indirectly.
+- Added direct regressions for both invalid-configuration cases.
+- Verified the RF-049 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `670 passed, 1 skipped`.
+- Closed `RF-049` and released its lock.

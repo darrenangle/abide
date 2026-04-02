@@ -52,3 +52,4 @@ Updated: 2026-04-01
 | RF-046 | P1 | done | | Reject unsupported PrimeVerse line counts instead of cycling the prime pattern | RF-045 |
 | RF-047 | P1 | done | | Replace silent line-count clamps with early validation in bounded pattern forms | RF-046 |
 | RF-048 | P1 | done | | Reject unsupported Rispetto variants instead of silently falling back to Tuscan | RF-047 |
+| RF-049 | P1 | done | | Validate PalindromePoem levels and ModularVerse moduli explicitly | RF-048 |

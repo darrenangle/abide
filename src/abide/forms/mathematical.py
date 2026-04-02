@@ -711,6 +711,8 @@ class ModularVerse(Constraint):
 
     def __init__(self, k: int = 1, n: int = 3, min_words: int = 15, weight: float = 1.0) -> None:
         super().__init__(weight)
+        if n <= 0:
+            raise ValueError("n must be positive")
         self.k = k % n  # Normalize k
         self.n = n
         self.min_words = min_words

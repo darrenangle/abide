@@ -3,6 +3,7 @@ import pytest
 from abide.forms.mathematical import (
     CoprimeVerse,
     GoldenRatioVerse,
+    ModularVerse,
     PiKu,
     PythagoreanTercet,
     SelfReferential,
@@ -127,3 +128,8 @@ def test_bounded_mathematical_forms_reject_unsupported_line_counts_instead_of_cl
 
     with pytest.raises(ValueError, match="num_lines must be between 1 and 9"):
         SelfReferential(num_lines=12)
+
+
+def test_modular_verse_rejects_nonpositive_modulus() -> None:
+    with pytest.raises(ValueError, match="n must be positive"):
+        ModularVerse(k=1, n=0)

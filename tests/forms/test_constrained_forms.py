@@ -1,3 +1,5 @@
+import pytest
+
 from abide.forms import (
     Abecedarian,
     Anaphora,
@@ -70,6 +72,11 @@ def test_palindrome_poem_supports_word_and_letter_levels() -> None:
     assert word_result.passed is True
     assert letter_result.passed is True
     assert bad_result.passed is False
+
+
+def test_palindrome_poem_rejects_unsupported_levels_instead_of_falling_back() -> None:
+    with pytest.raises(ValueError, match="level must be 'word' or 'letter'"):
+        PalindromePoem(level="bogus")
 
 
 def test_catalog_can_instantiate_constrained_forms_with_defaults() -> None:

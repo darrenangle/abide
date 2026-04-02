@@ -545,6 +545,8 @@ class PalindromePoem(Constraint):
             weight: Relative weight for composition
         """
         super().__init__(weight)
+        if level not in {"word", "letter"}:
+            raise ValueError("level must be 'word' or 'letter'")
         self.level = level
         self.min_lines = min_lines
 
