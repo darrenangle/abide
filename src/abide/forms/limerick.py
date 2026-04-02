@@ -1,7 +1,7 @@
 """
 Limerick form template.
 
-A humorous five-line poem with AABBA rhyme scheme.
+Structural proxy for the 5-line AABBA limerick shell.
 """
 
 from __future__ import annotations

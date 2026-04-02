@@ -27,7 +27,7 @@ class Haiku(Constraint):
     """
     Haiku: 3 lines with 5-7-5 syllable pattern.
 
-    A traditional Japanese form capturing a moment in nature.
+    This verifier checks only the 3-line 5-7-5 structural shell.
 
     Examples:
         >>> haiku = Haiku()
@@ -142,7 +142,7 @@ class Tanka(Constraint):
     """
     Tanka: 5 lines with 5-7-5-7-7 syllable pattern.
 
-    An extension of haiku with two additional 7-syllable lines.
+    This verifier checks only the 5-line 5-7-5-7-7 structural shell.
 
     Examples:
         >>> tanka = Tanka()

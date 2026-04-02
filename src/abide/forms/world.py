@@ -32,7 +32,6 @@ class Tanaga(Constraint):
     Traditional Filipino form with:
     - 4 lines of 7 syllables each (28 total)
     - AABB or ABAB rhyme scheme
-    - Often deals with love, nature, or social commentary
 
     Examples:
         >>> tanaga = Tanaga()
@@ -269,7 +268,6 @@ class Seguidilla(Constraint):
     Structure:
     - 7 lines with syllable pattern: 7-5-7-5-5-7-5
     - Rhyme scheme: xAxAxBx (where x is unrhymed)
-    - Often used for dance songs
 
     Examples:
         >>> seguidilla = Seguidilla()
@@ -457,7 +455,6 @@ class Rispetto(Constraint):
     Structure:
     - 8 lines of about 10 or 11 syllables
     - Rhyme scheme: ABABABCC (Tuscan) or ABABCCDD (Sicilian)
-    - Often about love or respect (rispetto = respect)
 
     Examples:
         >>> rispetto = Rispetto(variant="tuscan")

@@ -30,7 +30,6 @@ class Ghazal(Constraint):
     - First couplet (matla): both lines end with qafiya + radif
     - Subsequent couplets: only second line ends with qafiya + radif
     - Pattern: AA BA CA DA EA...
-    - Each couplet is thematically self-contained
 
     Examples:
         >>> ghazal = Ghazal()

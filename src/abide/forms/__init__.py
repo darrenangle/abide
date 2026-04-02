@@ -18,12 +18,12 @@ Available forms:
 - Rondeau: 15 lines with rentrement refrain
 - Ballade: 28 lines with 3 octaves + envoi
 - Blues Poem: AAB tercets with line repetition
-- Clerihew: 4-line humorous biographical poem
+- Clerihew: 4-line structural proxy with first-line-name check
 - Quatrain: 4-line stanza with various rhyme schemes
 - Couplet: 2 rhyming lines
 - Blank Verse: Unrhymed lines with roughly 10 syllables
 - Ode: Generic and stanzaic ode structure shells
-- Ballad: Narrative quatrains with ABCB rhyme
+- Ballad: Quatrain-based structural proxy with ABCB/ABAB rhyme
 - Diamante: 7-line diamond shape poem
 - Cinquain: 5-line syllabic poem
 - Ottava Rima: 8-line stanza with ABABABCC rhyme

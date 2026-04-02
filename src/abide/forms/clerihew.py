@@ -1,7 +1,7 @@
 """
 Clerihew form template.
 
-A humorous 4-line biographical poem.
+Structural proxy for the 4-line clerihew shell.
 """
 
 from __future__ import annotations
@@ -73,14 +73,15 @@ class _FirstLineContainsName(Constraint):
 
 class Clerihew(Constraint):
     """
-    Clerihew: 4-line humorous biographical poem.
+    Clerihew structural proxy.
 
     Structure:
     - 4 lines total
     - Rhyme scheme: AABB (two couplets)
     - Line 1 must be/contain a person's name
     - Irregular meter (intentionally uneven)
-    - Humorous or whimsical content
+
+    This verifier checks line count, a first-line-name proxy, and rhyme only.
 
     Famous example:
         "Sir Humphry Davy / Abominated gravy..."

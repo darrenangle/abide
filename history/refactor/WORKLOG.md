@@ -128,3 +128,8 @@
 - Added direct claim-alignment tests for representative generic forms and re-ran the full repository gates.
 - Verified the RF-025 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `598 passed, 1 skipped`.
 - Closed `RF-025` and released its lock.
+- Opened and claimed `RF-026` for the remaining source-level thematic claims still embedded in docstrings and top-level catalog summaries for forms whose code only verifies structural proxies.
+- Removed the remaining targeted thematic claims from representative form docstrings and catalog summaries, including `Clerihew`, `Ballad`, `Tanaga`, `Seguidilla`, `Rispetto`, `Ghazal`, `Haiku`, and the top-level form index.
+- Added direct docstring-alignment tests so those source-level claims stay structural and do not drift back toward unverified theme assertions.
+- Verified the RF-026 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest` -> `601 passed, 1 skipped`.
+- Closed `RF-026` and released its lock.

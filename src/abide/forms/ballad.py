@@ -1,7 +1,7 @@
 """
 Ballad form templates.
 
-Ballads are narrative poems, often in quatrain stanzas.
+Structural proxies for ballad-family stanza and rhyme patterns.
 """
 
 from __future__ import annotations
@@ -28,13 +28,14 @@ if TYPE_CHECKING:
 
 class Ballad(Constraint):
     """
-    Traditional ballad: quatrains with ABCB or ABAB rhyme.
+    Traditional ballad structural proxy: quatrains with ABCB or ABAB rhyme.
 
     Features:
     - Quatrain stanzas (4 lines each)
     - Common Meter: 8-6-8-6 syllables (iambic 4-3-4-3)
     - ABCB or ABAB rhyme scheme
-    - Narrative content
+
+    This verifier checks stanza shape, a syllable proxy, and rhyme only.
 
     Examples:
         >>> ballad = Ballad(stanza_count=4, rhyme_scheme="ABCB")
@@ -135,7 +136,7 @@ class Ballad(Constraint):
 
 class LiteraryBallad(Constraint):
     """
-    Literary ballad: More flexible form for art ballads.
+    Literary ballad structural proxy with looser stanza/count bounds.
 
     Less strict than traditional ballad, allows:
     - Variable stanza sizes
