@@ -148,3 +148,12 @@ def test_short_japanese_and_shape_forms_reject_high_scoring_near_misses(factory,
 
 def test_senryu_description_avoids_unverified_semantic_claims() -> None:
     assert "human" not in Senryu().describe().lower()
+
+
+def test_word_cinquain_does_not_treat_punctuation_as_words() -> None:
+    poem = "!!!\n???\n...\n!!!\n???"
+
+    result = WordCinquain().verify(poem)
+
+    assert result.passed is False
+    assert result.score < 0.6

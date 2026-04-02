@@ -20,6 +20,7 @@ from abide.forms._validation import (
     require_ordered_bounds,
     require_positive,
 )
+from abide.primitives import tokenize_line
 
 if TYPE_CHECKING:
     from abide.primitives import PoemStructure
@@ -107,19 +108,26 @@ class FreeVerse(Constraint):
             issues.append(f"Too many stanzas ({structure.stanza_count} > {self.max_stanzas})")
 
         # Check word counts per line
+        word_bound_matches = 0
         if self.min_words_per_line or self.max_words_per_line:
             for i, line in enumerate(structure.lines):
-                word_count = len(line.split())
+                word_count = len(tokenize_line(line))
+                within_bounds = True
                 if word_count < self.min_words_per_line:
-                    score *= 0.95  # Minor penalty
+                    within_bounds = False
                     word_bound_violations.append(
                         f"Line {i + 1} has too few words ({word_count} < {self.min_words_per_line})"
                     )
                 if self.max_words_per_line and word_count > self.max_words_per_line:
-                    score *= 0.95
+                    within_bounds = False
                     word_bound_violations.append(
                         f"Line {i + 1} has too many words ({word_count} > {self.max_words_per_line})"
                     )
+                if within_bounds:
+                    word_bound_matches += 1
+
+            if structure.line_count > 0:
+                score *= word_bound_matches / structure.line_count
 
         issues.extend(word_bound_violations)
         passed = score >= 0.8 and not issues
@@ -133,6 +141,7 @@ class FreeVerse(Constraint):
             details={
                 "line_count": structure.line_count,
                 "stanza_count": structure.stanza_count,
+                "word_bound_matches": word_bound_matches,
                 "word_bound_violations": word_bound_violations,
                 "issues": issues,
             },

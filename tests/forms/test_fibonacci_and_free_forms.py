@@ -79,6 +79,16 @@ def test_free_verse_enforces_configured_structural_bounds() -> None:
     assert form.verify(FREE_VERSE_TOO_SHORT).passed is False
 
 
+def test_free_verse_word_bounds_do_not_treat_punctuation_as_words() -> None:
+    form = FreeVerse(min_lines=5, min_words_per_line=1)
+    poem = "!!!\n???\n...\n!!!\n???"
+
+    result = form.verify(poem)
+
+    assert result.passed is False
+    assert result.details["word_bound_violations"]
+
+
 def test_prose_poem_rejects_line_broken_verse() -> None:
     form = ProsePoem(min_paragraphs=1, min_sentences=3)
 

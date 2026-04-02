@@ -318,3 +318,9 @@
 - Added a direct regression for the reproduced 10-line repeated-line triolet case and reran the repeated-line exported-form rescan to confirm the outlier is gone.
 - Verified the RF-064 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `841 passed, 1 skipped`.
 - Closed `RF-064` and released its lock.
+- Opened and claimed `RF-065` after the degenerate rescan found that punctuation-only lines still count as words in multiple verifier paths because they use raw whitespace splitting instead of the shared tokenizer; `WordCinquain` was the loudest example, scoring `0.742` on a five-line punctuation-only poem.
+- Standardized active word-count measurement onto the shared tokenizer across lexical constraints, shape/word-measured forms, `FreeVerse`, `OddEvenDance`, and the mathematical word-count forms, eliminating punctuation-as-word inconsistencies.
+- Strengthened `FreeVerse` word-bound scoring so punctuation-only lines no longer remain the top failed-score outlier once tokenization is corrected.
+- Added direct punctuation-as-word regressions plus a degenerate exported-form reward harness, and the rescan ceiling on failed degenerate cases dropped to `0.673` (`ReverseEtheree` on repeated-line input).
+- Verified the RF-065 sweep with `uv run ruff check src/abide tests scripts` -> clean, `uv run mypy src/abide` -> clean, and `uv run pytest -q -W error` -> `845 passed, 1 skipped`.
+- Closed `RF-065` and released its lock.

@@ -146,6 +146,13 @@ def test_uniform_word_count_keeps_open_ended_single_line_behavior() -> None:
     assert result.score == 1.0
 
 
+def test_word_count_does_not_treat_punctuation_as_words() -> None:
+    result = WordCount(1).verify("!!!")
+
+    assert result.passed is False
+    assert result.score == 0.0
+
+
 def test_all_words_unique_penalizes_inputs_below_minimum_sample_size() -> None:
     result = AllWordsUnique(min_words=10).verify("alpha bravo")
 

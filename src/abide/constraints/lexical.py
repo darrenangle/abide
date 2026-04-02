@@ -22,6 +22,7 @@ from abide.constraints._validation import (
 )
 from abide.constraints.base import Constraint
 from abide.constraints.types import ConstraintType, VerificationResult
+from abide.primitives import tokenize_line
 
 if TYPE_CHECKING:
     from abide.primitives import PoemStructure
@@ -70,7 +71,7 @@ class WordCount(Constraint):
             details.append(f"Missing {missing} expected line(s)")
 
         for i, line in enumerate(structure.lines):
-            words = line.split()
+            words = tokenize_line(line)
             actual = len(words)
             expected = self.words_per_line[i % len(self.words_per_line)]
 
@@ -1146,7 +1147,7 @@ class CrossLineVowelWordCount(Constraint):
         details = []
 
         for i, line in enumerate(structure.lines):
-            words = line.split()
+            words = tokenize_line(line)
             word_count = len(words)
             vowels_in_line = sum(1 for c in line if c in self.VOWELS)
 

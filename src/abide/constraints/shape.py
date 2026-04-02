@@ -17,7 +17,7 @@ from abide.constraints.types import (
     RubricItem,
     VerificationResult,
 )
-from abide.primitives import count_line_syllables
+from abide.primitives import count_line_syllables, tokenize_line
 
 if TYPE_CHECKING:
     from abide.primitives import PoemStructure
@@ -154,7 +154,7 @@ class LineShape(Constraint):
         elif self.mode == MeasureMode.SYLLABLES:
             return count_line_syllables(line)
         elif self.mode == MeasureMode.WORDS:
-            return len(line.split())
+            return len(tokenize_line(line))
         return len(line)
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
@@ -358,7 +358,7 @@ class LineLengthRange(Constraint):
         elif self.mode == MeasureMode.SYLLABLES:
             return count_line_syllables(line)
         elif self.mode == MeasureMode.WORDS:
-            return len(line.split())
+            return len(tokenize_line(line))
         return len(line)
 
     def verify(self, poem: str | PoemStructure) -> VerificationResult:

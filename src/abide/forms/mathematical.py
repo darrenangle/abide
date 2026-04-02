@@ -17,6 +17,7 @@ from abide.constraints import (
     ConstraintType,
     VerificationResult,
 )
+from abide.primitives import tokenize_line
 
 if TYPE_CHECKING:
     from abide.primitives import PoemStructure
@@ -112,7 +113,7 @@ class FibonacciVerse(Constraint):
         matches = 0
         details = []
         for i, line in enumerate(structure.lines):
-            words = len(line.split())
+            words = len(tokenize_line(line))
             expected = self.expected[i]
             if words == expected:
                 matches += 1
@@ -259,7 +260,7 @@ class TriangularVerse(Constraint):
         matches = 0
         details = []
         for i, line in enumerate(structure.lines):
-            words = len(line.split())
+            words = len(tokenize_line(line))
             expected = self.expected[i]
             if words == expected:
                 matches += 1
@@ -340,7 +341,7 @@ class PythagoreanTercet(Constraint):
 
         for s in range(self.num_stanzas):
             start = s * 3
-            words = [len(structure.lines[start + i].split()) for i in range(3)]
+            words = [len(tokenize_line(structure.lines[start + i])) for i in range(3)]
             a, b, c = words
 
             if self._is_pythagorean(a, b, c):
@@ -414,7 +415,7 @@ class CoprimeVerse(Constraint):
 
         matches = 0
         details = []
-        word_counts = [len(line.split()) for line in structure.lines[: self.num_lines]]
+        word_counts = [len(tokenize_line(line)) for line in structure.lines[: self.num_lines]]
 
         details.append(f"Line 1: {word_counts[0]} words")
 
@@ -509,7 +510,7 @@ class PiKu(Constraint):
         matches = 0
         details = []
         for i, line in enumerate(structure.lines):
-            words = line.split()
+            words = tokenize_line(line)
             syllables = sum(self._count_syllables(w) for w in words)
             expected = self.expected[i]
 
@@ -577,7 +578,7 @@ class SquareStanzas(Constraint):
         matches = 0
         details = []
         for i, stanza in enumerate(structure.stanzas[: self.num_stanzas]):
-            words = sum(len(line.split()) for line in stanza)
+            words = sum(len(tokenize_line(line)) for line in stanza)
             expected = self.expected[i]
 
             if words == expected:
@@ -720,9 +721,9 @@ class ModularVerse(Constraint):
     def verify(self, poem: str | PoemStructure) -> VerificationResult:
         structure = self._ensure_structure(poem)
 
-        all_words = []
+        all_words: list[str] = []
         for line in structure.lines:
-            all_words.extend(line.split())
+            all_words.extend(tokenize_line(line))
 
         if len(all_words) < self.min_words:
             return VerificationResult(

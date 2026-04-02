@@ -27,6 +27,7 @@ from abide.constraints.lexical import (
     MonosyllabicOnly,
     WordCount,
 )
+from abide.primitives import tokenize_line
 
 if TYPE_CHECKING:
     from abide.primitives import PoemStructure
@@ -711,7 +712,7 @@ class OddEvenDance(Constraint):
         details = []
 
         for i, line in enumerate(structure.lines):
-            words = line.split()
+            words = tokenize_line(line)
             expected = self.odd_words if (i + 1) % 2 == 1 else self.even_words
             actual = len(words)
 

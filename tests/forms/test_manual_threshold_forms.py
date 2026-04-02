@@ -44,5 +44,5 @@ def test_free_verse_enforces_configured_word_bounds_canonically() -> None:
     )
     result = FreeVerse(min_lines=3, max_words_per_line=3).verify(invalid)
     assert result.passed is False
-    assert result.score > 0.8
+    assert result.score == 0.0
     assert result.details["word_bound_violations"]
