@@ -82,3 +82,4 @@ Updated: 2026-04-03
 | RF-076 | P2 | done | | Restore Gemma 4 vLLM serving by reconciling native uv runtime with the upstream Gemma 4 image path | RF-075 |
 | RF-077 | P2 | done | | Add a resumable longer-canary Gemma 4 workflow with persisted telemetry artifacts | RF-076 |
 | RF-078 | P2 | done | | Update verifiers to the current RL stack and rewrite the Gemma verifiers trainer around well-known forms | RF-077 |
+| RF-079 | P2 | done | | Retarget the legacy verifiers Gemma trainer and runner path to verified Gemma 4 E4B defaults | RF-078 |

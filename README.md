@@ -300,7 +300,7 @@ We're actively running GRPO (Group Relative Policy Optimization) experiments to 
 
 | Script | Description |
 |--------|-------------|
-| [`scripts/train_grpo.py`](scripts/train_grpo.py) | Legacy verifiers RL trainer for local Gemma experiments on the well-known-form subset; upstream verifiers now recommends `prime-rl` for production training |
+| [`scripts/train_grpo.py`](scripts/train_grpo.py) | Legacy verifiers RL trainer for local Gemma 4 experiments on the well-known-form subset; upstream verifiers now recommends `prime-rl` for production training |
 | [`scripts/train_grpo_trl.py`](scripts/train_grpo_trl.py) | TRL-based GRPO with KL regularization (beta parameter) |
 | [`scripts/find_learnable_forms.py`](scripts/find_learnable_forms.py) | Identify forms with high within-rollout variance (best GRPO signal) |
 | [`scripts/prompt_generator.py`](scripts/prompt_generator.py) | Generate training prompts from the form catalog |
@@ -311,8 +311,8 @@ We're actively running GRPO (Group Relative Policy Optimization) experiments to 
 |--------|-------|-------|-------|
 | [`scripts/run_grpo_trl.sh`](scripts/run_grpo_trl.sh) | Gemma 3 4B | Top 10 learnable | TRL with beta=0.04 KL regularization |
 | [`scripts/run_grpo_gemma4_e4b.sh`](scripts/run_grpo_gemma4_e4b.sh) | Gemma 4 E4B | RL-default | Resumable TRL runner with `smoke` / `canary` / `soak` profiles and persisted reward telemetry |
-| [`scripts/run_grpo.sh`](scripts/run_grpo.sh) | Gemma 3 4B | Well-known | Legacy verifiers GRPO; auto-prepares `.venv-verifiers` via `scripts/prepare_verifiers_runtime.sh` |
-| [`scripts/run_grpo_gemma3.sh`](scripts/run_grpo_gemma3.sh) | Gemma 3 4B | Well-known | Legacy verifiers GRPO runner focused on canonical forms |
+| [`scripts/run_grpo.sh`](scripts/run_grpo.sh) | Gemma 4 E4B | Well-known | Legacy verifiers GRPO; auto-prepares `.venv-verifiers` with the verified Gemma 4 overlay and starts the compatibility vLLM server |
+| [`scripts/run_grpo_gemma3.sh`](scripts/run_grpo_gemma3.sh) | Gemma 3 4B | Well-known | Legacy verifiers fallback runner using the same compatibility vLLM server |
 
 ### Key Findings
 

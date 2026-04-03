@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import gc
 import os
 import re
 import signal
@@ -54,7 +55,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-DEFAULT_GEMMA_MODEL = "google/gemma-3-4b-it"
+DEFAULT_GEMMA_MODEL = "google/gemma-4-E4B-it"
 SUPPORTED_FORM_SETS = ("all", "learnable", "rl_default", "traditional", "well_known")
 
 
@@ -72,7 +73,7 @@ class TrainingConfig:
 
     num_train_epochs: int = 1
     rollouts_per_example: int = 8
-    batch_size: int = 16
+    batch_size: int = 8
     micro_batch_size: int = 1
     learning_rate: float = 2e-5
     max_seq_len: int = 1536
@@ -82,7 +83,7 @@ class TrainingConfig:
     top_p: float = 0.95
     repetition_penalty: float = 1.1
 
-    output_dir: str = "models/abide_verifiers_gemma_well_known"
+    output_dir: str = "models/abide_verifiers_gemma4_e4b_well_known"
     save_steps: int = 50
     eval_steps: int = 50
     logging_steps: int = 5
@@ -305,6 +306,7 @@ def create_environment(forms: dict[str, object], config: TrainingConfig):
     """Create a verifiers environment using parser-aware reward plumbing."""
     import verifiers as vf
 
+    install_verifiers_client_compat()
     parser = vf.MaybeThinkParser(extract_fn=normalize_generated_poem)
     dataset, eval_dataset = create_dataset(config)
     reward_fn = create_reward_function(
@@ -338,6 +340,52 @@ def create_environment(forms: dict[str, object], config: TrainingConfig):
     return env, reward_fn
 
 
+def install_verifiers_client_compat() -> None:
+    """Bridge the verifiers/verifiers-rl client API mismatch.
+
+    `verifiers-rl` still passes a raw `openai.AsyncOpenAI` subclass to
+    `Environment.generate`, while newer `verifiers` releases expect a
+    `verifiers.clients.Client` wrapper or a `ClientConfig`. Wrap the raw client
+    on the Abide side so the isolated legacy runtime remains usable.
+    """
+    import verifiers.clients as vf_clients
+    import verifiers.envs.environment as vf_environment
+    from openai import AsyncOpenAI
+    from verifiers.clients import OpenAIChatCompletionsClient
+
+    current_resolve = vf_clients.resolve_client
+    if getattr(current_resolve, "__name__", "") == "resolve_client_compat":
+        return
+
+    def resolve_client_compat(client_or_config):
+        if isinstance(client_or_config, AsyncOpenAI):
+            return OpenAIChatCompletionsClient(client_or_config)
+        return current_resolve(client_or_config)
+
+    vf_clients.resolve_client = resolve_client_compat
+    vf_environment.resolve_client = resolve_client_compat
+
+
+def install_verifiers_rl_kbit_compat() -> None:
+    """Teach the legacy trainer how to prepare k-bit PEFT models."""
+    import verifiers_rl.rl.trainer.trainer as rl_trainer_module
+    from peft import prepare_model_for_kbit_training
+
+    current_prepare = rl_trainer_module.prepare_peft_model
+    if getattr(current_prepare, "__name__", "") == "prepare_peft_model_compat":
+        return
+
+    def prepare_peft_model_compat(model, peft_config, args):
+        if getattr(model, "quantization_method", None) is not None:
+            model = prepare_model_for_kbit_training(
+                model,
+                use_gradient_checkpointing=False,
+            )
+        return current_prepare(model, peft_config, args)
+
+    rl_trainer_module.prepare_peft_model = prepare_peft_model_compat
+
+
 def import_verifiers_rl_trainer():
     """Import the optional verifiers RL trainer with a repo-specific hint."""
     try:
@@ -360,6 +408,25 @@ def find_latest_checkpoint(output_dir: Path) -> Path | None:
     if not checkpoints:
         return None
     return max(checkpoints, key=lambda item: item[0])[1]
+
+
+def apply_runtime_defaults(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
+    """Apply verified model-specific runtime defaults when the user did not override them."""
+    model_profile = resolve_model_profile(args.model)
+    if model_profile.family != "gemma4_e4b":
+        return
+
+    if args.rollouts == parser.get_default("rollouts"):
+        args.rollouts = 2
+    if args.batch_size == parser.get_default("batch_size"):
+        args.batch_size = 2
+    if args.max_seq_len == parser.get_default("max_seq_len"):
+        args.max_seq_len = 512
+    if args.max_prompt_len == parser.get_default("max_prompt_len"):
+        args.max_prompt_len = 192
+    if args.max_tokens == parser.get_default("max_tokens"):
+        args.max_tokens = 128
+    os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 
 def setup_signal_handlers(trainer) -> None:
@@ -474,6 +541,7 @@ def build_rl_config(config: TrainingConfig, *, max_steps: int):
 def train_with_retry(config: TrainingConfig) -> int:
     """Run verifiers training with simple retry-once checkpoint recovery."""
     _, RLTrainer = import_verifiers_rl_trainer()
+    install_verifiers_rl_kbit_compat()
 
     print("=" * 60)
     print("Abide Verifiers GRPO Training")
@@ -507,11 +575,30 @@ def train_with_retry(config: TrainingConfig) -> int:
             model_profile = resolve_model_profile(model_path)
             print(f"Loading model: {model_path}")
 
+            load_kwargs = dict(model_profile.causal_lm_load_kwargs())
+            if model_profile.family == "gemma4_e4b":
+                from transformers import BitsAndBytesConfig
+
+                load_kwargs.update(
+                    {
+                        "device_map": "auto",
+                        "max_memory": {0: "18GiB", "cpu": "64GiB"},
+                        "low_cpu_mem_usage": True,
+                        "quantization_config": BitsAndBytesConfig(
+                            load_in_4bit=True,
+                            bnb_4bit_compute_dtype=torch.bfloat16,
+                            bnb_4bit_quant_type="nf4",
+                            bnb_4bit_use_double_quant=True,
+                        ),
+                    }
+                )
+
             model = AutoModelForCausalLM.from_pretrained(
                 model_path,
                 torch_dtype=torch.bfloat16,
-                **model_profile.causal_lm_load_kwargs(),
+                **load_kwargs,
             )
+            model.config.use_cache = False
             tokenizer = AutoTokenizer.from_pretrained(
                 model_path,
                 trust_remote_code=model_profile.trust_remote_code,
@@ -545,6 +632,11 @@ def train_with_retry(config: TrainingConfig) -> int:
             print(f"\nError during training: {exc}")
             traceback.print_exc()
             flush_reward_telemetry(reward_fn)
+            with contextlib.suppress(Exception):
+                del model
+            with contextlib.suppress(Exception):
+                gc.collect()
+                torch.cuda.empty_cache()
 
             if attempt >= config.max_retries - 1:
                 finish_wandb(wandb_enabled)
@@ -591,7 +683,7 @@ def main() -> int:
         help="Optional number of held-out prompts for periodic evaluation.",
     )
     parser.add_argument("--rollouts", type=int, default=8, help="Rollouts per example.")
-    parser.add_argument("--batch-size", type=int, default=16, help="Total rollout batch size.")
+    parser.add_argument("--batch-size", type=int, default=8, help="Total rollout batch size.")
     parser.add_argument(
         "--micro-batch-size",
         type=int,
@@ -613,7 +705,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--output",
-        default="models/abide_verifiers_gemma_well_known",
+        default="models/abide_verifiers_gemma4_e4b_well_known",
         help="Output directory.",
     )
     parser.add_argument("--save-steps", type=int, default=50, help="Checkpoint cadence.")
@@ -636,6 +728,7 @@ def main() -> int:
         help="Emit aggregate reward telemetry every N scored samples.",
     )
     args = parser.parse_args()
+    apply_runtime_defaults(args, parser)
 
     config = TrainingConfig(
         model_name=args.model,

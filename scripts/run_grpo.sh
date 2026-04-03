@@ -2,12 +2,12 @@
 set -e
 
 # Legacy verifiers GRPO training for Abide poetry forms.
-# This script targets the smaller local verifiers RL trainer, not TRL.
+# This is the Gemma 4 E4B path for the smaller local verifiers RL trainer.
 
 # Configuration
-MODEL="${ABIDE_MODEL:-google/gemma-3-4b-it}"
+MODEL="${ABIDE_MODEL:-google/gemma-4-E4B-it}"
 FORM_SET="${ABIDE_FORM_SET:-well_known}"
-OUTPUT_DIR="${ABIDE_OUTPUT_DIR:-models/abide_verifiers_gemma_well_known}"
+OUTPUT_DIR="${ABIDE_OUTPUT_DIR:-models/abide_verifiers_gemma4_e4b_well_known}"
 PORT=8000
 VLLM_PID=""
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -20,6 +20,7 @@ cleanup() {
     echo "Interrupted. Cleaning up..."
     [ -n "$VLLM_PID" ] && kill $VLLM_PID 2>/dev/null
     pkill -f "vf-vllm" 2>/dev/null || true
+    pkill -f "abide.verifiers_vllm_server" 2>/dev/null || true
     exit 1
 }
 trap cleanup INT TERM
@@ -38,6 +39,7 @@ echo "Runtime: ${VERIFIERS_VENV}"
 echo "Cleaning up old vLLM processes..."
 pkill -f "vf-vllm" || true
 pkill -f "vllm.entrypoints" || true
+pkill -f "abide.verifiers_vllm_server" || true
 sleep 2
 
 "${REPO_ROOT}/scripts/prepare_verifiers_runtime.sh"
@@ -45,15 +47,14 @@ sleep 2
 # Create log directory
 mkdir -p logs
 
-# Start vf-vllm on GPU 1
-# Using V1 engine (patched scheduler assertion)
-echo "Starting vf-vllm on GPU 1..."
-CUDA_VISIBLE_DEVICES=1 nohup "${VERIFIERS_VENV}/bin/vf-vllm" \
+# Start Gemma 4-capable vLLM server on GPU 1
+echo "Starting Gemma 4-capable vLLM server on GPU 1..."
+CUDA_VISIBLE_DEVICES=1 nohup "${VERIFIERS_VENV}/bin/python" -m abide.verifiers_vllm_server \
     --model "$MODEL" \
     --port $PORT \
-    --gpu-memory-utilization 0.92 \
+    --gpu-memory-utilization 0.80 \
     --tensor-parallel-size 1 \
-    --max-model-len 4096 \
+    --max-model-len 1024 \
     --trust-remote-code \
     --disable-log-stats \
     --enforce-eager \

@@ -184,6 +184,10 @@ module = [
 ]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["abide.verifiers_vllm_server"]
+ignore_errors = true
+
 # ============================================================================
 # ruff configuration
 # ============================================================================

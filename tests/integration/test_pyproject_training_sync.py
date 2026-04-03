@@ -37,3 +37,26 @@ def test_prepare_verifiers_runtime_uses_isolated_legacy_stack() -> None:
     assert "packages/verifiers-rl" in script
     assert "UV_PROJECT_ENVIRONMENT" in script
     assert "uv sync --no-dev --extra evals" in script
+    assert "66e86f1dbd565292a253e7d2d6851f65dc4f14ba" in script
+    assert "edaac7db98e34208209fd67d8c66781b8c2e4a53" in script
+    assert 'uv pip install --python "${VENV_DIR}/bin/python" bitsandbytes' in script
+    assert 'uv pip uninstall --python "${VENV_DIR}/bin/python" flash-attn' in script
+
+
+def test_verifiers_vllm_server_matches_current_vllm_api() -> None:
+    server = Path("src/abide/verifiers_vllm_server.py").read_text()
+
+    assert "supported_tasks = await engine.get_supported_tasks()" in server
+    assert 'cast("Any", build_app)(args, supported_tasks, engine.model_config)' in server
+    assert "await init_app_state(engine, app.state, args, supported_tasks)" in server
+    assert "get_vllm_config" not in server
+
+
+def test_legacy_verifiers_runner_defaults_to_gemma4_and_local_server() -> None:
+    runner = Path("scripts/run_grpo.sh").read_text()
+
+    assert 'MODEL="${ABIDE_MODEL:-google/gemma-4-E4B-it}"' in runner
+    assert (
+        'OUTPUT_DIR="${ABIDE_OUTPUT_DIR:-models/abide_verifiers_gemma4_e4b_well_known}"' in runner
+    )
+    assert "-m abide.verifiers_vllm_server" in runner

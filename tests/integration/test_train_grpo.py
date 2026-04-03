@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
 
-from scripts import train_grpo
+from scripts import model_profiles, train_grpo
 
 
 class _StubForm:
@@ -108,6 +110,144 @@ def test_build_rl_config_uses_legacy_field_names(monkeypatch) -> None:
     assert "lora_r" not in rl_config.kwargs
     assert rl_config.kwargs["report_to"] == []
     assert rl_config.kwargs["zero_truncated_completions"] is True
+
+
+def test_train_grpo_defaults_align_with_gemma4_e4b_profile() -> None:
+    defaults = train_grpo.TrainingConfig()
+    profile = model_profiles.resolve_model_profile(defaults.model_name)
+
+    assert defaults.model_name == "google/gemma-4-E4B-it"
+    assert profile.family == "gemma4_e4b"
+    assert defaults.batch_size == profile.canary_batch_size
+    assert defaults.output_dir == "models/abide_verifiers_gemma4_e4b_well_known"
+
+
+def test_install_verifiers_client_compat_wraps_async_openai(monkeypatch) -> None:
+    import openai
+    import verifiers.clients as vf_clients
+    import verifiers.envs.environment as vf_environment
+
+    class WrappedClient:
+        def __init__(self, client) -> None:
+            self.client = client
+
+    monkeypatch.setattr(vf_clients, "OpenAIChatCompletionsClient", WrappedClient)
+    monkeypatch.setattr(
+        vf_clients,
+        "resolve_client",
+        lambda client_or_config: ("base", client_or_config),
+    )
+    monkeypatch.setattr(
+        vf_environment,
+        "resolve_client",
+        lambda client_or_config: ("env", client_or_config),
+    )
+
+    train_grpo.install_verifiers_client_compat()
+
+    client = openai.AsyncOpenAI(api_key="EMPTY", base_url="http://127.0.0.1:1/v1")
+    wrapped = vf_clients.resolve_client(client)
+
+    assert isinstance(wrapped, WrappedClient)
+    assert vf_environment.resolve_client is vf_clients.resolve_client
+    assert vf_clients.resolve_client("config") == ("base", "config")
+
+
+def test_install_verifiers_rl_kbit_compat_patches_prepare(monkeypatch) -> None:
+    from types import ModuleType, SimpleNamespace
+
+    marker = object()
+
+    def prepare_model_for_kbit_training(model, *, use_gradient_checkpointing):
+        assert use_gradient_checkpointing is False
+        return marker
+
+    def prepare_peft_model(model, peft_config, args):
+        return ("prepared", model, peft_config, args)
+
+    trainer_module = ModuleType("verifiers_rl.rl.trainer.trainer")
+    trainer_module.prepare_peft_model = prepare_peft_model
+    trainer_pkg = ModuleType("verifiers_rl.rl.trainer")
+    trainer_pkg.trainer = trainer_module
+    rl_pkg = ModuleType("verifiers_rl.rl")
+    rl_pkg.trainer = trainer_pkg
+    root_pkg = ModuleType("verifiers_rl")
+    root_pkg.rl = rl_pkg
+
+    peft_module = ModuleType("peft")
+    peft_module.prepare_model_for_kbit_training = prepare_model_for_kbit_training
+
+    monkeypatch.setitem(sys.modules, "verifiers_rl", root_pkg)
+    monkeypatch.setitem(sys.modules, "verifiers_rl.rl", rl_pkg)
+    monkeypatch.setitem(sys.modules, "verifiers_rl.rl.trainer", trainer_pkg)
+    monkeypatch.setitem(sys.modules, "verifiers_rl.rl.trainer.trainer", trainer_module)
+    monkeypatch.setitem(sys.modules, "peft", peft_module)
+
+    train_grpo.install_verifiers_rl_kbit_compat()
+
+    quantized_model = SimpleNamespace(quantization_method="bitsandbytes")
+    result = trainer_module.prepare_peft_model(quantized_model, "cfg", "args")
+    assert result == ("prepared", marker, "cfg", "args")
+
+    plain_model = SimpleNamespace(quantization_method=None)
+    result = trainer_module.prepare_peft_model(plain_model, "cfg", "args")
+    assert result == ("prepared", plain_model, "cfg", "args")
+
+
+def test_apply_runtime_defaults_constrains_gemma4_e4b(monkeypatch) -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--rollouts", type=int, default=8)
+    parser.add_argument("--batch-size", type=int, default=8)
+    parser.add_argument("--max-seq-len", type=int, default=1536)
+    parser.add_argument("--max-prompt-len", type=int, default=384)
+    parser.add_argument("--max-tokens", type=int, default=768)
+
+    monkeypatch.delenv("PYTORCH_CUDA_ALLOC_CONF", raising=False)
+
+    args = argparse.Namespace(
+        model="google/gemma-4-E4B-it",
+        rollouts=8,
+        batch_size=8,
+        max_seq_len=1536,
+        max_prompt_len=384,
+        max_tokens=768,
+    )
+    train_grpo.apply_runtime_defaults(args, parser)
+
+    assert args.rollouts == 2
+    assert args.batch_size == 2
+    assert args.max_seq_len == 512
+    assert args.max_prompt_len == 192
+    assert args.max_tokens == 128
+    assert os.environ["PYTORCH_CUDA_ALLOC_CONF"] == "expandable_segments:True"
+
+
+def test_apply_runtime_defaults_preserves_explicit_overrides(monkeypatch) -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--rollouts", type=int, default=8)
+    parser.add_argument("--batch-size", type=int, default=8)
+    parser.add_argument("--max-seq-len", type=int, default=1536)
+    parser.add_argument("--max-prompt-len", type=int, default=384)
+    parser.add_argument("--max-tokens", type=int, default=768)
+
+    monkeypatch.delenv("PYTORCH_CUDA_ALLOC_CONF", raising=False)
+
+    args = argparse.Namespace(
+        model="google/gemma-4-E4B-it",
+        rollouts=4,
+        batch_size=3,
+        max_seq_len=640,
+        max_prompt_len=256,
+        max_tokens=160,
+    )
+    train_grpo.apply_runtime_defaults(args, parser)
+
+    assert args.rollouts == 4
+    assert args.batch_size == 3
+    assert args.max_seq_len == 640
+    assert args.max_prompt_len == 256
+    assert args.max_tokens == 160
+    assert os.environ["PYTORCH_CUDA_ALLOC_CONF"] == "expandable_segments:True"
 
 
 def test_train_grpo_help_smoke() -> None:

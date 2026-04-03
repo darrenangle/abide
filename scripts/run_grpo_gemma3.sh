@@ -20,6 +20,7 @@ cleanup() {
     echo "Interrupted. Cleaning up..."
     [ -n "$VLLM_PID" ] && kill $VLLM_PID 2>/dev/null
     pkill -f "vf-vllm" 2>/dev/null || true
+    pkill -f "abide.verifiers_vllm_server" 2>/dev/null || true
     exit 1
 }
 trap cleanup INT TERM
@@ -38,6 +39,7 @@ echo "Runtime: ${VERIFIERS_VENV}"
 echo "Cleaning up old vLLM processes..."
 pkill -f "vf-vllm" || true
 pkill -f "vllm.entrypoints" || true
+pkill -f "abide.verifiers_vllm_server" || true
 sleep 2
 
 "${REPO_ROOT}/scripts/prepare_verifiers_runtime.sh"
@@ -45,9 +47,9 @@ sleep 2
 # Create log directory
 mkdir -p logs
 
-# Start vf-vllm on GPU 1
-echo "Starting vf-vllm on GPU 1..."
-CUDA_VISIBLE_DEVICES=1 nohup "${VERIFIERS_VENV}/bin/vf-vllm" \
+# Start compatibility vLLM server on GPU 1
+echo "Starting compatibility vLLM server on GPU 1..."
+CUDA_VISIBLE_DEVICES=1 nohup "${VERIFIERS_VENV}/bin/python" -m abide.verifiers_vllm_server \
     --model "$MODEL" \
     --port $PORT \
     --gpu-memory-utilization 0.92 \
