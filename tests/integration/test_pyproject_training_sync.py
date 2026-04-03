@@ -60,3 +60,6 @@ def test_legacy_verifiers_runner_defaults_to_gemma4_and_local_server() -> None:
         'OUTPUT_DIR="${ABIDE_OUTPUT_DIR:-models/abide_verifiers_gemma4_e4b_well_known}"' in runner
     )
     assert "-m abide.verifiers_vllm_server" in runner
+    assert 'TRAIN_GPU="${ABIDE_TRAIN_GPU:-}"' in runner
+    assert 'VLLM_GPU="${ABIDE_VLLM_GPU:-}"' in runner
+    assert 'TRAIN_MIN_FREE_MIB="${ABIDE_TRAIN_MIN_FREE_MIB:-8192}"' in runner

@@ -404,3 +404,6 @@
 - Added regression coverage for the Gemma 4 legacy runtime prep, the verifiers client-compat shim, the k-bit PEFT compat shim, and the model-specific runtime defaulting, then verified the RF-079 sweep with `uv run pytest -q tests/integration/test_train_grpo.py tests/integration/test_pyproject_training_sync.py` -> `16 passed`, `uv run ruff check src/abide tests scripts` -> clean, and `uv run mypy src/abide` -> clean.
 - Directly verified the full legacy Gemma 4 path with `bash scripts/prepare_verifiers_runtime.sh`, a live `abide.verifiers_vllm_server` boot on port `8133`, and a one-prompt smoke run through `scripts/train_grpo.py` that completed successfully and saved `models/abide_verifiers_gemma4_e4b_legacy_smoke_defaulted/final`.
 - Closed `RF-079` and released its lock.
+
+- 2026-04-03 `RF-080` claimed to harden the legacy Gemma 4 verifiers vLLM barrier path after multi-step runs timed out in `update_named_param`.
+- 2026-04-03 `RF-080` hardened the legacy Gemma 4 runner and loader in progress: serialized vLLM weight-sync updates, reduced compatibility-server update concurrency, skipped fragile Transformers allocator warmup on the Gemma 4 QLoRA path, added an early GPU-memory preflight, and made `scripts/run_grpo.sh` choose GPUs from live free-memory data instead of hardcoding `0/1`.

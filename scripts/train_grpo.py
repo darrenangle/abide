@@ -386,6 +386,90 @@ def install_verifiers_rl_kbit_compat() -> None:
     rl_trainer_module.prepare_peft_model = prepare_peft_model_compat
 
 
+def install_verifiers_rl_vllm_sync_compat() -> None:
+    """Serialize legacy vLLM weight syncs for the current Gemma 4 runtime.
+
+    The legacy `verifiers-rl` client assumes it can pipeline parameter-update
+    requests aggressively and let the server process them in the background.
+    With the current Gemma 4 + vLLM stack, that can deadlock inside the NCCL
+    barrier path during multi-step runs. Keep the protocol conservative:
+    broadcast one parameter, wait for the barrier, then wait for the server's
+    background queue to drain before returning to the trainer loop.
+    """
+    import time
+
+    import verifiers_rl.rl.inference.client as inference_client
+    from requests.exceptions import Timeout
+
+    current_update = inference_client.VLLMClient.update_named_param
+    if getattr(current_update, "__name__", "") == "update_named_param_compat":
+        return
+
+    def update_named_param_compat(self, name, weights):
+        dtype, shape = str(weights.dtype), tuple(weights.shape)
+        url = f"{self.server_url}/update_named_param"
+
+        try:
+            response = self.session.post(
+                url,
+                json={"name": name, "dtype": dtype, "shape": shape},
+                timeout=300.0,
+            )
+        except Timeout as exc:
+            inference_client.logger.error(
+                f"Timeout waiting for server response for {name} after 300s"
+            )
+            raise Exception(f"Request timeout for {name} after 300s") from exc
+        except Exception as exc:
+            inference_client.logger.error(f"Error sending request for {name}: {exc}")
+            raise
+
+        if response.status_code != 200:
+            raise Exception(f"Request failed: {response.status_code}, {response.text}")
+
+        self.pynccl_comm.broadcast(weights, src=self.rank)
+        self.pynccl_comm.group.barrier()
+
+        while self.get_num_background_tasks() > 0:
+            time.sleep(0.05)
+
+    inference_client.VLLMClient.update_named_param = update_named_param_compat
+
+
+def install_transformers_allocator_warmup_compat() -> None:
+    """Allow the legacy Gemma 4 load path to skip fragile allocator warmup.
+
+    Recent Transformers releases warm the CUDA caching allocator during
+    `from_pretrained()`. On the Gemma 4 E4B QLoRA path, that extra reservation
+    can OOM even when the quantized model would otherwise fit. Keep the default
+    conservative for this script and let callers opt back in via
+    `ABIDE_SKIP_TRANSFORMERS_ALLOCATOR_WARMUP=0`.
+    """
+    import torch
+    import transformers.modeling_utils as modeling_utils
+
+    current_warmup = modeling_utils.caching_allocator_warmup
+    if getattr(current_warmup, "__name__", "") == "caching_allocator_warmup_compat":
+        return
+
+    def caching_allocator_warmup_compat(model, expanded_device_map, hf_quantizer):
+        skip = os.environ.get("ABIDE_SKIP_TRANSFORMERS_ALLOCATOR_WARMUP", "").lower()
+        if skip in {"1", "true", "yes"}:
+            return None
+        try:
+            return current_warmup(model, expanded_device_map, hf_quantizer)
+        except torch.OutOfMemoryError:
+            print(
+                "Warning: skipping Transformers allocator warmup after CUDA OOM; "
+                "continuing with incremental parameter loading."
+            )
+            with contextlib.suppress(Exception):
+                torch.cuda.empty_cache()
+            return None
+
+    modeling_utils.caching_allocator_warmup = caching_allocator_warmup_compat
+
+
 def import_verifiers_rl_trainer():
     """Import the optional verifiers RL trainer with a repo-specific hint."""
     try:
@@ -427,6 +511,38 @@ def apply_runtime_defaults(args: argparse.Namespace, parser: argparse.ArgumentPa
     if args.max_tokens == parser.get_default("max_tokens"):
         args.max_tokens = 128
     os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+    os.environ.setdefault("ABIDE_SKIP_TRANSFORMERS_ALLOCATOR_WARMUP", "1")
+
+
+def enforce_runtime_preflight(model_name: str) -> None:
+    """Fail early when the visible training GPU is obviously too full.
+
+    The legacy Gemma 4 E4B path assumes a mostly dedicated 24 GiB-class GPU.
+    If the visible training device is already heavily occupied, the user gets a
+    long model-load traceback instead of an actionable message.
+    """
+    model_profile = resolve_model_profile(model_name)
+    if model_profile.family != "gemma4_e4b":
+        return
+
+    import torch
+
+    if not torch.cuda.is_available():
+        return
+
+    min_free_mib = int(os.environ.get("ABIDE_GEMMA4_E4B_MIN_FREE_MIB", "8192"))
+    free_bytes, total_bytes = torch.cuda.mem_get_info(0)
+    free_mib = free_bytes // (1024**2)
+    total_mib = total_bytes // (1024**2)
+
+    if free_mib < min_free_mib:
+        raise RuntimeError(
+            "Insufficient free GPU memory for the legacy Gemma 4 E4B trainer: "
+            f"{free_mib} MiB free on visible device 0 out of {total_mib} MiB total. "
+            "Free the training GPU, pick a different GPU, or lower "
+            "`ABIDE_GEMMA4_E4B_MIN_FREE_MIB` if you intentionally want to try a "
+            "more constrained run."
+        )
 
 
 def setup_signal_handlers(trainer) -> None:
@@ -542,6 +658,7 @@ def train_with_retry(config: TrainingConfig) -> int:
     """Run verifiers training with simple retry-once checkpoint recovery."""
     _, RLTrainer = import_verifiers_rl_trainer()
     install_verifiers_rl_kbit_compat()
+    install_verifiers_rl_vllm_sync_compat()
 
     print("=" * 60)
     print("Abide Verifiers GRPO Training")
@@ -574,6 +691,9 @@ def train_with_retry(config: TrainingConfig) -> int:
             model_path = config.resume_from or config.model_name
             model_profile = resolve_model_profile(model_path)
             print(f"Loading model: {model_path}")
+            if model_profile.family == "gemma4_e4b":
+                enforce_runtime_preflight(model_path)
+                install_transformers_allocator_warmup_compat()
 
             load_kwargs = dict(model_profile.causal_lm_load_kwargs())
             if model_profile.family == "gemma4_e4b":
@@ -595,7 +715,7 @@ def train_with_retry(config: TrainingConfig) -> int:
 
             model = AutoModelForCausalLM.from_pretrained(
                 model_path,
-                torch_dtype=torch.bfloat16,
+                dtype=torch.bfloat16,
                 **load_kwargs,
             )
             model.config.use_cache = False
@@ -605,6 +725,14 @@ def train_with_retry(config: TrainingConfig) -> int:
             )
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
+            model.config.pad_token_id = tokenizer.pad_token_id
+            model.config.bos_token_id = tokenizer.bos_token_id
+            model.config.eos_token_id = tokenizer.eos_token_id
+            generation_config = getattr(model, "generation_config", None)
+            if generation_config is not None:
+                generation_config.pad_token_id = tokenizer.pad_token_id
+                generation_config.bos_token_id = tokenizer.bos_token_id
+                generation_config.eos_token_id = tokenizer.eos_token_id
 
             trainer = RLTrainer(
                 model=model,

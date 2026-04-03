@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
 
+import torch
 from scripts import model_profiles, train_grpo
 
 
@@ -194,6 +195,119 @@ def test_install_verifiers_rl_kbit_compat_patches_prepare(monkeypatch) -> None:
     assert result == ("prepared", plain_model, "cfg", "args")
 
 
+def test_install_verifiers_rl_vllm_sync_compat_waits_for_background_tasks(monkeypatch) -> None:
+    client_module = ModuleType("verifiers_rl.rl.inference.client")
+    inference_pkg = ModuleType("verifiers_rl.rl.inference")
+    rl_pkg = ModuleType("verifiers_rl.rl")
+    root_pkg = ModuleType("verifiers_rl")
+
+    class Logger:
+        def error(self, *_args, **_kwargs) -> None:
+            return None
+
+    class VLLMClient:
+        def __init__(self) -> None:
+            self.server_url = "http://127.0.0.1:8000"
+            self.rank = 1
+            self.background_counts = [1, 0]
+            self.post_calls = []
+            self.broadcast_calls = []
+            self.barrier_calls = 0
+            self.session = SimpleNamespace(post=self._post)
+            self.pynccl_comm = SimpleNamespace(
+                broadcast=self._broadcast,
+                group=SimpleNamespace(barrier=self._barrier),
+            )
+
+        def update_named_param(self, name, weights) -> None:
+            del name, weights
+
+        def _post(self, url, json, timeout):
+            self.post_calls.append((url, json, timeout))
+            return SimpleNamespace(status_code=200, text="ok")
+
+        def _broadcast(self, weights, *, src):
+            self.broadcast_calls.append((tuple(weights.shape), src))
+
+        def _barrier(self) -> None:
+            self.barrier_calls += 1
+
+        def get_num_background_tasks(self) -> int:
+            return self.background_counts.pop(0)
+
+    client_module.VLLMClient = VLLMClient
+    client_module.logger = Logger()
+    inference_pkg.client = client_module
+    rl_pkg.inference = inference_pkg
+    root_pkg.rl = rl_pkg
+
+    monkeypatch.setitem(sys.modules, "verifiers_rl", root_pkg)
+    monkeypatch.setitem(sys.modules, "verifiers_rl.rl", rl_pkg)
+    monkeypatch.setitem(sys.modules, "verifiers_rl.rl.inference", inference_pkg)
+    monkeypatch.setitem(sys.modules, "verifiers_rl.rl.inference.client", client_module)
+    monkeypatch.setattr("time.sleep", lambda _seconds: None)
+
+    train_grpo.install_verifiers_rl_vllm_sync_compat()
+
+    client = VLLMClient()
+    client_module.VLLMClient.update_named_param(client, "weight", torch.zeros(2))
+
+    assert client.post_calls == [
+        (
+            "http://127.0.0.1:8000/update_named_param",
+            {"name": "weight", "dtype": "torch.float32", "shape": (2,)},
+            300.0,
+        )
+    ]
+    assert client.broadcast_calls == [((2,), 1)]
+    assert client.barrier_calls == 1
+    assert client.background_counts == []
+
+
+def test_install_transformers_allocator_warmup_compat_skips_when_enabled(monkeypatch) -> None:
+    modeling_utils = ModuleType("transformers.modeling_utils")
+    calls: list[str] = []
+
+    def caching_allocator_warmup(model, expanded_device_map, hf_quantizer):
+        del model, expanded_device_map, hf_quantizer
+        calls.append("warmup")
+
+    modeling_utils.caching_allocator_warmup = caching_allocator_warmup
+    transformers_pkg = ModuleType("transformers")
+    transformers_pkg.modeling_utils = modeling_utils
+
+    monkeypatch.setitem(sys.modules, "transformers", transformers_pkg)
+    monkeypatch.setitem(sys.modules, "transformers.modeling_utils", modeling_utils)
+    monkeypatch.setenv("ABIDE_SKIP_TRANSFORMERS_ALLOCATOR_WARMUP", "1")
+
+    train_grpo.install_transformers_allocator_warmup_compat()
+    modeling_utils.caching_allocator_warmup(None, {}, None)
+
+    assert calls == []
+
+
+def test_enforce_runtime_preflight_rejects_overfull_visible_gpu(monkeypatch) -> None:
+    class FakeCuda:
+        @staticmethod
+        def is_available() -> bool:
+            return True
+
+        @staticmethod
+        def mem_get_info(_index):
+            return (7 * 1024**3, 24 * 1024**3)
+
+    monkeypatch.setattr(torch, "cuda", FakeCuda())
+    monkeypatch.delenv("ABIDE_GEMMA4_E4B_MIN_FREE_MIB", raising=False)
+
+    try:
+        train_grpo.enforce_runtime_preflight("google/gemma-4-E4B-it")
+    except RuntimeError as exc:
+        assert "Insufficient free GPU memory" in str(exc)
+        assert "visible device 0" in str(exc)
+    else:
+        raise AssertionError("expected RuntimeError")
+
+
 def test_apply_runtime_defaults_constrains_gemma4_e4b(monkeypatch) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--rollouts", type=int, default=8)
@@ -220,6 +334,7 @@ def test_apply_runtime_defaults_constrains_gemma4_e4b(monkeypatch) -> None:
     assert args.max_prompt_len == 192
     assert args.max_tokens == 128
     assert os.environ["PYTORCH_CUDA_ALLOC_CONF"] == "expandable_segments:True"
+    assert os.environ["ABIDE_SKIP_TRANSFORMERS_ALLOCATOR_WARMUP"] == "1"
 
 
 def test_apply_runtime_defaults_preserves_explicit_overrides(monkeypatch) -> None:

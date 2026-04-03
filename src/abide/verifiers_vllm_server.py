@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
 os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
 
-MAX_CONCURRENT_WEIGHT_UPDATES = 10
+MAX_CONCURRENT_WEIGHT_UPDATES = int(os.environ.get("ABIDE_VLLM_MAX_CONCURRENT_WEIGHT_UPDATES", "1"))
 weight_update_semaphore = asyncio.Semaphore(MAX_CONCURRENT_WEIGHT_UPDATES)
 background_tasks: set[asyncio.Task[Any]] = set()
 

@@ -83,3 +83,4 @@ Updated: 2026-04-03
 | RF-077 | P2 | done | | Add a resumable longer-canary Gemma 4 workflow with persisted telemetry artifacts | RF-076 |
 | RF-078 | P2 | done | | Update verifiers to the current RL stack and rewrite the Gemma verifiers trainer around well-known forms | RF-077 |
 | RF-079 | P2 | done | | Retarget the legacy verifiers Gemma trainer and runner path to verified Gemma 4 E4B defaults | RF-078 |
+| RF-080 | P1 | in_progress | `RF-080--codex` | Stabilize legacy verifiers Gemma 4 vLLM weight sync | RF-079 |
