@@ -86,9 +86,9 @@ class TrainingArgs:
 
     # LoRA
     use_lora: bool = True
-    lora_r: int = 64
-    lora_alpha: int = 128
-    lora_dropout: float = 0.05
+    lora_r: int = GEMMA_4_E4B_PROFILE.default_lora_r
+    lora_alpha: int = GEMMA_4_E4B_PROFILE.default_lora_alpha
+    lora_dropout: float = GEMMA_4_E4B_PROFILE.default_lora_dropout
 
     # Wandb
     wandb_project: str = "abide-grpo"
@@ -392,7 +392,7 @@ def create_grpo_config(training_args: TrainingArgs, *, max_steps: int):
         "logging_steps": training_args.logging_steps,
         "save_steps": training_args.save_steps,
         "save_total_limit": 5,
-        "report_to": "wandb" if training_args.use_wandb else "none",
+        "report_to": ["wandb"] if training_args.use_wandb else [],
         "run_name": f"grpo-trl-beta{training_args.beta}",
         "gradient_checkpointing": True,
         "bf16": True,
@@ -457,6 +457,24 @@ def main():
     parser.add_argument("--output", default=TrainingArgs.output_dir, help="Output directory")
     parser.add_argument("--save-steps", type=int, default=50, help="Save every N steps")
     parser.add_argument("--port", type=int, default=8000, help="vLLM server port")
+    parser.add_argument(
+        "--lora-r",
+        type=int,
+        default=None,
+        help="LoRA rank override (defaults to the selected model profile)",
+    )
+    parser.add_argument(
+        "--lora-alpha",
+        type=int,
+        default=None,
+        help="LoRA alpha override (defaults to the selected model profile)",
+    )
+    parser.add_argument(
+        "--lora-dropout",
+        type=float,
+        default=None,
+        help="LoRA dropout override (defaults to the selected model profile)",
+    )
     parser.add_argument("--no-wandb", action="store_true", help="Disable wandb")
     parser.add_argument("--use-vllm", action="store_true", help="Use a vLLM server for generation")
     parser.add_argument("--no-vllm", action="store_true", help="Disable vLLM and generate locally")
@@ -471,9 +489,16 @@ def main():
     if args.use_vllm and args.no_vllm:
         parser.error("--use-vllm and --no-vllm are mutually exclusive")
 
+    if args.no_wandb:
+        os.environ["WANDB_DISABLED"] = "true"
+        os.environ["WANDB_MODE"] = "disabled"
+        os.environ["WANDB_SILENT"] = "true"
+
     # Check for env override
     if os.environ.get("ABIDE_MODEL"):
         args.model = os.environ["ABIDE_MODEL"]
+
+    model_profile = resolve_model_profile(args.model)
 
     try:
         import torch
@@ -510,6 +535,15 @@ def main():
         seed=args.seed,
         telemetry_every=args.telemetry_every,
         use_vllm=use_vllm,
+        lora_r=args.lora_r if args.lora_r is not None else model_profile.default_lora_r,
+        lora_alpha=(
+            args.lora_alpha if args.lora_alpha is not None else model_profile.default_lora_alpha
+        ),
+        lora_dropout=(
+            args.lora_dropout
+            if args.lora_dropout is not None
+            else model_profile.default_lora_dropout
+        ),
     )
 
     print("=" * 60)
@@ -552,8 +586,6 @@ def main():
 
     # Configure TRL GRPO
     grpo_config = create_grpo_config(training_args, max_steps=max_steps)
-
-    model_profile = resolve_model_profile(training_args.model_name)
 
     # Load model
     print(f"Loading model: {training_args.model_name}")

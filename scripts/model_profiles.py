@@ -34,8 +34,12 @@ class ModelProfile:
     canary_output_dir: str = "models/grpo_trl_canary"
     vllm_gpu_memory_utilization: float = 0.9
     vllm_max_model_len: int = 4096
+    vllm_enforce_eager: bool = False
     startup_timeout_seconds: int = 300
     canary_use_vllm: bool = True
+    default_lora_r: int = 64
+    default_lora_alpha: int = 128
+    default_lora_dropout: float = 0.05
     lora_target_modules: tuple[str, ...] | str = DEFAULT_LORA_TARGET_MODULES
 
     def causal_lm_load_kwargs(self) -> dict[str, Any]:
@@ -77,10 +81,13 @@ GEMMA_4_E2B_PROFILE = ModelProfile(
     canary_beta=0.02,
     canary_learning_rate=3e-5,
     canary_output_dir="models/grpo_trl_gemma4_e2b",
-    vllm_gpu_memory_utilization=0.9,
-    vllm_max_model_len=4096,
+    vllm_gpu_memory_utilization=0.85,
+    vllm_max_model_len=2048,
+    vllm_enforce_eager=True,
     startup_timeout_seconds=600,
     canary_use_vllm=False,
+    default_lora_r=32,
+    default_lora_alpha=64,
     lora_target_modules=GEMMA4_LORA_TARGET_MODULES,
 )
 
@@ -94,10 +101,13 @@ GEMMA_4_E4B_PROFILE = ModelProfile(
     canary_beta=0.02,
     canary_learning_rate=3e-5,
     canary_output_dir="models/grpo_trl_gemma4_e4b",
-    vllm_gpu_memory_utilization=0.88,
-    vllm_max_model_len=4096,
+    vllm_gpu_memory_utilization=0.8,
+    vllm_max_model_len=1024,
+    vllm_enforce_eager=True,
     startup_timeout_seconds=600,
-    canary_use_vllm=False,
+    canary_use_vllm=True,
+    default_lora_r=16,
+    default_lora_alpha=32,
     lora_target_modules=GEMMA4_LORA_TARGET_MODULES,
 )
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from scripts import model_profiles, train_grpo_trl
 
 
@@ -14,8 +16,13 @@ def test_resolve_gemma4_e4b_profile_has_canary_defaults() -> None:
     assert profile.canary_num_generations == 8
     assert profile.canary_beta == 0.02
     assert profile.canary_output_dir == "models/grpo_trl_gemma4_e4b"
+    assert profile.vllm_gpu_memory_utilization == 0.8
+    assert profile.vllm_max_model_len == 1024
+    assert profile.vllm_enforce_eager is True
     assert profile.startup_timeout_seconds == 600
-    assert profile.canary_use_vllm is False
+    assert profile.canary_use_vllm is True
+    assert profile.default_lora_r == 16
+    assert profile.default_lora_alpha == 32
     assert profile.causal_lm_load_kwargs() == {
         "trust_remote_code": True,
         "attn_implementation": "sdpa",
@@ -39,3 +46,14 @@ def test_train_grpo_trl_defaults_align_with_gemma4_e4b_profile() -> None:
     assert defaults.beta == profile.canary_beta
     assert defaults.output_dir == profile.canary_output_dir
     assert defaults.use_vllm is profile.canary_use_vllm
+    assert defaults.lora_r == profile.default_lora_r
+    assert defaults.lora_alpha == profile.default_lora_alpha
+    assert defaults.lora_dropout == profile.default_lora_dropout
+
+
+def test_prepare_gemma4_runtime_uses_pinned_verified_overlay() -> None:
+    script = Path("scripts/prepare_gemma4_runtime.sh").read_text()
+
+    assert "66e86f1dbd565292a253e7d2d6851f65dc4f14ba" in script
+    assert "edaac7db98e34208209fd67d8c66781b8c2e4a53" in script
+    assert "uv pip install --reinstall vllm --pre" not in script

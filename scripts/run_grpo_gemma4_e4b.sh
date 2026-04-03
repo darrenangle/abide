@@ -4,9 +4,12 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
+PYTHON_BIN="${REPO_ROOT}/.venv/bin/python"
+TRL_BIN="${REPO_ROOT}/.venv/bin/trl"
+
 # Gemma 4 E4B canary runner.
 # This uses the current stable TRL path with exact-form routing and reward telemetry.
-# Defaults are intentionally conservative for the first working run on a 2x4090 setup.
+# Defaults are intentionally conservative for the first working vLLM run on a 2x4090 setup.
 
 MODEL="${ABIDE_MODEL:-google/gemma-4-E4B-it}"
 PORT="${ABIDE_PORT:-8000}"
@@ -19,11 +22,15 @@ SAVE_STEPS="${ABIDE_SAVE_STEPS:-10}"
 TELEMETRY_EVERY="${ABIDE_TELEMETRY_EVERY:-1}"
 OUTPUT_DIR="${ABIDE_OUTPUT_DIR:-models/grpo_trl_gemma4_e4b}"
 FORM_SET="${ABIDE_FORM_SET:-rl_default}"
-GPU_MEMORY_UTILIZATION="${ABIDE_GPU_MEMORY_UTILIZATION:-0.88}"
-MAX_MODEL_LEN="${ABIDE_MAX_MODEL_LEN:-4096}"
+GPU_MEMORY_UTILIZATION="${ABIDE_GPU_MEMORY_UTILIZATION:-0.80}"
+MAX_MODEL_LEN="${ABIDE_MAX_MODEL_LEN:-1024}"
 STARTUP_TIMEOUT="${ABIDE_STARTUP_TIMEOUT:-600}"
-MAX_COMPLETION_LENGTH="${ABIDE_MAX_COMPLETION_LENGTH:-768}"
-USE_VLLM="${ABIDE_USE_VLLM:-0}"
+MAX_COMPLETION_LENGTH="${ABIDE_MAX_COMPLETION_LENGTH:-128}"
+USE_VLLM="${ABIDE_USE_VLLM:-1}"
+ENFORCE_EAGER="${ABIDE_ENFORCE_EAGER:-1}"
+LORA_R="${ABIDE_LORA_R:-16}"
+LORA_ALPHA="${ABIDE_LORA_ALPHA:-32}"
+PREPARE_RUNTIME="${ABIDE_PREPARE_RUNTIME:-1}"
 VLLM_PID=""
 
 cleanup() {
@@ -48,13 +55,25 @@ echo "Beta (KL): $BETA"
 echo "Learning rate: $LR"
 echo "Form set: $FORM_SET"
 echo "Use vLLM: $USE_VLLM"
+echo "LoRA rank: $LORA_R"
+echo "LoRA alpha: $LORA_ALPHA"
 echo "Telemetry every: $TELEMETRY_EVERY"
 echo "Output: $OUTPUT_DIR"
 echo "============================================================"
 
 mkdir -p logs "$OUTPUT_DIR"
 
-if ! uv run python - <<PY
+if [ ! -x "$PYTHON_BIN" ] || [ ! -x "$TRL_BIN" ]; then
+    echo "ERROR: missing virtualenv entrypoints."
+    echo "Run: uv sync --extra training"
+    exit 1
+fi
+
+if [ "$PREPARE_RUNTIME" = "1" ]; then
+    "${REPO_ROOT}/scripts/prepare_gemma4_runtime.sh"
+fi
+
+if ! "$PYTHON_BIN" - <<PY
 from transformers import AutoConfig
 
 AutoConfig.from_pretrained("$MODEL")
@@ -73,12 +92,21 @@ if [ "$USE_VLLM" = "1" ]; then
     sleep 2
 
     echo "Starting TRL vLLM server on GPU 1..."
-    CUDA_VISIBLE_DEVICES=1 nohup uv run trl vllm-serve \
-        --model "$MODEL" \
-        --port "$PORT" \
-        --gpu_memory_utilization "$GPU_MEMORY_UTILIZATION" \
-        --tensor_parallel_size 1 \
-        --max_model_len "$MAX_MODEL_LEN" \
+    SERVER_ARGS=(
+        vllm-serve
+        --model "$MODEL"
+        --port "$PORT"
+        --gpu_memory_utilization "$GPU_MEMORY_UTILIZATION"
+        --tensor_parallel_size 1
+        --max_model_len "$MAX_MODEL_LEN"
+    )
+    if [ "$ENFORCE_EAGER" = "1" ]; then
+        SERVER_ARGS+=(--enforce_eager)
+    fi
+
+    CUDA_VISIBLE_DEVICES=1 \
+    PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+    nohup "$TRL_BIN" "${SERVER_ARGS[@]}" \
         > logs/vllm_gemma4_e4b.log 2>&1 &
 
     VLLM_PID=$!
@@ -114,6 +142,8 @@ TRAIN_ARGS=(
     --save-steps "$SAVE_STEPS"
     --telemetry-every "$TELEMETRY_EVERY"
     --max-completion-length "$MAX_COMPLETION_LENGTH"
+    --lora-r "$LORA_R"
+    --lora-alpha "$LORA_ALPHA"
 )
 
 if [ "$USE_VLLM" = "1" ]; then
@@ -122,7 +152,7 @@ else
     TRAIN_ARGS+=(--no-vllm)
 fi
 
-CUDA_VISIBLE_DEVICES=0 uv run python scripts/train_grpo_trl.py "${TRAIN_ARGS[@]}"
+CUDA_VISIBLE_DEVICES=0 "$PYTHON_BIN" scripts/train_grpo_trl.py "${TRAIN_ARGS[@]}"
 
 echo ""
 echo "Training finished. Cleaning up..."

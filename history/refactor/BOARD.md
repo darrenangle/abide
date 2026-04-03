@@ -79,3 +79,4 @@ Updated: 2026-04-02
 | RF-073 | P2 | done | | Move Gemma 4 runner off stale miniconda toolchain onto the project uv environment | RF-072 |
 | RF-074 | P2 | done | | Add no-vLLM TRL fallback for Gemma 4 canaries while vLLM lacks architecture support | RF-073 |
 | RF-075 | P2 | done | | Standardize the repo onto `uv` and refresh the lockfile to the latest resolvable dependencies | RF-074 |
+| RF-076 | P2 | done | | Restore Gemma 4 vLLM serving by reconciling native uv runtime with the upstream Gemma 4 image path | RF-075 |

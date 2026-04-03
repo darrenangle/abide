@@ -112,6 +112,8 @@ def test_train_grpo_trl_help_smoke() -> None:
     assert "--model" in result.stdout
     assert "--telemetry-every" in result.stdout
     assert "--no-vllm" in result.stdout
+    assert "--lora-r" in result.stdout
+    assert "--lora-alpha" in result.stdout
 
 
 def test_create_grpo_config_can_disable_vllm() -> None:
@@ -119,8 +121,10 @@ def test_create_grpo_config_can_disable_vllm() -> None:
         model_name="google/gemma-4-E4B-it",
         use_vllm=False,
         batch_size=1,
+        use_wandb=False,
     )
 
     config = train_grpo_trl.create_grpo_config(args, max_steps=4)
 
     assert config.use_vllm is False
+    assert config.report_to == []
