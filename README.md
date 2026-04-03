@@ -310,7 +310,7 @@ We're actively running GRPO (Group Relative Policy Optimization) experiments to 
 | Script | Model | Forms | Notes |
 |--------|-------|-------|-------|
 | [`scripts/run_grpo_trl.sh`](scripts/run_grpo_trl.sh) | Gemma 3 4B | Top 10 learnable | TRL with beta=0.04 KL regularization |
-| [`scripts/run_grpo_gemma4_e4b.sh`](scripts/run_grpo_gemma4_e4b.sh) | Gemma 4 E4B | RL-default canary | Conservative TRL canary with reward telemetry for first working runs |
+| [`scripts/run_grpo_gemma4_e4b.sh`](scripts/run_grpo_gemma4_e4b.sh) | Gemma 4 E4B | RL-default | Resumable TRL runner with `smoke` / `canary` / `soak` profiles and persisted reward telemetry |
 | [`scripts/run_grpo_learnable.sh`](scripts/run_grpo_learnable.sh) | Gemma 3 4B | Top 10 learnable | Verifiers library GRPO |
 | [`scripts/run_grpo_traditional.sh`](scripts/run_grpo_traditional.sh) | Gemma 3 4B | Traditional forms | Weighted sampling by form popularity |
 

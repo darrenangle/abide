@@ -114,6 +114,10 @@ def test_train_grpo_trl_help_smoke() -> None:
     assert "--no-vllm" in result.stdout
     assert "--lora-r" in result.stdout
     assert "--lora-alpha" in result.stdout
+    assert "--model-path" in result.stdout
+    assert "--resume-from-checkpoint" in result.stdout
+    assert "--auto-resume" in result.stdout
+    assert "--telemetry-jsonl" in result.stdout
 
 
 def test_create_grpo_config_can_disable_vllm() -> None:
@@ -128,3 +132,31 @@ def test_create_grpo_config_can_disable_vllm() -> None:
 
     assert config.use_vllm is False
     assert config.report_to == []
+
+
+def test_find_latest_checkpoint_picks_highest_step(tmp_path) -> None:
+    (tmp_path / "checkpoint-10").mkdir()
+    (tmp_path / "checkpoint-200").mkdir()
+    (tmp_path / "checkpoint-2").mkdir()
+
+    latest = train_grpo_trl.find_latest_checkpoint(tmp_path)
+
+    assert latest == tmp_path / "checkpoint-200"
+
+
+def test_resolve_resume_checkpoint_prefers_explicit_then_auto(tmp_path) -> None:
+    explicit = tmp_path / "manual"
+    explicit.mkdir()
+    auto = tmp_path / "checkpoint-50"
+    auto.mkdir()
+
+    assert train_grpo_trl.resolve_resume_checkpoint(
+        tmp_path,
+        explicit_path=str(explicit),
+        auto_resume=True,
+    ) == str(explicit)
+    assert train_grpo_trl.resolve_resume_checkpoint(
+        tmp_path,
+        explicit_path=None,
+        auto_resume=True,
+    ) == str(auto)

@@ -372,3 +372,11 @@
   `CUDA_VISIBLE_DEVICES=0 .venv/bin/python scripts/train_grpo_trl.py --model google/gemma-4-E4B-it --prompts 1 --batch-size 1 --num-generations 2 --max-completion-length 128 --use-vllm --port 8126 --output models/grpo_trl_gemma4_e4b_vllm_smoke --save-steps 10 --telemetry-every 1 --no-wandb`
   which completed successfully and saved `models/grpo_trl_gemma4_e4b_vllm_smoke/final`.
 - Closed `RF-076` and released its lock.
+- Opened and claimed `RF-077` to turn the working Gemma 4 E4B smoke path into a real longer-canary workflow with checkpoint resume, persisted telemetry artifacts, and fewer manual runner edits.
+- Added JSONL-backed reward telemetry snapshots in `scripts/reward_telemetry.py`, plus `--telemetry-jsonl`, `--resume-from-checkpoint`, and `--auto-resume` support in `scripts/train_grpo_trl.py`, including helper logic to pick the latest `checkpoint-*` directory automatically.
+- Reworked `scripts/run_grpo_gemma4_e4b.sh` into a profile-driven runner with `smoke`, `canary`, and `soak` presets, default auto-resume, final telemetry-summary printing, and local-snapshot resolution via `huggingface_hub.snapshot_download(local_files_only=True)` so cached Gemma 4 artifacts can run without live Hub access.
+- Updated README plus integration coverage so the new runner profile behavior, pinned runtime overlay, telemetry JSONL persistence, resume helpers, and TRL CLI flags are all exercised by tests.
+- Verified the RF-077 sweep with `bash -n scripts/run_grpo_gemma4_e4b.sh`, `uv run pytest -q tests/integration/test_reward_telemetry.py tests/integration/test_model_profiles.py tests/integration/test_train_grpo_trl.py` -> `16 passed`, and a longer live Gemma 4 E4B canary:
+  `ABIDE_RUN_PROFILE=canary ABIDE_PORT=8129 ABIDE_OUTPUT_DIR=models/grpo_trl_gemma4_e4b_canary_rf077 bash scripts/run_grpo_gemma4_e4b.sh`
+  which completed 8 GRPO steps successfully, wrote 4 telemetry snapshots to `models/grpo_trl_gemma4_e4b_canary_rf077/reward_telemetry.jsonl`, and saved `models/grpo_trl_gemma4_e4b_canary_rf077/final`.
+- Closed `RF-077` and released its lock.

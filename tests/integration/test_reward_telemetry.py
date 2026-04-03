@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from types import SimpleNamespace
 
 from scripts import reward_telemetry
@@ -75,3 +76,23 @@ def test_extract_form_names_from_metadata_reads_form_name_and_info() -> None:
         {"info": [{"form_name": "Ghazal"}]},
         2,
     ) == ["Ghazal", None]
+
+
+def test_reward_telemetry_can_persist_jsonl_snapshots(tmp_path) -> None:
+    path = tmp_path / "telemetry.jsonl"
+    telemetry = reward_telemetry.RewardTelemetry(
+        label="unit",
+        emit_every=1,
+        use_wandb=False,
+        jsonl_path=path,
+    )
+
+    telemetry.record("Haiku", reward=0.25, passed=False, failure_reason="missing syllables")
+    snapshot = telemetry.emit()
+
+    assert snapshot is not None
+    lines = path.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    payload = json.loads(lines[0])
+    assert payload["label"] == "unit"
+    assert payload["forms"]["Haiku"]["mean_reward"] == 0.25

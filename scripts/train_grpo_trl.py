@@ -57,6 +57,7 @@ class TrainingArgs:
 
     # Model
     model_name: str = "google/gemma-4-E4B-it"
+    model_path: str | None = None
 
     # Dataset
     num_prompts: int = 50000
@@ -94,7 +95,10 @@ class TrainingArgs:
     wandb_project: str = "abide-grpo"
     use_wandb: bool = True
     telemetry_every: int = 256
+    telemetry_jsonl: str | None = None
     use_vllm: bool = GEMMA_4_E4B_PROFILE.canary_use_vllm
+    resume_from_checkpoint: str | None = None
+    auto_resume: bool = False
 
 
 def get_forms() -> dict[str, object]:
@@ -198,6 +202,7 @@ def create_reward_function(
     *,
     telemetry_every: int = 256,
     use_wandb: bool = True,
+    telemetry_jsonl: str | None = None,
 ):
     """Create reward function for TRL.
 
@@ -212,6 +217,7 @@ def create_reward_function(
         label="trl",
         emit_every=telemetry_every,
         use_wandb=use_wandb,
+        jsonl_path=telemetry_jsonl,
     )
 
     def reward_fn(completions: list, prompts: list, **kwargs: Any) -> list[float]:
@@ -312,6 +318,48 @@ def create_reward_function(
         return rewards
 
     return bind_reward_telemetry(reward_fn, telemetry)
+
+
+def find_latest_checkpoint(output_dir: str | Path) -> Path | None:
+    """Return the numerically latest checkpoint directory, if present."""
+    output_path = Path(output_dir)
+    if not output_path.exists():
+        return None
+
+    checkpoints: list[tuple[int, Path]] = []
+    for candidate in output_path.iterdir():
+        if not candidate.is_dir():
+            continue
+        match = re.fullmatch(r"checkpoint-(\d+)", candidate.name)
+        if match is None:
+            continue
+        checkpoints.append((int(match.group(1)), candidate))
+
+    if not checkpoints:
+        return None
+    return max(checkpoints, key=lambda item: item[0])[1]
+
+
+def resolve_resume_checkpoint(
+    output_dir: str | Path,
+    *,
+    explicit_path: str | None,
+    auto_resume: bool,
+) -> str | None:
+    """Resolve the checkpoint path used to resume training."""
+    if explicit_path:
+        checkpoint_path = Path(explicit_path)
+        if not checkpoint_path.exists():
+            raise FileNotFoundError(f"resume checkpoint not found: {checkpoint_path}")
+        return str(checkpoint_path)
+
+    if not auto_resume:
+        return None
+
+    latest_checkpoint = find_latest_checkpoint(output_dir)
+    if latest_checkpoint is None:
+        return None
+    return str(latest_checkpoint)
 
 
 def create_dataset(args: TrainingArgs, forms: dict[str, object]) -> Dataset:
@@ -419,6 +467,11 @@ def main():
         description="GRPO training with TRL (includes KL regularization)"
     )
     parser.add_argument("--model", default=TrainingArgs.model_name, help="Model name")
+    parser.add_argument(
+        "--model-path",
+        default=None,
+        help="Optional local model artifact path used for loading weights/tokenizer",
+    )
     parser.add_argument("--prompts", type=int, default=50000, help="Number of prompts")
     parser.add_argument(
         "--batch-size",
@@ -480,10 +533,25 @@ def main():
     parser.add_argument("--no-vllm", action="store_true", help="Disable vLLM and generate locally")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument(
+        "--resume-from-checkpoint",
+        default=None,
+        help="Resume from an explicit checkpoint path",
+    )
+    parser.add_argument(
+        "--auto-resume",
+        action="store_true",
+        help="Resume from the latest checkpoint in the output directory when present",
+    )
+    parser.add_argument(
         "--telemetry-every",
         type=int,
         default=256,
         help="Emit aggregate reward telemetry every N scored samples",
+    )
+    parser.add_argument(
+        "--telemetry-jsonl",
+        default=None,
+        help="Optional JSONL file for persisted reward telemetry snapshots",
     )
     args = parser.parse_args()
     if args.use_vllm and args.no_vllm:
@@ -520,6 +588,7 @@ def main():
 
     training_args = TrainingArgs(
         model_name=args.model,
+        model_path=args.model_path,
         num_prompts=args.prompts,
         batch_size=args.batch_size,
         num_generations=args.num_generations,
@@ -534,6 +603,7 @@ def main():
         use_wandb=not args.no_wandb,
         seed=args.seed,
         telemetry_every=args.telemetry_every,
+        telemetry_jsonl=args.telemetry_jsonl,
         use_vllm=use_vllm,
         lora_r=args.lora_r if args.lora_r is not None else model_profile.default_lora_r,
         lora_alpha=(
@@ -544,12 +614,16 @@ def main():
             if args.lora_dropout is not None
             else model_profile.default_lora_dropout
         ),
+        resume_from_checkpoint=args.resume_from_checkpoint,
+        auto_resume=args.auto_resume,
     )
 
     print("=" * 60)
     print("TRL GRPO Training (with KL regularization)")
     print("=" * 60)
     print(f"Model: {training_args.model_name}")
+    if training_args.model_path is not None:
+        print(f"Model artifacts: {training_args.model_path}")
     print(f"Prompts: {training_args.num_prompts}")
     print(f"Generations per prompt: {training_args.num_generations}")
     print(f"Batch size: {training_args.batch_size}")
@@ -558,6 +632,8 @@ def main():
     print(f"Epsilon (clip): {training_args.epsilon}")
     print(f"Generation backend: {'vLLM server' if training_args.use_vllm else 'local model'}")
     print(f"Output: {training_args.output_dir}")
+    if training_args.telemetry_jsonl is not None:
+        print(f"Telemetry JSONL: {training_args.telemetry_jsonl}")
     print("=" * 60)
 
     # Load forms
@@ -578,6 +654,7 @@ def main():
         forms,
         telemetry_every=training_args.telemetry_every,
         use_wandb=training_args.use_wandb,
+        telemetry_jsonl=training_args.telemetry_jsonl,
     )
 
     # Compute max_steps
@@ -586,17 +663,18 @@ def main():
 
     # Configure TRL GRPO
     grpo_config = create_grpo_config(training_args, max_steps=max_steps)
+    model_load_target = training_args.model_path or training_args.model_name
 
     # Load model
-    print(f"Loading model: {training_args.model_name}")
+    print(f"Loading model: {model_load_target}")
     model = AutoModelForCausalLM.from_pretrained(
-        training_args.model_name,
+        model_load_target,
         torch_dtype=torch.bfloat16,
         **model_profile.causal_lm_load_kwargs(),
     )
 
     tokenizer = AutoTokenizer.from_pretrained(
-        training_args.model_name,
+        model_load_target,
         trust_remote_code=model_profile.trust_remote_code,
     )
     if tokenizer.pad_token is None:
@@ -629,9 +707,17 @@ def main():
     print(f"KL regularization enabled with beta={training_args.beta}")
     print("=" * 60)
 
+    resume_checkpoint = resolve_resume_checkpoint(
+        training_args.output_dir,
+        explicit_path=training_args.resume_from_checkpoint,
+        auto_resume=training_args.auto_resume,
+    )
+    if resume_checkpoint is not None:
+        print(f"Resuming from checkpoint: {resume_checkpoint}")
+
     # Train
     try:
-        trainer.train()
+        trainer.train(resume_from_checkpoint=resume_checkpoint)
     finally:
         flush_reward_telemetry(reward_fn)
 

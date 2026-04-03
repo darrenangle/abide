@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import contextlib
+import json
 import re
 from collections import Counter
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -51,6 +53,7 @@ class RewardTelemetry:
         max_logged_forms: int = 12,
         max_failure_reasons: int = 2,
         log_fn: Callable[[dict[str, float]], None] | None = None,
+        jsonl_path: str | Path | None = None,
     ) -> None:
         if emit_every <= 0:
             raise ValueError("emit_every must be positive")
@@ -60,6 +63,7 @@ class RewardTelemetry:
         self.max_logged_forms = max_logged_forms
         self.max_failure_reasons = max_failure_reasons
         self.log_fn = log_fn
+        self.jsonl_path = Path(jsonl_path) if jsonl_path is not None else None
         self._samples_seen = 0
         self._window_total = _FormStats()
         self._window_forms: dict[str, _FormStats] = {}
@@ -107,6 +111,7 @@ class RewardTelemetry:
         snapshot = self.snapshot()
         self._print_snapshot(snapshot)
         self._log_snapshot(snapshot)
+        self._write_snapshot(snapshot)
         self._reset_window()
         return snapshot
 
@@ -180,6 +185,14 @@ class RewardTelemetry:
 
             if getattr(wandb, "run", None) is not None:
                 wandb.log(metrics)
+
+    def _write_snapshot(self, snapshot: dict[str, Any]) -> None:
+        if self.jsonl_path is None:
+            return
+        self.jsonl_path.parent.mkdir(parents=True, exist_ok=True)
+        with self.jsonl_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(snapshot, sort_keys=True))
+            handle.write("\n")
 
 
 def extract_form_names_from_metadata(

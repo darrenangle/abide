@@ -57,3 +57,14 @@ def test_prepare_gemma4_runtime_uses_pinned_verified_overlay() -> None:
     assert "66e86f1dbd565292a253e7d2d6851f65dc4f14ba" in script
     assert "edaac7db98e34208209fd67d8c66781b8c2e4a53" in script
     assert "uv pip install --reinstall vllm --pre" not in script
+
+
+def test_gemma4_runner_exposes_named_profiles_and_auto_resume() -> None:
+    script = Path("scripts/run_grpo_gemma4_e4b.sh").read_text()
+
+    assert 'RUN_PROFILE="${ABIDE_RUN_PROFILE:-canary}"' in script
+    assert 'AUTO_RESUME="${ABIDE_AUTO_RESUME:-1}"' in script
+    assert "snapshot_download(repo_id=model, local_files_only=True)" in script
+    assert "HF_HUB_OFFLINE=1" in script
+    assert "--auto-resume" in script
+    assert "--telemetry-jsonl" in script
