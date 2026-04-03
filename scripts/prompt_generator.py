@@ -781,7 +781,7 @@ LEARNABLE_FORMS = [
     "Terzanelle",  # signal=0.191, mean=0.46, within_std=0.19
 ]
 
-SUPPORTED_FORM_SETS = {"all", "traditional", "learnable", "rl_default"}
+SUPPORTED_FORM_SETS = {"all", "traditional", "learnable", "rl_default", "well_known"}
 
 
 def get_form_tier(form_name: str) -> int:
@@ -831,6 +831,14 @@ def get_rl_default_forms() -> dict[str, object]:
     from abide.forms.catalog import load_rl_default_form_instances
 
     return load_rl_default_form_instances()
+
+
+def get_well_known_forms() -> dict[str, object]:
+    """Load a smaller subset of canonical well-known forms."""
+    sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+    from abide.forms.catalog import load_well_known_form_instances
+
+    return load_well_known_form_instances()
 
 
 # =============================================================================
@@ -1311,6 +1319,28 @@ def generate_rl_default_verifiers_dataset(num_prompts: int = 50000, seed: int = 
     from datasets import Dataset
 
     data = generate_rl_default_dataset(num_prompts=num_prompts, seed=seed)
+    return Dataset.from_list(data)
+
+
+def generate_well_known_dataset(
+    num_prompts: int = 16000,
+    seed: int = 42,
+) -> list[dict]:
+    """Generate a balanced dataset over a smaller set of canonical forms."""
+    forms = get_well_known_forms()
+    return _generate_balanced_forms_dataset(
+        forms,
+        num_prompts=num_prompts,
+        seed=seed,
+        label="Well-known forms",
+    )
+
+
+def generate_well_known_verifiers_dataset(num_prompts: int = 16000, seed: int = 42):
+    """Generate well-known-form dataset in verifiers-compatible format."""
+    from datasets import Dataset
+
+    data = generate_well_known_dataset(num_prompts=num_prompts, seed=seed)
     return Dataset.from_list(data)
 
 

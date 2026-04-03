@@ -1,17 +1,18 @@
 #!/bin/bash
 set -e
 
-# GRPO Training for Gemma 3 4B-it
-# Pure text model from Gemma 3 family (not 3n multimodal)
-# 4B parameters - should fit well on a 4090 with room for training
-#
-# Gemma 3 has improved poetry/creative writing exposure in training data
+# GRPO Training for Gemma 3 4B-it with the legacy verifiers trainer.
+# This runner focuses the prompt set on a smaller group of canonical forms.
 
 # Configuration
 MODEL="google/gemma-3-4b-it"
 PORT=8000
 VLLM_PID=""
 NUM_PROMPTS="${ABIDE_NUM_PROMPTS:-100000}"
+FORM_SET="${ABIDE_FORM_SET:-well_known}"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+VERIFIERS_VENV="${ABIDE_VERIFIERS_VENV:-${REPO_ROOT}/.venv-verifiers}"
+cd "$REPO_ROOT"
 
 # Cleanup on ctrl-c
 cleanup() {
@@ -27,10 +28,11 @@ echo "============================================================"
 echo "Abide GRPO Training - GEMMA 3 4B-it"
 echo "============================================================"
 echo "Model: $MODEL (4B params, text-only)"
-echo "Prompts: $NUM_PROMPTS (traditional forms, weighted sampling)"
+echo "Prompts: $NUM_PROMPTS ($FORM_SET forms, balanced sampling)"
 echo "vLLM: GPU 1, port $PORT"
 echo "Training: GPU 0"
 echo "============================================================"
+echo "Runtime: ${VERIFIERS_VENV}"
 
 # Cleanup old processes
 echo "Cleaning up old vLLM processes..."
@@ -38,12 +40,14 @@ pkill -f "vf-vllm" || true
 pkill -f "vllm.entrypoints" || true
 sleep 2
 
+"${REPO_ROOT}/scripts/prepare_verifiers_runtime.sh"
+
 # Create log directory
 mkdir -p logs
 
 # Start vf-vllm on GPU 1
 echo "Starting vf-vllm on GPU 1..."
-CUDA_VISIBLE_DEVICES=1 nohup uv run vf-vllm \
+CUDA_VISIBLE_DEVICES=1 nohup "${VERIFIERS_VENV}/bin/vf-vllm" \
     --model "$MODEL" \
     --port $PORT \
     --gpu-memory-utilization 0.92 \
@@ -72,11 +76,13 @@ echo ""
 echo "Starting Gemma 3 training on GPU 0..."
 export OMP_NUM_THREADS=4
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-export ABIDE_TRADITIONAL=1  # Use traditional forms only
 export ABIDE_MODEL="$MODEL"
-CUDA_VISIBLE_DEVICES=0 uv run torchrun --nproc_per_node=1 scripts/train_grpo.py \
+export ABIDE_FORM_SET="$FORM_SET"
+CUDA_VISIBLE_DEVICES=0 "${VERIFIERS_VENV}/bin/python" scripts/train_grpo.py \
+    --model "$MODEL" \
+    --form-set "$FORM_SET" \
     --prompts $NUM_PROMPTS \
-    --output models/abide_grpo_gemma3
+    --output models/abide_verifiers_gemma3_well_known
 
 # Cleanup
 echo ""

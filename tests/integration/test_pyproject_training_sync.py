@@ -25,5 +25,15 @@ def test_training_extra_declares_explicit_runtime_stack() -> None:
 
     assert "accelerate>=1.13.0" in training
     assert "vllm>=0.18.1" in training
-    assert "verifiers>=0.1.0" in training
+    assert "verifiers>=0.1.11" in training
     assert all("verifiers[rl]" not in dep for dep in training)
+    assert all("verifiers-rl" not in dep for dep in training)
+
+
+def test_prepare_verifiers_runtime_uses_isolated_legacy_stack() -> None:
+    script = Path("scripts/prepare_verifiers_runtime.sh").read_text()
+
+    assert 'VERIFIERS_TAG="${ABIDE_VERIFIERS_TAG:-v0.1.11}"' in script
+    assert "packages/verifiers-rl" in script
+    assert "UV_PROJECT_ENVIRONMENT" in script
+    assert "uv sync --no-dev --extra evals" in script

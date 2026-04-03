@@ -380,3 +380,20 @@
   `ABIDE_RUN_PROFILE=canary ABIDE_PORT=8129 ABIDE_OUTPUT_DIR=models/grpo_trl_gemma4_e4b_canary_rf077 bash scripts/run_grpo_gemma4_e4b.sh`
   which completed 8 GRPO steps successfully, wrote 4 telemetry snapshots to `models/grpo_trl_gemma4_e4b_canary_rf077/reward_telemetry.jsonl`, and saved `models/grpo_trl_gemma4_e4b_canary_rf077/final`.
 - Closed `RF-077` and released its lock.
+
+## 2026-04-03
+
+- Opened and claimed `RF-078` to refresh the verifiers integration against the current upstream package split, then rewrite the legacy Gemma trainer around a smaller well-known-form subset instead of the older broad default modes.
+- Updated the repo's main verifiers dependency to `verifiers>=0.1.11`, refreshed `uv.lock`, synced the main training environment, and confirmed `uv run python -c 'import verifiers'` now reports `0.1.11`.
+- Added a shared well-known-form catalog subset plus balanced prompt generation for `Haiku`, `Tanka`, `Limerick`, `ShakespeareanSonnet`, `PetrarchanSonnet`, `Villanelle`, `Ghazal`, and `Sestina`.
+- Rewrote `scripts/train_grpo.py` as an explicit legacy-verifiers entrypoint: Gemma-first defaults, well-known forms by default, parser-aware completion normalization through `vf.MaybeThinkParser`, metadata-driven rewards, zero-weight parser metrics, current `RLConfig` field names, and clearer runtime guidance that points production users to `prime-rl`.
+- Updated `scripts/run_grpo.sh` and `scripts/run_grpo_gemma3.sh` to auto-prepare and use an isolated `.venv-verifiers` runtime instead of assuming the main repo environment can satisfy both the TRL and legacy verifiers stacks simultaneously.
+- Added `scripts/prepare_verifiers_runtime.sh`, which creates `.venv-verifiers`, syncs the repo base plus `evals` dependencies into it, then installs the upstream split `verifiers-rl` package from `PrimeIntellect-ai/verifiers@v0.1.11#subdirectory=packages/verifiers-rl`.
+- Added regression coverage for the well-known catalog subset, prompt-selection behavior, the rewritten trainer CLI/config plumbing, and the isolated runtime prep script, then verified the RF-078 sweep with:
+  `uv run ruff check ...` -> clean,
+  `uv run mypy src/abide` -> clean,
+  `uv run pytest -q tests/integration/test_train_grpo.py tests/integration/test_prompt_generator.py tests/integration/test_pyproject_training_sync.py tests/forms/test_catalog.py` -> `18 passed`,
+  `uv run python scripts/train_grpo.py --help` -> clean,
+  `bash scripts/prepare_verifiers_runtime.sh` -> created `.venv-verifiers`,
+  `.venv-verifiers/bin/python -c 'import verifiers; from verifiers.rl.trainer import RLConfig, RLTrainer; ...'` -> clean.
+- Closed `RF-078` and released its lock.

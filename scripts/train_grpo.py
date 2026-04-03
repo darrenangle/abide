@@ -1,46 +1,33 @@
 #!/usr/bin/env python3
 """
-GRPO training script for poetic form generation using verifiers RLTrainer.
+Train a Gemma model on well-known poetic forms with the legacy verifiers RL stack.
 
-Uses abide constraints as verifiable rewards to train models
-to follow complex poetic form requirements.
+This script intentionally targets the smaller, local `vf.RLTrainer` path. Prime
+Intellect's current upstream guidance recommends `prime-rl` for production
+training and treats `vf.RLTrainer` as a lightweight legacy trainer for
+educational or experimental runs:
+https://docs.primeintellect.ai/verifiers/training
 
-Features:
-- Recombinant prompt generation (62k+ combinations)
-- Checkpointing every N steps
-- Best model tracking based on reward
-- Robust error handling with retries
-- Resume from checkpoint support
-
-Usage:
-    # Start vf-vllm on GPU 0 first (in separate terminal):
-    CUDA_VISIBLE_DEVICES=0 uv run vf-vllm --model /home/darren/10k-poems/models/baguettotron_sft/final --port 8000 --enforce-eager
-
-    # Then run training on GPU 1:
-    CUDA_VISIBLE_DEVICES=1 uv run python scripts/train_grpo.py
-
-    # Resume from checkpoint:
-    CUDA_VISIBLE_DEVICES=1 uv run python scripts/train_grpo.py --resume models/abide_grpo/checkpoint-500
-
-    # Or use a different model:
-    CUDA_VISIBLE_DEVICES=1 uv run python scripts/train_grpo.py --model google/gemma-3-270m-it
+The Abide-side defaults here reflect that recommendation:
+- Gemma is the default model family
+- a focused well-known-form subset is the default dataset
+- verifiers `MaybeThinkParser` is used to normalize completions
+- reward telemetry remains enabled so form-specific failures are visible
 """
 
 from __future__ import annotations
 
+import argparse
 import contextlib
-import json
 import os
 import re
-import shutil
 import signal
 import sys
 import time
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
-
-import wandb
+from typing import TYPE_CHECKING, Any
 
 # Add src and scripts to path for development
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -54,243 +41,222 @@ from reward_telemetry import (
     flush_reward_telemetry,
 )
 
-from abide.forms.catalog import RL_DEFAULT_FORM_NAMES, load_form_instances
+from abide.forms.catalog import (
+    RL_DEFAULT_FORM_NAMES,
+    WELL_KNOWN_FORM_NAMES,
+    instantiate_form,
+    load_form_instances,
+    load_rl_default_form_instances,
+    load_well_known_form_instances,
+)
 
-# Model paths
-BAGUETTOTRON_PATH = "/home/darren/10k-poems/models/baguettotron_sft/final"
-DEEPSEEK_R1_PATH = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
-OLMO_THINK_PATH = "allenai/OLMo-3-7B-Think-DPO"
-OLMO_INSTRUCT_PATH = "allenai/OLMo-3-7B-Instruct"
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+
+DEFAULT_GEMMA_MODEL = "google/gemma-3-4b-it"
+SUPPORTED_FORM_SETS = ("all", "learnable", "rl_default", "traditional", "well_known")
 
 
 @dataclass
 class TrainingConfig:
-    """Training configuration with sensible defaults for 2x4090."""
+    """Training configuration for the local verifiers RL trainer."""
 
-    # Model - OLMo-3-7B-Instruct (7B instruction-tuned model for poetry)
-    model_name: str = OLMO_INSTRUCT_PATH  # Override with --model or ABIDE_MODEL env
+    model_name: str = DEFAULT_GEMMA_MODEL
+    form_set: str = "well_known"
+    single_form: str | None = None
 
-    # Dataset
-    num_prompts: int = 100000
+    num_prompts: int = 16000
+    eval_prompts: int = 0
     seed: int = 42
 
-    # Training hyperparameters
     num_train_epochs: int = 1
-    rollouts_per_example: int = 16
-    batch_size: int = 32
-    micro_batch_size: int = 1  # Keep at 1 for 7B models to avoid OOM
-    learning_rate: float = 5e-5  # Aggressive LR for faster learning
-    max_seq_len: int = 2048  # Room for reasoning traces + poem
+    rollouts_per_example: int = 8
+    batch_size: int = 16
+    micro_batch_size: int = 1
+    learning_rate: float = 2e-5
+    max_seq_len: int = 1536
     max_prompt_len: int = 384
+    max_tokens: int = 768
+    temperature: float = 0.8
+    top_p: float = 0.95
+    repetition_penalty: float = 1.1
 
-    # Checkpointing
-    output_dir: str = "models/abide_grpo"
-    save_steps: int = 100
+    output_dir: str = "models/abide_verifiers_gemma_well_known"
+    save_steps: int = 50
     eval_steps: int = 50
-    keep_best_n: int = 3
+    logging_steps: int = 5
 
-    # Logging
-    logging_steps: int = 10
     use_wandb: bool = True
-    wandb_project: str = "abide-grpo"
+    wandb_project: str = "abide-verifiers-grpo"
 
-    # vLLM
+    vllm_host: str = "0.0.0.0"
     vllm_port: int = 8000
+    vllm_timeout: float = 300.0
 
-    # Error handling
-    max_retries: int = 3
+    max_retries: int = 2
     retry_delay: float = 5.0
-
-    # Resume
     resume_from: str | None = None
     telemetry_every: int = 256
 
 
-class BestModelTracker:
-    """Track and keep the N best models based on reward."""
-
-    def __init__(self, output_dir: str, keep_n: int = 3):
-        self.output_dir = Path(output_dir)
-        self.keep_n = keep_n
-        self.best_models: list[tuple[float, str]] = []  # (reward, path)
-        self.tracker_file = self.output_dir / "best_models.json"
-        self._load()
-
-    def _load(self):
-        """Load existing tracker state."""
-        if self.tracker_file.exists():
-            try:
-                with self.tracker_file.open() as f:
-                    data = json.load(f)
-                    self.best_models = [(m["reward"], m["path"]) for m in data]
-            except Exception:
-                self.best_models = []
-
-    def _save(self):
-        """Save tracker state."""
-        self.tracker_file.parent.mkdir(parents=True, exist_ok=True)
-        with self.tracker_file.open("w") as f:
-            json.dump(
-                [{"reward": r, "path": p} for r, p in self.best_models],
-                f,
-                indent=2,
-            )
-
-    def maybe_save(self, reward: float, step: int, save_fn) -> bool:
-        """Save model if it's among the best N."""
-        # Check if this would be in top N
-        if len(self.best_models) < self.keep_n or reward > self.best_models[-1][0]:
-            # Save the model
-            save_path = str(self.output_dir / f"best-step-{step}-reward-{reward:.4f}")
-            save_fn(save_path)
-
-            # Update tracker
-            self.best_models.append((reward, save_path))
-            self.best_models.sort(key=lambda x: -x[0])  # Sort by reward descending
-
-            # Remove old models if we have too many
-            while len(self.best_models) > self.keep_n:
-                _, old_path = self.best_models.pop()
-                if Path(old_path).exists():
-                    shutil.rmtree(old_path)
-                    print(f"  Removed old model: {old_path}")
-
-            self._save()
-            return True
-
-        return False
-
-    def get_best(self) -> str | None:
-        """Get path to best model."""
-        if self.best_models:
-            return self.best_models[0][1]
-        return None
+def resolve_default_form_set() -> str:
+    """Resolve a form-set default while keeping older env knobs working."""
+    explicit = os.environ.get("ABIDE_FORM_SET", "").strip().lower()
+    if explicit:
+        return explicit
+    if os.environ.get("ABIDE_LEARNABLE", "").lower() in {"1", "true", "yes"}:
+        return "learnable"
+    if os.environ.get("ABIDE_TRADITIONAL", "").lower() in {"1", "true", "yes"}:
+        return "traditional"
+    return "well_known"
 
 
-def get_forms(
-    form_names: list[str] | None = None,
-    *,
-    training_profile: bool = False,
-) -> dict[str, object]:
-    """Load training forms from the shared form catalog."""
-    return load_form_instances(form_names, training_profile=training_profile)
+def normalize_generated_poem(text: str) -> str:
+    """Normalize raw model output into poem text before verification."""
+    cleaned = text
 
+    if "```" in cleaned:
+        code_block_match = re.search(r"```(?:\w*\n)?(.*?)```", cleaned, re.DOTALL)
+        if code_block_match:
+            cleaned = code_block_match.group(1)
 
-def get_completion_text(completion, require_think_close: bool = True) -> str:
-    """Extract poem text from completion, requiring proper </think> tag.
+    for token in (
+        "<think>",
+        "</think>",
+        "<|thinking|>",
+        "<|/thinking|>",
+        "<|im_end|>",
+        "<|im_start|>",
+        "<|end_of_text|>",
+        "<|begin_of_text|>",
+        "<|endoftext|>",
+        "<start_of_turn>",
+        "<end_of_turn>",
+        "<bos>",
+        "<eos>",
+    ):
+        cleaned = cleaned.replace(token, "")
 
-    For Baguettotron: The chat template already includes <think> in the prompt,
-    so completions look like: "reasoning here</think>poem here"
-
-    If require_think_close=True (default for Baguettotron):
-      - MUST have </think> tag, otherwise returns "" (0 reward)
-      - Returns only what comes AFTER </think>
-
-    If require_think_close=False (for non-reasoning models):
-      - Returns the text as-is (after stripping special tokens)
-    """
-    val = completion
-    if isinstance(val, list):
-        if len(val) > 0 and isinstance(val[0], dict):
-            val = val[-1].get("content", "")
-        elif len(val) > 0 and isinstance(val[0], str):
-            val = "".join(val)
-    if isinstance(val, list):
-        val = "".join([str(x) for x in val])
-
-    text = str(val)
-
-    # Check for thinking close tags (different models use different formats)
-    # Baguettotron: </think>
-    # OLMo-Think: <|/thinking|>
-    has_think_close = "</think>" in text or "<|/thinking|>" in text
-
-    if require_think_close:
-        # For thinking models: completion should be "reasoning[close_tag]poem"
-        if not has_think_close:
-            # No closing tag = incomplete reasoning = 0 reward
-            return ""
-        # Extract only what comes after the thinking section
-        if "</think>" in text:
-            text = text.split("</think>", 1)[-1]
-        elif "<|/thinking|>" in text:
-            text = text.split("<|/thinking|>", 1)[-1]
-
-    # Strip any remaining thinking tags
-    text = text.replace("<think>", "").replace("</think>", "")
-    text = text.replace("<|thinking|>", "").replace("<|/thinking|>", "")
-
-    # Strip ChatML tokens if present
-    text = text.replace("<|im_end|>", "").replace("<|im_start|>", "")
-    text = text.replace("<|end_of_text|>", "").replace("<|begin_of_text|>", "")
-    text = text.replace("<|endoftext|>", "")
-
-    # Strip Gemma tokens if present
-    text = text.replace("<start_of_turn>", "").replace("<end_of_turn>", "")
-    text = text.replace("<bos>", "").replace("<eos>", "")
-
-    # Strip markdown code blocks (common in chat models)
-    # Handle ```poem\n...\n``` or just ```\n...\n```
-    code_block_match = re.search(r"```(?:\w*\n)?(.*?)```", text, re.DOTALL)
-    if code_block_match:
-        text = code_block_match.group(1)
-
-    # Strip common preambles that chat models add
-    preambles = [
+    preambles = (
         "No explanations.",
         "Here is the poem:",
         "Here's the poem:",
         "The poem:",
-    ]
+    )
+    stripped = cleaned.strip()
     for preamble in preambles:
-        if text.strip().startswith(preamble):
-            text = text.strip()[len(preamble) :]
+        if stripped.startswith(preamble):
+            stripped = stripped[len(preamble) :].strip()
+            break
 
-    return text.strip()
+    return stripped
+
+
+def resolve_forms(config: TrainingConfig) -> dict[str, object]:
+    """Load form instances that match the requested training subset."""
+    if config.single_form:
+        training_profile = config.single_form in set(RL_DEFAULT_FORM_NAMES) | set(
+            WELL_KNOWN_FORM_NAMES
+        )
+        return {
+            config.single_form: instantiate_form(
+                config.single_form,
+                training_profile=training_profile,
+            )
+        }
+
+    if config.form_set == "well_known":
+        return load_well_known_form_instances()
+    if config.form_set == "rl_default":
+        return load_rl_default_form_instances()
+    return load_form_instances()
+
+
+def resolve_dataset_builder(
+    form_set: str,
+    *,
+    single_form: str | None = None,
+) -> Callable[..., Any]:
+    """Resolve the prompt-generator dataset builder for a form selection mode."""
+    from prompt_generator import (
+        generate_learnable_forms_verifiers_dataset,
+        generate_rl_default_verifiers_dataset,
+        generate_single_form_verifiers_dataset,
+        generate_traditional_verifiers_dataset,
+        generate_verifiers_dataset,
+        generate_well_known_verifiers_dataset,
+    )
+
+    if single_form:
+        return generate_single_form_verifiers_dataset
+    if form_set == "well_known":
+        return generate_well_known_verifiers_dataset
+    if form_set == "learnable":
+        return generate_learnable_forms_verifiers_dataset
+    if form_set == "traditional":
+        return generate_traditional_verifiers_dataset
+    if form_set == "all":
+        return generate_verifiers_dataset
+    if form_set == "rl_default":
+        return generate_rl_default_verifiers_dataset
+    valid = ", ".join(SUPPORTED_FORM_SETS)
+    raise ValueError(f"Unsupported form set {form_set!r}. Expected one of: {valid}")
+
+
+def create_dataset(config: TrainingConfig) -> tuple[Any, Any | None]:
+    """Create train and optional eval datasets in verifiers-compatible format."""
+    builder = resolve_dataset_builder(config.form_set, single_form=config.single_form)
+    builder_kwargs = {"num_prompts": config.num_prompts, "seed": config.seed}
+    if config.single_form:
+        builder_kwargs["form_name"] = config.single_form
+
+    dataset = builder(**builder_kwargs)
+
+    eval_dataset = None
+    if config.eval_prompts > 0:
+        eval_kwargs = dict(builder_kwargs)
+        eval_kwargs["num_prompts"] = config.eval_prompts
+        eval_kwargs["seed"] = config.seed + 1
+        eval_dataset = builder(**eval_kwargs)
+
+    return dataset, eval_dataset
 
 
 def create_reward_function(
     forms: dict[str, object],
-    require_think_close: bool = True,
     *,
     telemetry_every: int = 256,
     use_wandb: bool = True,
 ):
-    """Create reward function closure over forms.
-
-    Args:
-        forms: Dict of form_name -> form_instance
-        require_think_close: If True, completions must have </think> tag (for Baguettotron)
-    """
-
-    _call_count = [0]  # Mutable to track calls
+    """Create a metadata-driven reward function over abide form instances."""
     telemetry = RewardTelemetry(
         label="verifiers",
         emit_every=telemetry_every,
         use_wandb=use_wandb,
     )
 
-    def abide_reward(completion, **kwargs) -> float:
-        """Score poem against the target form. Returns 0-1 score."""
-        _call_count[0] += 1
+    def abide_reward(completion, info=None, parser=None, **kwargs) -> float:
         form_name: str | None = None
         try:
-            poem = get_completion_text(completion, require_think_close=require_think_close)
-            if not poem or len(poem.strip()) < 10:
-                reason = "short completion"
-                if require_think_close and "</think>" not in str(completion):
-                    reason = "missing </think>"
-                telemetry.record(None, reward=0.0, passed=False, failure_reason=reason)
+            if parser is not None:
+                poem = parser.parse_answer(completion) or ""
+            else:
+                poem = normalize_generated_poem(str(completion))
+
+            if len(poem.strip()) < 10:
+                telemetry.record(
+                    None,
+                    reward=0.0,
+                    passed=False,
+                    failure_reason="short completion",
+                )
                 telemetry.emit()
                 return 0.0
 
-            # form_name is in the 'info' dict (set in dataset)
-            info = kwargs.get("info", {})
-            form_name = info.get("form_name") if isinstance(info, dict) else None
-
+            info_dict = info if isinstance(info, dict) else {}
+            form_name = info_dict.get("form_name")
             if not form_name:
-                if _call_count[0] <= 3:
-                    print(f"[DEBUG] No form_name in info: {info}")
                 telemetry.record(
                     None,
                     reward=0.0,
@@ -302,8 +268,6 @@ def create_reward_function(
 
             form_instance = forms.get(form_name)
             if form_instance is None:
-                if _call_count[0] <= 3:
-                    print(f"[DEBUG] Form not found: {form_name}")
                 telemetry.record(
                     form_name,
                     reward=0.0,
@@ -314,11 +278,6 @@ def create_reward_function(
                 return 0.0
 
             result = form_instance.verify(poem)
-            if _call_count[0] <= 3:
-                # Show first 200 chars of extracted poem to debug extraction
-                poem_preview = poem.replace("\n", "\\n")[:200]
-                print(f"[DEBUG] {form_name}: score={result.score:.3f}")
-                print(f"[DEBUG] poem: {poem_preview}...")
             reward = float(result.score)
             telemetry.record(
                 form_name,
@@ -328,13 +287,13 @@ def create_reward_function(
             )
             telemetry.emit()
             return reward
-        except Exception as e:
-            print(f"[reward error: {e}]")
+        except Exception as exc:
+            print(f"[reward error: {exc}]")
             telemetry.record(
                 form_name,
                 reward=0.0,
                 passed=False,
-                failure_reason=f"reward error: {type(e).__name__}",
+                failure_reason=f"reward error: {type(exc).__name__}",
             )
             telemetry.emit()
             return 0.0
@@ -343,96 +302,78 @@ def create_reward_function(
 
 
 def create_environment(forms: dict[str, object], config: TrainingConfig):
-    """Create verifiers environment with generated prompts."""
-    from prompt_generator import (
-        generate_learnable_forms_verifiers_dataset,
-        generate_rl_default_verifiers_dataset,
-        generate_single_form_verifiers_dataset,
-        generate_traditional_verifiers_dataset,
-        generate_verifiers_dataset,
-        resolve_form_selection_mode,
-    )
-
+    """Create a verifiers environment using parser-aware reward plumbing."""
     import verifiers as vf
 
-    # Detect if using a thinking model (requires </think> tag in completions)
-    # These models use explicit <think>...</think> tags in their chat templates
-    model_lower = config.model_name.lower()
-    # Only true thinking models (NOT olmo-instruct which has no think tags)
-    is_thinking_model = any(
-        x in model_lower
-        for x in ["baguettotron", "qwq", "qwen3", "deepseek-r1", "r1-distill", "olmo-think"]
-    )
-    if is_thinking_model:
-        print("Thinking model detected: requiring </think> tag in completions")
-    else:
-        print("Standard model: not requiring thinking tags")
-
-    # Check for single-form ablation mode
-    single_form = os.environ.get("ABIDE_SINGLE_FORM", "")
-    form_mode = resolve_form_selection_mode()
-
-    print(f"Generating {config.num_prompts} prompts...")
-    if single_form:
-        print(f"ABLATION MODE: Single form only ({single_form})")
-        dataset = generate_single_form_verifiers_dataset(
-            form_name=single_form,
-            num_prompts=config.num_prompts,
-            seed=config.seed,
-        )
-    elif form_mode == "learnable":
-        print("Using LEARNABLE forms only (top 10 with highest GRPO signal)")
-        dataset = generate_learnable_forms_verifiers_dataset(
-            num_prompts=config.num_prompts,
-            seed=config.seed,
-        )
-    elif form_mode == "traditional":
-        print("Using TRADITIONAL forms only (weighted sampling)")
-        dataset = generate_traditional_verifiers_dataset(
-            num_prompts=config.num_prompts,
-            seed=config.seed,
-        )
-    elif form_mode == "all":
-        print("Using ALL instantiable forms")
-        dataset = generate_verifiers_dataset(
-            num_prompts=config.num_prompts,
-            seed=config.seed,
-        )
-    else:
-        print("Using RL-DEFAULT forms only (current curated rollout set)")
-        dataset = generate_rl_default_verifiers_dataset(
-            num_prompts=config.num_prompts,
-            seed=config.seed,
-        )
-    print(f"Generated {len(dataset)} prompts")
-
+    parser = vf.MaybeThinkParser(extract_fn=normalize_generated_poem)
+    dataset, eval_dataset = create_dataset(config)
     reward_fn = create_reward_function(
         forms,
-        require_think_close=is_thinking_model,
         telemetry_every=config.telemetry_every,
         use_wandb=config.use_wandb,
     )
-    rubric = vf.Rubric(funcs=[reward_fn], weights=[1.0])
-    env = vf.SingleTurnEnv(dataset=dataset, rubric=rubric)
 
+    rubric = vf.Rubric(funcs=[reward_fn], weights=[1.0], parser=parser)
+
+    def parsed_nonempty_metric(completion, parser, **kwargs) -> float:
+        del kwargs
+        return float(bool((parser.parse_answer(completion) or "").strip()))
+
+    def parsed_word_count_metric(completion, parser, **kwargs) -> float:
+        del kwargs
+        return float(len((parser.parse_answer(completion) or "").split()))
+
+    rubric.add_metric(parsed_nonempty_metric)
+    rubric.add_metric(parsed_word_count_metric)
+
+    env_kwargs: dict[str, Any] = {
+        "dataset": dataset,
+        "rubric": rubric,
+        "parser": parser,
+    }
+    if eval_dataset is not None:
+        env_kwargs["eval_dataset"] = eval_dataset
+
+    env = vf.SingleTurnEnv(**env_kwargs)
     return env, reward_fn
 
 
-def setup_signal_handlers(trainer):
-    """Set up graceful shutdown on SIGINT/SIGTERM."""
+def import_verifiers_rl_trainer():
+    """Import the optional verifiers RL trainer with a repo-specific hint."""
+    try:
+        from verifiers.rl.trainer import RLConfig, RLTrainer
+    except ModuleNotFoundError as exc:
+        raise ModuleNotFoundError(
+            "The legacy verifiers RL trainer is not installed. "
+            "Run `bash scripts/prepare_verifiers_runtime.sh` and retry."
+        ) from exc
+    return RLConfig, RLTrainer
+
+
+def find_latest_checkpoint(output_dir: Path) -> Path | None:
+    """Find the highest-step checkpoint under an output directory."""
+    checkpoints = []
+    for path in output_dir.glob("checkpoint-*"):
+        suffix = path.name.removeprefix("checkpoint-")
+        if suffix.isdigit():
+            checkpoints.append((int(suffix), path))
+    if not checkpoints:
+        return None
+    return max(checkpoints, key=lambda item: item[0])[1]
+
+
+def setup_signal_handlers(trainer) -> None:
+    """Save an interrupt checkpoint on SIGINT or SIGTERM."""
     original_sigint = signal.getsignal(signal.SIGINT)
     original_sigterm = signal.getsignal(signal.SIGTERM)
 
     def handler(signum, frame):
-        print("\n" + "=" * 60)
-        print("Received interrupt signal. Saving checkpoint...")
-        print("=" * 60)
+        del signum, frame
+        print("\nReceived interrupt signal. Saving checkpoint...")
         try:
-            trainer.save_model(trainer.args.output_dir + "/interrupt-checkpoint")
-            print(f"Saved to {trainer.args.output_dir}/interrupt-checkpoint")
-        except Exception as e:
-            print(f"Failed to save checkpoint: {e}")
-        # Restore original handlers and re-raise
+            trainer.save_model(str(Path(trainer.args.output_dir) / "interrupt-checkpoint"))
+        except Exception as exc:  # pragma: no cover - best effort shutdown path
+            print(f"Failed to save interrupt checkpoint: {exc}")
         signal.signal(signal.SIGINT, original_sigint)
         signal.signal(signal.SIGTERM, original_sigterm)
         raise KeyboardInterrupt
@@ -441,256 +382,289 @@ def setup_signal_handlers(trainer):
     signal.signal(signal.SIGTERM, handler)
 
 
+def init_wandb(config: TrainingConfig) -> bool:
+    """Initialize Weights & Biases if enabled."""
+    if not config.use_wandb:
+        return False
+
+    try:
+        import wandb
+
+        wandb.init(
+            project=config.wandb_project,
+            name=f"verifiers-{Path(config.model_name).name}",
+            config={
+                "model": config.model_name,
+                "form_set": config.form_set,
+                "single_form": config.single_form,
+                "num_prompts": config.num_prompts,
+                "rollouts_per_example": config.rollouts_per_example,
+                "batch_size": config.batch_size,
+                "micro_batch_size": config.micro_batch_size,
+                "learning_rate": config.learning_rate,
+            },
+        )
+        return True
+    except Exception as exc:
+        print(f"Warning: failed to initialize wandb: {exc}")
+        return False
+
+
+def finish_wandb(enabled: bool) -> None:
+    """Close a wandb run if one was opened."""
+    if not enabled:
+        return
+    with contextlib.suppress(Exception):
+        import wandb
+
+        wandb.finish()
+
+
+def build_rl_config(config: TrainingConfig, *, max_steps: int):
+    """Build the legacy verifiers RLConfig with Gemma-friendly defaults."""
+    RLConfig, _ = import_verifiers_rl_trainer()
+    model_profile = resolve_model_profile(config.model_name)
+
+    target_modules: list[str] | str | None
+    if isinstance(model_profile.lora_target_modules, tuple):
+        target_modules = list(model_profile.lora_target_modules)
+    else:
+        target_modules = model_profile.lora_target_modules
+
+    eval_strategy = "steps" if config.eval_prompts > 0 else "no"
+    eval_steps = config.eval_steps if config.eval_prompts > 0 else None
+
+    return RLConfig(
+        output_dir=config.output_dir,
+        run_name=f"abide-verifiers-{int(time.time())}",
+        learning_rate=config.learning_rate,
+        num_train_epochs=config.num_train_epochs,
+        max_steps=max_steps,
+        per_device_train_batch_size=config.micro_batch_size,
+        batch_size=config.batch_size,
+        micro_batch_size=config.micro_batch_size,
+        rollouts_per_example=config.rollouts_per_example,
+        max_seq_len=config.max_seq_len,
+        max_prompt_len=config.max_prompt_len,
+        max_tokens=config.max_tokens,
+        temperature=config.temperature,
+        top_p=config.top_p,
+        repetition_penalty=config.repetition_penalty,
+        zero_truncated_completions=True,
+        vllm_server_host=config.vllm_host,
+        vllm_server_port=config.vllm_port,
+        vllm_server_timeout=config.vllm_timeout,
+        bf16=True,
+        gradient_checkpointing=True,
+        save_steps=config.save_steps,
+        eval_strategy=eval_strategy,
+        eval_steps=eval_steps,
+        logging_steps=config.logging_steps,
+        report_to="wandb" if config.use_wandb else [],
+        remove_unused_columns=False,
+        use_lora=True,
+        lora_rank=model_profile.default_lora_r,
+        lora_alpha=model_profile.default_lora_alpha,
+        lora_dropout=model_profile.default_lora_dropout,
+        lora_target_modules=target_modules,
+        use_liger=False,
+    )
+
+
 def train_with_retry(config: TrainingConfig) -> int:
-    """Run training with retry logic."""
-    from verifiers.rl.trainer import RLConfig, RLTrainer
+    """Run verifiers training with simple retry-once checkpoint recovery."""
+    _, RLTrainer = import_verifiers_rl_trainer()
 
     print("=" * 60)
-    print("Abide GRPO Training")
+    print("Abide Verifiers GRPO Training")
     print("=" * 60)
     print(f"Model: {config.model_name}")
+    print(f"Form set: {config.form_set}")
+    if config.single_form:
+        print(f"Single form: {config.single_form}")
     print(f"Prompts: {config.num_prompts}")
+    print(f"Eval prompts: {config.eval_prompts}")
     print(f"Rollouts per example: {config.rollouts_per_example}")
-    print(f"Total rollouts: ~{config.num_prompts * config.rollouts_per_example:,}")
     print(f"Output: {config.output_dir}")
     print("=" * 60)
-    print()
 
-    # Initialize wandb (wrapped in try-except to avoid crashing on sync issues)
-    wandb_enabled = False
-    if config.use_wandb:
-        try:
-            wandb.init(
-                project=config.wandb_project,
-                name=f"grpo-{config.model_name.split('/')[-1]}",
-                config={
-                    "model": config.model_name,
-                    "num_prompts": config.num_prompts,
-                    "rollouts_per_example": config.rollouts_per_example,
-                    "batch_size": config.batch_size,
-                    "micro_batch_size": config.micro_batch_size,
-                    "learning_rate": config.learning_rate,
-                    "max_seq_len": config.max_seq_len,
-                },
-            )
-            wandb_enabled = True
-            print("Wandb initialized successfully")
-        except Exception as e:
-            print(f"Warning: Failed to initialize wandb: {e}")
-            print("Continuing without wandb logging...")
+    forms = resolve_forms(config)
+    print(f"Forms: {len(forms)} ({', '.join(forms)})")
 
-    # Load forms
-    single_form = os.environ.get("ABIDE_SINGLE_FORM", "")
-    if single_form:
-        forms = get_forms(
-            [single_form],
-            training_profile=single_form in RL_DEFAULT_FORM_NAMES,
-        )
-    else:
-        from prompt_generator import resolve_form_selection_mode
-
-        form_mode = resolve_form_selection_mode()
-        if form_mode == "rl_default":
-            forms = get_forms(list(RL_DEFAULT_FORM_NAMES), training_profile=True)
-        else:
-            forms = get_forms()
-    print(f"Forms: {len(forms)} ({', '.join(forms.keys())})")
-
-    # Create environment
     env, reward_fn = create_environment(forms, config)
+    max_steps = max(1, (config.num_prompts // max(config.batch_size, 1)) * config.num_train_epochs)
+    rl_config = build_rl_config(config, max_steps=max_steps)
+    wandb_enabled = init_wandb(config)
 
-    # Best model tracker
-    best_tracker = BestModelTracker(config.output_dir, keep_n=config.keep_best_n)
-
-    # Training with retries
     for attempt in range(config.max_retries):
         try:
             print(f"\nTraining attempt {attempt + 1}/{config.max_retries}")
 
-            # Configure training
-            # Compute max_steps from num_prompts (verifiers defaults to 500!)
-            max_steps = (config.num_prompts // config.batch_size) * config.num_train_epochs
-            print(
-                f"Computed max_steps: {max_steps} ({config.num_prompts} prompts / {config.batch_size} batch x {config.num_train_epochs} epochs)"
-            )
-
-            rl_config = RLConfig(
-                output_dir=config.output_dir,
-                run_name=f"abide-grpo-{int(time.time())}",
-                learning_rate=config.learning_rate,
-                num_train_epochs=config.num_train_epochs,
-                max_steps=max_steps,  # Override verifiers default of 500!
-                per_device_train_batch_size=config.micro_batch_size,
-                batch_size=config.batch_size,
-                micro_batch_size=config.micro_batch_size,
-                rollouts_per_example=config.rollouts_per_example,
-                max_seq_len=config.max_seq_len,
-                max_prompt_len=config.max_prompt_len,
-                vllm_server_port=config.vllm_port,
-                temperature=0.6,  # Nemotron starts at 0.6, increases later
-                top_p=0.95,  # Nemotron uses 0.95 for diverse sampling
-                repetition_penalty=1.2,  # Mild penalty to break loops
-                max_tokens=2048,  # Poem output only (no thinking overhead)
-                mask_truncated_completions=True,  # DAPO: exclude truncated from loss
-                bf16=True,
-                gradient_checkpointing=True,
-                logging_steps=config.logging_steps,
-                save_steps=config.save_steps,
-                save_total_limit=5,  # Keep only last 5 checkpoints
-                report_to="wandb" if config.use_wandb else "none",
-                remove_unused_columns=False,
-                use_lora=True,
-            )
-
-            model_profile = resolve_model_profile(config.model_name)
-            if model_profile.stop_tokens:
-                rl_config.sampling_args["stop"] = list(model_profile.stop_tokens)
-                print(f"Added stop tokens: {', '.join(model_profile.stop_tokens)}")
-
-            # Load model
             import torch
             from transformers import AutoModelForCausalLM, AutoTokenizer
 
             model_path = config.resume_from or config.model_name
+            model_profile = resolve_model_profile(model_path)
             print(f"Loading model: {model_path}")
 
-            model_profile = resolve_model_profile(model_path)
             model = AutoModelForCausalLM.from_pretrained(
                 model_path,
                 torch_dtype=torch.bfloat16,
                 **model_profile.causal_lm_load_kwargs(),
             )
-
             tokenizer = AutoTokenizer.from_pretrained(
                 model_path,
                 trust_remote_code=model_profile.trust_remote_code,
             )
-
-            # Ensure pad token is set (Baguettotron uses [PAD])
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
-            print(f"Tokenizer: pad={tokenizer.pad_token}, eos={tokenizer.eos_token}")
 
-            # Create trainer
             trainer = RLTrainer(
                 model=model,
                 env=env,
                 args=rl_config,
                 processing_class=tokenizer,
             )
-
-            # Set up graceful shutdown
             setup_signal_handlers(trainer)
 
-            print("\nStarting training...")
-            print("=" * 60)
-
-            trainer.train()
+            trainer.train(resume_from_checkpoint=config.resume_from)
             flush_reward_telemetry(reward_fn)
 
-            print("\n" + "=" * 60)
-            print("Training Complete!")
-            print("=" * 60)
-
-            # Save final model
-            final_path = config.output_dir + "/final"
-            trainer.save_model(final_path)
+            final_path = Path(config.output_dir) / "final"
+            trainer.save_model(str(final_path))
             print(f"Saved final model to {final_path}")
 
-            # Print best model info
-            best_path = best_tracker.get_best()
-            if best_path:
-                print(f"Best model: {best_path}")
-
-            if wandb_enabled:
-                with contextlib.suppress(Exception):
-                    wandb.finish()
-
+            finish_wandb(wandb_enabled)
             return 0
-
         except KeyboardInterrupt:
             print("\nTraining interrupted by user.")
             flush_reward_telemetry(reward_fn)
-            if wandb_enabled:
-                with contextlib.suppress(Exception):
-                    wandb.finish()
+            finish_wandb(wandb_enabled)
             return 1
-
-        except Exception as e:
-            print(f"\nError during training: {e}")
+        except Exception as exc:
+            print(f"\nError during training: {exc}")
             traceback.print_exc()
             flush_reward_telemetry(reward_fn)
 
-            if attempt < config.max_retries - 1:
-                print(f"Retrying in {config.retry_delay}s...")
-                time.sleep(config.retry_delay)
-
-                # Try to resume from last checkpoint
-                checkpoints = list(Path(config.output_dir).glob("checkpoint-*"))
-                if checkpoints:
-                    latest = max(checkpoints, key=lambda p: int(p.name.split("-")[1]))
-                    config.resume_from = str(latest)
-                    print(f"Will resume from {config.resume_from}")
-            else:
-                print("Max retries exceeded. Training failed.")
-                if wandb_enabled:
-                    with contextlib.suppress(Exception):
-                        wandb.finish()
+            if attempt >= config.max_retries - 1:
+                finish_wandb(wandb_enabled)
                 return 1
 
-    if wandb_enabled:
-        with contextlib.suppress(Exception):
-            wandb.finish()
+            latest_checkpoint = find_latest_checkpoint(Path(config.output_dir))
+            if latest_checkpoint is not None:
+                config.resume_from = str(latest_checkpoint)
+                print(f"Retrying from checkpoint {config.resume_from} in {config.retry_delay}s...")
+            else:
+                print(f"Retrying from base model in {config.retry_delay}s...")
+            time.sleep(config.retry_delay)
+
+    finish_wandb(wandb_enabled)
     return 1
 
 
 def main() -> int:
-    """Main entry point."""
-    import argparse
-
+    """Main CLI entrypoint."""
     parser = argparse.ArgumentParser(
-        description="GRPO training for abide poetry forms",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__,
+        description="Train a Gemma poetry model with the legacy verifiers RL trainer.",
+        epilog=(
+            "This script is for local experimental runs. Upstream verifiers guidance now "
+            "recommends prime-rl for production training."
+        ),
     )
-    parser.add_argument("--model", default=None, help="Model name or path")
-    parser.add_argument("--prompts", type=int, default=100000, help="Number of prompts")
-    parser.add_argument("--rollouts", type=int, default=16, help="Rollouts per example")
-    parser.add_argument("--batch-size", type=int, default=32, help="Batch size")
-    parser.add_argument("--lr", type=float, default=5e-5, help="Learning rate")
-    parser.add_argument("--output", default="models/abide_grpo", help="Output directory")
-    parser.add_argument("--save-steps", type=int, default=100, help="Save every N steps")
-    parser.add_argument("--resume", type=str, help="Resume from checkpoint")
-    parser.add_argument("--port", type=int, default=8000, help="vLLM port")
-    parser.add_argument("--no-wandb", action="store_true", help="Disable wandb")
-    parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser.add_argument("--model", default=os.environ.get("ABIDE_MODEL", DEFAULT_GEMMA_MODEL))
+    parser.add_argument(
+        "--form-set",
+        choices=SUPPORTED_FORM_SETS,
+        default=resolve_default_form_set(),
+        help="Curated prompt/form subset to train against.",
+    )
+    parser.add_argument(
+        "--single-form",
+        default=os.environ.get("ABIDE_SINGLE_FORM") or None,
+        help="Override the form set and train on a single named form.",
+    )
+    parser.add_argument("--prompts", type=int, default=16000, help="Number of training prompts.")
+    parser.add_argument(
+        "--eval-prompts",
+        type=int,
+        default=0,
+        help="Optional number of held-out prompts for periodic evaluation.",
+    )
+    parser.add_argument("--rollouts", type=int, default=8, help="Rollouts per example.")
+    parser.add_argument("--batch-size", type=int, default=16, help="Total rollout batch size.")
+    parser.add_argument(
+        "--micro-batch-size",
+        type=int,
+        default=1,
+        help="Per-device micro batch size.",
+    )
+    parser.add_argument("--lr", type=float, default=2e-5, help="Learning rate.")
+    parser.add_argument("--epochs", type=int, default=1, help="Training epochs.")
+    parser.add_argument("--max-seq-len", type=int, default=1536, help="Max train sequence length.")
+    parser.add_argument("--max-prompt-len", type=int, default=384, help="Max prompt length.")
+    parser.add_argument("--max-tokens", type=int, default=768, help="Generation max tokens.")
+    parser.add_argument("--temperature", type=float, default=0.8, help="Sampling temperature.")
+    parser.add_argument("--top-p", type=float, default=0.95, help="Top-p sampling value.")
+    parser.add_argument(
+        "--repetition-penalty",
+        type=float,
+        default=1.1,
+        help="Sampling repetition penalty.",
+    )
+    parser.add_argument(
+        "--output",
+        default="models/abide_verifiers_gemma_well_known",
+        help="Output directory.",
+    )
+    parser.add_argument("--save-steps", type=int, default=50, help="Checkpoint cadence.")
+    parser.add_argument("--eval-steps", type=int, default=50, help="Eval cadence when enabled.")
+    parser.add_argument("--resume", type=str, help="Resume from a checkpoint path.")
+    parser.add_argument("--host", default="0.0.0.0", help="vf-vllm host.")
+    parser.add_argument("--port", type=int, default=8000, help="vf-vllm port.")
+    parser.add_argument(
+        "--vllm-timeout",
+        type=float,
+        default=300.0,
+        help="Seconds to wait for the vLLM server.",
+    )
+    parser.add_argument("--no-wandb", action="store_true", help="Disable wandb logging.")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed.")
     parser.add_argument(
         "--telemetry-every",
         type=int,
         default=256,
-        help="Emit aggregate reward telemetry every N scored samples",
+        help="Emit aggregate reward telemetry every N scored samples.",
     )
     args = parser.parse_args()
 
     config = TrainingConfig(
+        model_name=args.model,
+        form_set=args.form_set,
+        single_form=args.single_form,
         num_prompts=args.prompts,
+        eval_prompts=args.eval_prompts,
+        seed=args.seed,
+        num_train_epochs=args.epochs,
         rollouts_per_example=args.rollouts,
         batch_size=args.batch_size,
+        micro_batch_size=args.micro_batch_size,
         learning_rate=args.lr,
+        max_seq_len=args.max_seq_len,
+        max_prompt_len=args.max_prompt_len,
+        max_tokens=args.max_tokens,
+        temperature=args.temperature,
+        top_p=args.top_p,
+        repetition_penalty=args.repetition_penalty,
         output_dir=args.output,
         save_steps=args.save_steps,
-        resume_from=args.resume,
-        vllm_port=args.port,
+        eval_steps=args.eval_steps,
         use_wandb=not args.no_wandb,
-        seed=args.seed,
+        resume_from=args.resume,
+        vllm_host=args.host,
+        vllm_port=args.port,
+        vllm_timeout=args.vllm_timeout,
         telemetry_every=args.telemetry_every,
     )
-
-    if args.model:
-        config.model_name = args.model
-    elif os.environ.get("ABIDE_MODEL"):
-        config.model_name = os.environ["ABIDE_MODEL"]
-
     return train_with_retry(config)
 
 

@@ -1,9 +1,10 @@
 """
-Catalog helpers and curated RL defaults for poetic forms.
+Catalog helpers and curated form subsets for poetry training.
 
 This module centralizes:
 - default kwargs used when a form needs explicit construction params
-- the current curated subset used by RL scripts
+- the current RL rollout subset
+- the smaller well-known subset used by the legacy verifiers trainer
 """
 
 from __future__ import annotations
@@ -38,6 +39,22 @@ RL_DEFAULT_FORM_DEFAULTS: dict[str, dict[str, Any]] = {
 }
 
 RL_DEFAULT_FORM_NAMES: tuple[str, ...] = tuple(RL_DEFAULT_FORM_DEFAULTS)
+
+WELL_KNOWN_FORM_DEFAULTS: dict[str, dict[str, Any]] = {
+    "Haiku": {},
+    "Tanka": {},
+    "Limerick": {},
+    "ShakespeareanSonnet": {
+        "syllable_tolerance": 2,
+        "rhyme_threshold": 0.4,
+    },
+    "PetrarchanSonnet": {},
+    "Villanelle": {},
+    "Ghazal": {},
+    "Sestina": {},
+}
+
+WELL_KNOWN_FORM_NAMES: tuple[str, ...] = tuple(WELL_KNOWN_FORM_DEFAULTS)
 
 SPECIAL_FORM_KWARGS: dict[str, dict[str, Any]] = {
     "StaircasePoem": {"num_words": 7},
@@ -85,6 +102,7 @@ def instantiate_form(
     kwargs.update(SPECIAL_FORM_KWARGS.get(form_name, {}))
     if training_profile:
         kwargs.update(RL_DEFAULT_FORM_DEFAULTS.get(form_name, {}))
+        kwargs.update(WELL_KNOWN_FORM_DEFAULTS.get(form_name, {}))
     kwargs.update(overrides)
 
     return form_class(**kwargs)
@@ -116,11 +134,19 @@ def load_rl_default_form_instances() -> dict[str, Constraint]:
     return load_form_instances(RL_DEFAULT_FORM_NAMES, training_profile=True)
 
 
+def load_well_known_form_instances() -> dict[str, Constraint]:
+    """Load the smaller well-known subset with its tuned defaults."""
+    return load_form_instances(WELL_KNOWN_FORM_NAMES, training_profile=True)
+
+
 __all__ = [
     "RL_DEFAULT_FORM_DEFAULTS",
     "RL_DEFAULT_FORM_NAMES",
     "SPECIAL_FORM_KWARGS",
+    "WELL_KNOWN_FORM_DEFAULTS",
+    "WELL_KNOWN_FORM_NAMES",
     "instantiate_form",
     "load_form_instances",
     "load_rl_default_form_instances",
+    "load_well_known_form_instances",
 ]

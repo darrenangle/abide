@@ -16,3 +16,11 @@ def test_resolve_form_selection_mode_honors_explicit_form_set(monkeypatch) -> No
     monkeypatch.setenv("ABIDE_LEARNABLE", "1")
 
     assert prompt_generator.resolve_form_selection_mode() == "all"
+
+
+def test_resolve_form_selection_mode_accepts_well_known(monkeypatch) -> None:
+    monkeypatch.setenv("ABIDE_FORM_SET", "well_known")
+    monkeypatch.delenv("ABIDE_LEARNABLE", raising=False)
+    monkeypatch.delenv("ABIDE_TRADITIONAL", raising=False)
+
+    assert prompt_generator.resolve_form_selection_mode() == "well_known"

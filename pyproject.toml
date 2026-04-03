@@ -44,7 +44,7 @@ evals = [
     "datasets>=2.0.0",          # HuggingFace datasets
     "httpx>=0.27.0",            # HTTP client for OpenRouter
     "openai>=1.0.0",            # OpenAI client (for verifiers compat)
-    "verifiers>=0.1.0",         # RL training framework
+    "verifiers>=0.1.11",        # Current stable verifiers package
 ]
 # Local GRPO training
 training = [
@@ -54,7 +54,7 @@ training = [
     "transformers>=4.45.0",
     "peft>=0.13.0",
     "trl>=0.11.0",
-    "verifiers>=0.1.0",
+    "verifiers>=0.1.11",
     "vllm>=0.18.1",
     "wandb>=0.16.0",            # Experiment tracking
 ]
@@ -69,7 +69,7 @@ dev = [
 ]
 # All optional dependencies
 all = [
-    "abide[nn,nlp,evals,dev,training]",
+    "abide[nn,nlp,evals,dev]",
 ]
 
 [project.urls]
