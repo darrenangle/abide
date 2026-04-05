@@ -41,6 +41,7 @@ class ModelProfile:
     default_lora_alpha: int = 128
     default_lora_dropout: float = 0.05
     lora_target_modules: tuple[str, ...] | str = DEFAULT_LORA_TARGET_MODULES
+    prime_rl_use_lora: bool = True
 
     def causal_lm_load_kwargs(self) -> dict[str, Any]:
         kwargs: dict[str, Any] = {}
@@ -89,6 +90,7 @@ GEMMA_4_E2B_PROFILE = ModelProfile(
     default_lora_r=32,
     default_lora_alpha=64,
     lora_target_modules=GEMMA4_LORA_TARGET_MODULES,
+    prime_rl_use_lora=False,
 )
 
 GEMMA_4_E4B_PROFILE = ModelProfile(
@@ -109,6 +111,7 @@ GEMMA_4_E4B_PROFILE = ModelProfile(
     default_lora_r=16,
     default_lora_alpha=32,
     lora_target_modules=GEMMA4_LORA_TARGET_MODULES,
+    prime_rl_use_lora=False,
 )
 
 

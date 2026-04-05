@@ -22,6 +22,7 @@ wheels/
 
 # Virtual environments
 .venv/
+.venv-prime-rl/
 venv/
 ENV/
 
@@ -46,6 +47,7 @@ Thumbs.db
 
 # uv
 .uv/
+.prime-rl-src/
 logs/
 results/
 
