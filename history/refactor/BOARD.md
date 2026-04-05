@@ -84,4 +84,4 @@ Updated: 2026-04-05
 | RF-078 | P2 | done | | Update verifiers to the current RL stack and rewrite the Gemma verifiers trainer around well-known forms | RF-077 |
 | RF-079 | P2 | done | | Retarget the legacy verifiers Gemma trainer and runner path to verified Gemma 4 E4B defaults | RF-078 |
 | RF-080 | P1 | done | | Stabilize legacy verifiers Gemma 4 vLLM weight sync and prove the remaining blocker is packed 4-bit state, not NCCL | RF-079 |
-| RF-081 | P1 | in_progress | `RF-081--codex` | Replace the legacy Gemma trainer with a prime-rl Gemma 4 E2B path using Abide as a verifiers env server | RF-080 |
+| RF-081 | P1 | done | | Replace the legacy Gemma trainer with a prime-rl Gemma 4 E2B path using Abide as a verifiers env server | RF-080 |

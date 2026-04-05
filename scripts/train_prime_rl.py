@@ -6,8 +6,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import signal
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -214,7 +216,6 @@ def build_prime_rl_toml(config: PrimeRLTrainingConfig, *, model_target: str | No
         f"trust_remote_code = {_toml_literal(profile.trust_remote_code)}",
         'optimization_dtype = "bfloat16"',
         'reduce_dtype = "bfloat16"',
-        "optim_cpu_offload = true",
         'fused_lm_head_token_chunk_size = "auto"',
         "",
         "[trainer.tokenizer]",
@@ -232,6 +233,9 @@ def build_prime_rl_toml(config: PrimeRLTrainingConfig, *, model_target: str | No
         "[orchestrator]",
         f"batch_size = {config.batch_size}",
         f"rollouts_per_example = {config.rollouts_per_example}",
+        "",
+        "[orchestrator.client]",
+        f"base_url = {_toml_literal([f'http://localhost:{config.port}/v1'])}",
         "",
         "[orchestrator.sampling]",
         f"max_tokens = {config.max_tokens}",
@@ -263,6 +267,22 @@ def build_prime_rl_toml(config: PrimeRLTrainingConfig, *, model_target: str | No
         "num_train_gpus = 1",
         "num_infer_gpus = 1",
     ]
+
+    if "gemma-4" in model_lower:
+        trainer_tokenizer_idx = lines.index("[trainer.tokenizer]")
+        lines[trainer_tokenizer_idx:trainer_tokenizer_idx] = [
+            "fsdp_cpu_offload = true",
+            "",
+            "[trainer.model.ac_offloading]",
+            "max_inflight_activations = 2",
+            "",
+        ]
+    else:
+        trainer_tokenizer_idx = lines.index("[trainer.tokenizer]")
+        lines[trainer_tokenizer_idx:trainer_tokenizer_idx] = [
+            "optim_cpu_offload = true",
+            "",
+        ]
 
     if use_lora:
         lines[lines.index("[trainer.optim]") : lines.index("[trainer.optim]")] = [
@@ -357,10 +377,59 @@ def build_prime_rl_env(runtime_venv: str, *, use_local_model: bool = False) -> d
     env["PATH"] = f"{venv_bin}:{current_path}" if current_path else venv_bin
     env["PYTHONPATH"] = f"{src_path}:{current_pythonpath}" if current_pythonpath else src_path
     env["VIRTUAL_ENV"] = str(Path(runtime_venv).resolve())
+    env.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
     if use_local_model:
         env["HF_HUB_OFFLINE"] = "1"
         env["TRANSFORMERS_OFFLINE"] = "1"
     return env
+
+
+def find_final_summary(output_dir: Path) -> Path | None:
+    summaries = sorted(output_dir.glob("run_default/run-*/final_summary.json"))
+    if summaries:
+        return summaries[-1]
+    return None
+
+
+def trainer_log_has_fatal_error(output_dir: Path) -> bool:
+    trainer_log = output_dir / "logs" / "trainer.log"
+    if not trainer_log.exists():
+        return False
+    return "Fatal error in train" in trainer_log.read_text()
+
+
+def wait_for_prime_rl_completion(
+    proc: subprocess.Popen[str],
+    *,
+    output_dir: Path,
+    grace_period_seconds: float = 20.0,
+    poll_interval_seconds: float = 2.0,
+) -> int:
+    while True:
+        return_code = proc.poll()
+        if return_code is not None:
+            return return_code
+
+        final_summary = find_final_summary(output_dir)
+        if final_summary is None or trainer_log_has_fatal_error(output_dir):
+            time.sleep(poll_interval_seconds)
+            continue
+
+        deadline = time.monotonic() + grace_period_seconds
+        while time.monotonic() < deadline:
+            return_code = proc.poll()
+            if return_code is not None:
+                return return_code
+            time.sleep(poll_interval_seconds)
+
+        os.killpg(proc.pid, signal.SIGTERM)
+        try:
+            proc.wait(timeout=grace_period_seconds)
+            return 0
+        except subprocess.TimeoutExpired:
+            os.killpg(proc.pid, signal.SIGKILL)
+            proc.wait(timeout=grace_period_seconds)
+            return 0
 
 
 def main() -> int:
@@ -383,11 +452,14 @@ def main() -> int:
 
     command = build_prime_rl_command(config_path, config.runtime_venv)
     print("Running:", " ".join(command))
-    subprocess.run(
+    proc = subprocess.Popen(
         command,
-        check=True,
         env=build_prime_rl_env(config.runtime_venv, use_local_model=use_local_model),
+        start_new_session=True,
     )
+    return_code = wait_for_prime_rl_completion(proc, output_dir=Path(config.output_dir))
+    if return_code != 0:
+        raise subprocess.CalledProcessError(return_code, command)
     return 0
 
 

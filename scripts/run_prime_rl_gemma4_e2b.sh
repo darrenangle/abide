@@ -14,6 +14,14 @@ TRAIN_GPU="${ABIDE_TRAIN_GPU:-}"
 INFER_GPU="${ABIDE_INFER_GPU:-}"
 TRAIN_MIN_FREE_MIB="${ABIDE_TRAIN_MIN_FREE_MIB:-12000}"
 INFER_MIN_FREE_MIB="${ABIDE_INFER_MIN_FREE_MIB:-10000}"
+MAX_STEPS_OVERRIDE="${ABIDE_MAX_STEPS:-}"
+MAX_ASYNC_LEVEL_OVERRIDE="${ABIDE_MAX_ASYNC_LEVEL:-}"
+NUM_PROMPTS_OVERRIDE="${ABIDE_NUM_PROMPTS:-}"
+BATCH_SIZE_OVERRIDE="${ABIDE_BATCH_SIZE:-}"
+ROLLOUTS_PER_EXAMPLE_OVERRIDE="${ABIDE_ROLLOUTS_PER_EXAMPLE:-}"
+MAX_TOKENS_OVERRIDE="${ABIDE_MAX_TOKENS:-}"
+SEQ_LEN_OVERRIDE="${ABIDE_SEQ_LEN:-}"
+LEARNING_RATE_OVERRIDE="${ABIDE_LEARNING_RATE:-}"
 
 gpu_free_memory_mib() {
     nvidia-smi --query-gpu=index,memory.free --format=csv,noheader,nounits \
@@ -68,7 +76,7 @@ ensure_gpu_ready() {
 profile_args() {
     case "$RUN_PROFILE" in
         smoke)
-            echo "--max-steps 1 --max-async-level 1 --num-prompts 16 --batch-size 4 --rollouts-per-example 2 --max-tokens 96 --seq-len 640"
+            echo "--max-steps 1 --max-async-level 0 --num-prompts 2 --batch-size 1 --rollouts-per-example 1 --max-tokens 64 --seq-len 384"
             ;;
         canary)
             echo "--max-steps 8 --num-prompts 1024 --batch-size 64 --rollouts-per-example 4 --max-tokens 384 --seq-len 1280"
@@ -105,6 +113,30 @@ echo "Runtime: $PRIME_RL_VENV"
 echo "============================================================"
 
 read -r -a EXTRA_PROFILE_ARGS <<< "$(profile_args)"
+if [ -n "$MAX_STEPS_OVERRIDE" ]; then
+    EXTRA_PROFILE_ARGS+=("--max-steps" "$MAX_STEPS_OVERRIDE")
+fi
+if [ -n "$MAX_ASYNC_LEVEL_OVERRIDE" ]; then
+    EXTRA_PROFILE_ARGS+=("--max-async-level" "$MAX_ASYNC_LEVEL_OVERRIDE")
+fi
+if [ -n "$NUM_PROMPTS_OVERRIDE" ]; then
+    EXTRA_PROFILE_ARGS+=("--num-prompts" "$NUM_PROMPTS_OVERRIDE")
+fi
+if [ -n "$BATCH_SIZE_OVERRIDE" ]; then
+    EXTRA_PROFILE_ARGS+=("--batch-size" "$BATCH_SIZE_OVERRIDE")
+fi
+if [ -n "$ROLLOUTS_PER_EXAMPLE_OVERRIDE" ]; then
+    EXTRA_PROFILE_ARGS+=("--rollouts-per-example" "$ROLLOUTS_PER_EXAMPLE_OVERRIDE")
+fi
+if [ -n "$MAX_TOKENS_OVERRIDE" ]; then
+    EXTRA_PROFILE_ARGS+=("--max-tokens" "$MAX_TOKENS_OVERRIDE")
+fi
+if [ -n "$SEQ_LEN_OVERRIDE" ]; then
+    EXTRA_PROFILE_ARGS+=("--seq-len" "$SEQ_LEN_OVERRIDE")
+fi
+if [ -n "$LEARNING_RATE_OVERRIDE" ]; then
+    EXTRA_PROFILE_ARGS+=("--learning-rate" "$LEARNING_RATE_OVERRIDE")
+fi
 VISIBLE_GPUS="${INFER_GPU},${TRAIN_GPU}"
 
 CUDA_VISIBLE_DEVICES="$VISIBLE_GPUS" python scripts/train_prime_rl.py \

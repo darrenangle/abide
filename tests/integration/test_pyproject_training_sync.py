@@ -43,6 +43,35 @@ def test_prepare_verifiers_runtime_uses_isolated_legacy_stack() -> None:
     assert 'uv pip uninstall --python "${VENV_DIR}/bin/python" flash-attn' in script
 
 
+def test_prepare_prime_rl_runtime_uses_pinned_gemma4_overlay() -> None:
+    script = Path("scripts/prepare_prime_rl_runtime.sh").read_text()
+
+    assert "66e86f1dbd565292a253e7d2d6851f65dc4f14ba" in script
+    assert "edaac7db98e34208209fd67d8c66781b8c2e4a53" in script
+    assert (
+        'uv pip install --python "${VENV_DIR}/bin/python" --reinstall "${GEMMA4_VLLM_WHEEL_URL}"'
+        in script
+    )
+    assert 'type(config).__name__ != "Gemma4Config"' in script
+
+
+def test_prime_rl_runner_uses_conservative_smoke_defaults_and_env_overrides() -> None:
+    script = Path("scripts/run_prime_rl_gemma4_e2b.sh").read_text()
+
+    assert 'MAX_STEPS_OVERRIDE="${ABIDE_MAX_STEPS:-}"' in script
+    assert 'NUM_PROMPTS_OVERRIDE="${ABIDE_NUM_PROMPTS:-}"' in script
+    assert 'BATCH_SIZE_OVERRIDE="${ABIDE_BATCH_SIZE:-}"' in script
+    assert 'MAX_TOKENS_OVERRIDE="${ABIDE_MAX_TOKENS:-}"' in script
+    assert 'SEQ_LEN_OVERRIDE="${ABIDE_SEQ_LEN:-}"' in script
+    assert (
+        'echo "--max-steps 1 --max-async-level 0 --num-prompts 2 --batch-size 1 --rollouts-per-example 1 --max-tokens 64 --seq-len 384"'
+        in script
+    )
+    assert 'EXTRA_PROFILE_ARGS+=("--num-prompts" "$NUM_PROMPTS_OVERRIDE")' in script
+    assert 'EXTRA_PROFILE_ARGS+=("--batch-size" "$BATCH_SIZE_OVERRIDE")' in script
+    assert 'EXTRA_PROFILE_ARGS+=("--seq-len" "$SEQ_LEN_OVERRIDE")' in script
+
+
 def test_verifiers_vllm_server_matches_current_vllm_api() -> None:
     server = Path("src/abide/verifiers_vllm_server.py").read_text()
 

@@ -117,21 +117,15 @@ def _install_prime_rl_vllm_build_app_compat() -> None:
     api_server_any.build_app = custom_build_app
 
 
-def _install_prime_rl_serving_chat_kwarg_compat() -> None:
-    try:
-        serving = importlib.import_module("prime_rl.inference.vllm.serving_chat_with_tokens")
-    except Exception:
-        return
-
-    chat_cls = getattr(serving, "OpenAIServingChatWithTokens", None)
-    if chat_cls is None:
-        return
-
-    original_init = chat_cls.__init__
-    if getattr(original_init, "__abide_kwarg_compat__", False):
-        return
-
-    signature = inspect.signature(original_init)
+def _resolve_openai_serving_chat_kwargs(
+    chat_init: Any,
+    state: Any,
+    args: Any,
+    *,
+    request_logger: Any,
+    resolved_chat_template: Any,
+) -> dict[str, Any]:
+    signature = inspect.signature(chat_init)
     accepted_kwargs = {
         name
         for name, parameter in signature.parameters.items()
@@ -140,17 +134,87 @@ def _install_prime_rl_serving_chat_kwarg_compat() -> None:
         in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
     }
 
-    def compat_init(self: Any, *args: Any, **kwargs: Any) -> None:
-        filtered_kwargs = {key: value for key, value in kwargs.items() if key in accepted_kwargs}
-        original_init(self, *args, **filtered_kwargs)
+    structured_outputs_config = getattr(args, "structured_outputs_config", None)
+    candidate_kwargs: dict[str, Any] = {
+        "openai_serving_render": getattr(state, "openai_serving_render", None),
+        "request_logger": request_logger,
+        "chat_template": resolved_chat_template,
+        "chat_template_content_format": getattr(args, "chat_template_content_format", None),
+        "trust_request_chat_template": getattr(args, "trust_request_chat_template", False),
+        "return_tokens_as_token_ids": getattr(args, "return_tokens_as_token_ids", False),
+        "reasoning_parser": getattr(structured_outputs_config, "reasoning_parser", ""),
+        "enable_auto_tools": getattr(args, "enable_auto_tool_choice", False),
+        "exclude_tools_when_tool_choice_none": getattr(
+            args, "exclude_tools_when_tool_choice_none", False
+        ),
+        "tool_parser": getattr(args, "tool_call_parser", None),
+        "enable_prompt_tokens_details": getattr(args, "enable_prompt_tokens_details", False),
+        "enable_force_include_usage": getattr(args, "enable_force_include_usage", False),
+        "enable_log_outputs": getattr(args, "enable_log_outputs", False),
+        "enable_log_deltas": getattr(args, "enable_log_deltas", True),
+        "default_chat_template_kwargs": getattr(args, "default_chat_template_kwargs", None),
+        "log_error_stack": getattr(args, "log_error_stack", False),
+    }
+    return {key: value for key, value in candidate_kwargs.items() if key in accepted_kwargs}
 
-    compat_init_any: Any = compat_init
-    compat_init_any.__abide_kwarg_compat__ = True
-    chat_cls.__init__ = compat_init
+
+def _install_prime_rl_init_app_state_compat() -> None:
+    try:
+        from vllm.entrypoints.chat_utils import load_chat_template
+        from vllm.entrypoints.logger import RequestLogger
+
+        api_server = importlib.import_module("vllm.entrypoints.openai.api_server")
+        original_vllm_init_app_state = api_server.init_app_state
+        server = importlib.import_module("prime_rl.inference.vllm.server")
+        serving = importlib.import_module("prime_rl.inference.vllm.serving_chat_with_tokens")
+    except Exception:
+        return
+
+    chat_cls = getattr(serving, "OpenAIServingChatWithTokens", None)
+    if chat_cls is None or getattr(server, "__abide_init_app_state_compat__", False):
+        return
+
+    async def compat_init_app_state(
+        engine_client: Any,
+        state: Any,
+        args: Any,
+        supported_tasks: Any,
+    ) -> None:
+        await original_vllm_init_app_state(engine_client, state, args, supported_tasks)
+
+        if getattr(args, "enable_log_requests", False):
+            request_logger = RequestLogger(max_log_len=getattr(args, "max_log_len", None))
+        else:
+            request_logger = None
+
+        resolved_chat_template = load_chat_template(getattr(args, "chat_template", None))
+        chat_kwargs = _resolve_openai_serving_chat_kwargs(
+            chat_cls.__init__,
+            state,
+            args,
+            request_logger=request_logger,
+            resolved_chat_template=resolved_chat_template,
+        )
+        serving_chat = chat_cls(
+            engine_client,
+            state.openai_serving_models,
+            args.response_role,
+            **chat_kwargs,
+        )
+        state.openai_serving_chat = serving_chat if "generate" in supported_tasks else None
+        state.openai_serving_chat_with_tokens = (
+            serving_chat if "generate" in supported_tasks else None
+        )
+
+    server_any: Any = server
+    server_any.custom_init_app_state = compat_init_app_state
+    server_any.__abide_init_app_state_compat__ = True
+    api_server_any: Any = api_server
+    api_server_any.init_app_state = compat_init_app_state
 
 
 _install_flash_attn_symbol_compat()
 _install_prime_rl_gemma4_compat()
 _install_vllm_serve_symbol_compat()
+_install_prime_rl_init_app_state_compat()
 _install_prime_rl_vllm_build_app_compat()
-_install_prime_rl_serving_chat_kwarg_compat()
