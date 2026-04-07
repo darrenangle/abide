@@ -13,6 +13,22 @@ def test_load_environment_defaults_to_well_known_subset() -> None:
     assert form_names.issubset(set(abide_poetry_forms.resolve_prime_rl_form_instances()))
 
 
+def test_load_environment_supports_short_and_long_well_known_subsets() -> None:
+    short_env = abide_poetry_forms.load_environment(
+        num_prompts=6, seed=7, form_set="well_known_short"
+    )
+    long_env = abide_poetry_forms.load_environment(
+        num_prompts=6, seed=7, form_set="well_known_long"
+    )
+
+    assert {row["info"]["form_name"] for row in short_env.dataset}.issubset(
+        {"Haiku", "Tanka", "Limerick"}
+    )
+    assert {row["info"]["form_name"] for row in long_env.dataset}.issubset(
+        {"ShakespeareanSonnet", "PetrarchanSonnet", "Villanelle", "Ghazal", "Sestina"}
+    )
+
+
 def test_load_environment_single_form_routes_metadata_exactly() -> None:
     env = abide_poetry_forms.load_environment(num_prompts=4, seed=11, form_name="Haiku")
 

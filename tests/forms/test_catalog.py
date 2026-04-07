@@ -4,10 +4,14 @@ import abide.forms as forms_module
 from abide.forms.catalog import (
     RL_DEFAULT_FORM_NAMES,
     WELL_KNOWN_FORM_NAMES,
+    WELL_KNOWN_LONG_FORM_NAMES,
+    WELL_KNOWN_SHORT_FORM_NAMES,
     instantiate_form,
     load_form_instances,
     load_rl_default_form_instances,
     load_well_known_form_instances,
+    load_well_known_long_form_instances,
+    load_well_known_short_form_instances,
 )
 
 
@@ -27,9 +31,26 @@ def test_load_well_known_form_instances_returns_exact_catalog_set() -> None:
     assert tuple(forms.keys()) == WELL_KNOWN_FORM_NAMES
 
 
+def test_load_well_known_short_form_instances_returns_exact_catalog_set() -> None:
+    forms = load_well_known_short_form_instances()
+    assert tuple(forms.keys()) == WELL_KNOWN_SHORT_FORM_NAMES
+
+
+def test_load_well_known_long_form_instances_returns_exact_catalog_set() -> None:
+    forms = load_well_known_long_form_instances()
+    assert tuple(forms.keys()) == WELL_KNOWN_LONG_FORM_NAMES
+
+
 def test_well_known_subset_is_stable_and_smaller_than_rl_default() -> None:
     assert set(WELL_KNOWN_FORM_NAMES).issubset(set(RL_DEFAULT_FORM_NAMES))
     assert len(WELL_KNOWN_FORM_NAMES) < len(RL_DEFAULT_FORM_NAMES)
+
+
+def test_well_known_short_and_long_sets_partition_well_known_subset() -> None:
+    assert set(WELL_KNOWN_SHORT_FORM_NAMES).isdisjoint(set(WELL_KNOWN_LONG_FORM_NAMES))
+    assert set(WELL_KNOWN_SHORT_FORM_NAMES) | set(WELL_KNOWN_LONG_FORM_NAMES) == set(
+        WELL_KNOWN_FORM_NAMES
+    )
 
 
 def test_catalog_instantiates_positional_poem_without_runtime_exception() -> None:

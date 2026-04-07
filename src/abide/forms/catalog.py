@@ -4,7 +4,7 @@ Catalog helpers and curated form subsets for poetry training.
 This module centralizes:
 - default kwargs used when a form needs explicit construction params
 - the current RL rollout subset
-- the smaller well-known subset used by the legacy verifiers trainer
+- the well-known subsets used by the Gemma training paths
 """
 
 from __future__ import annotations
@@ -18,10 +18,15 @@ if TYPE_CHECKING:
     from abide.constraints import Constraint
 
 
-RL_DEFAULT_FORM_DEFAULTS: dict[str, dict[str, Any]] = {
+WELL_KNOWN_SHORT_FORM_DEFAULTS: dict[str, dict[str, Any]] = {
     "Haiku": {},
     "Tanka": {},
     "Limerick": {},
+}
+
+WELL_KNOWN_SHORT_FORM_NAMES: tuple[str, ...] = tuple(WELL_KNOWN_SHORT_FORM_DEFAULTS)
+
+WELL_KNOWN_LONG_FORM_DEFAULTS: dict[str, dict[str, Any]] = {
     "ShakespeareanSonnet": {
         "syllable_tolerance": 2,
         "rhyme_threshold": 0.4,
@@ -30,6 +35,19 @@ RL_DEFAULT_FORM_DEFAULTS: dict[str, dict[str, Any]] = {
     "Villanelle": {},
     "Ghazal": {},
     "Sestina": {},
+}
+
+WELL_KNOWN_LONG_FORM_NAMES: tuple[str, ...] = tuple(WELL_KNOWN_LONG_FORM_DEFAULTS)
+
+WELL_KNOWN_FORM_DEFAULTS: dict[str, dict[str, Any]] = {
+    **WELL_KNOWN_SHORT_FORM_DEFAULTS,
+    **WELL_KNOWN_LONG_FORM_DEFAULTS,
+}
+
+WELL_KNOWN_FORM_NAMES: tuple[str, ...] = tuple(WELL_KNOWN_FORM_DEFAULTS)
+
+RL_DEFAULT_FORM_DEFAULTS: dict[str, dict[str, Any]] = {
+    **WELL_KNOWN_FORM_DEFAULTS,
     "Triolet": {},
     "Pantoum": {},
     "TerzaRima": {},
@@ -39,22 +57,6 @@ RL_DEFAULT_FORM_DEFAULTS: dict[str, dict[str, Any]] = {
 }
 
 RL_DEFAULT_FORM_NAMES: tuple[str, ...] = tuple(RL_DEFAULT_FORM_DEFAULTS)
-
-WELL_KNOWN_FORM_DEFAULTS: dict[str, dict[str, Any]] = {
-    "Haiku": {},
-    "Tanka": {},
-    "Limerick": {},
-    "ShakespeareanSonnet": {
-        "syllable_tolerance": 2,
-        "rhyme_threshold": 0.4,
-    },
-    "PetrarchanSonnet": {},
-    "Villanelle": {},
-    "Ghazal": {},
-    "Sestina": {},
-}
-
-WELL_KNOWN_FORM_NAMES: tuple[str, ...] = tuple(WELL_KNOWN_FORM_DEFAULTS)
 
 SPECIAL_FORM_KWARGS: dict[str, dict[str, Any]] = {
     "StaircasePoem": {"num_words": 7},
@@ -139,14 +141,30 @@ def load_well_known_form_instances() -> dict[str, Constraint]:
     return load_form_instances(WELL_KNOWN_FORM_NAMES, training_profile=True)
 
 
+def load_well_known_short_form_instances() -> dict[str, Constraint]:
+    """Load the short-form well-known subset with its tuned defaults."""
+    return load_form_instances(WELL_KNOWN_SHORT_FORM_NAMES, training_profile=True)
+
+
+def load_well_known_long_form_instances() -> dict[str, Constraint]:
+    """Load the longer-form well-known subset with its tuned defaults."""
+    return load_form_instances(WELL_KNOWN_LONG_FORM_NAMES, training_profile=True)
+
+
 __all__ = [
     "RL_DEFAULT_FORM_DEFAULTS",
     "RL_DEFAULT_FORM_NAMES",
     "SPECIAL_FORM_KWARGS",
     "WELL_KNOWN_FORM_DEFAULTS",
     "WELL_KNOWN_FORM_NAMES",
+    "WELL_KNOWN_LONG_FORM_DEFAULTS",
+    "WELL_KNOWN_LONG_FORM_NAMES",
+    "WELL_KNOWN_SHORT_FORM_DEFAULTS",
+    "WELL_KNOWN_SHORT_FORM_NAMES",
     "instantiate_form",
     "load_form_instances",
     "load_rl_default_form_instances",
     "load_well_known_form_instances",
+    "load_well_known_long_form_instances",
+    "load_well_known_short_form_instances",
 ]

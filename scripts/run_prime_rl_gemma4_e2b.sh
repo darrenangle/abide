@@ -5,8 +5,8 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 MODEL="${ABIDE_MODEL:-google/gemma-4-E2B-it}"
-FORM_SET="${ABIDE_FORM_SET:-well_known}"
-OUTPUT_DIR="${ABIDE_OUTPUT_DIR:-models/prime_rl_gemma4_e2b_well_known}"
+FORM_SET_OVERRIDE="${ABIDE_FORM_SET:-}"
+OUTPUT_DIR_OVERRIDE="${ABIDE_OUTPUT_DIR:-}"
 RUN_PROFILE="${ABIDE_RUN_PROFILE:-smoke}"
 PORT="${ABIDE_PORT:-8000}"
 PRIME_RL_VENV="${ABIDE_PRIME_RL_VENV:-${REPO_ROOT}/.venv-prime-rl}"
@@ -26,6 +26,45 @@ LEARNING_RATE_OVERRIDE="${ABIDE_LEARNING_RATE:-}"
 gpu_free_memory_mib() {
     nvidia-smi --query-gpu=index,memory.free --format=csv,noheader,nounits \
         | awk -F', ' -v gpu="$1" '$1 == gpu { print $2; exit }'
+}
+
+canonical_profile_name() {
+    case "$RUN_PROFILE" in
+        canary)
+            echo "mixed-canary"
+            ;;
+        soak)
+            echo "mixed-soak"
+            ;;
+        *)
+            echo "$RUN_PROFILE"
+            ;;
+    esac
+}
+
+profile_default_form_set() {
+    case "$(canonical_profile_name)" in
+        smoke|short-canary)
+            echo "well_known_short"
+            ;;
+        long-canary)
+            echo "well_known_long"
+            ;;
+        mixed-canary|mixed-soak)
+            echo "well_known"
+            ;;
+        *)
+            echo "ERROR: unknown ABIDE_RUN_PROFILE=${RUN_PROFILE}. Expected smoke, short-canary, long-canary, mixed-canary, canary, mixed-soak, or soak." >&2
+            exit 1
+            ;;
+    esac
+}
+
+default_output_dir() {
+    local resolved_profile
+
+    resolved_profile="$(canonical_profile_name | tr '-' '_')"
+    echo "models/prime_rl_gemma4_e2b_${FORM_SET}_${resolved_profile}"
 }
 
 pick_default_gpus() {
@@ -74,22 +113,31 @@ ensure_gpu_ready() {
 }
 
 profile_args() {
-    case "$RUN_PROFILE" in
+    case "$(canonical_profile_name)" in
         smoke)
-            echo "--max-steps 1 --max-async-level 0 --num-prompts 2 --batch-size 1 --rollouts-per-example 1 --max-tokens 64 --seq-len 384"
+            echo "--max-steps 1 --max-async-level 0 --num-prompts 4 --batch-size 1 --rollouts-per-example 1 --max-tokens 128 --seq-len 512"
             ;;
-        canary)
-            echo "--max-steps 8 --num-prompts 1024 --batch-size 64 --rollouts-per-example 4 --max-tokens 384 --seq-len 1280"
+        short-canary)
+            echo "--max-steps 4 --max-async-level 0 --num-prompts 24 --batch-size 2 --rollouts-per-example 2 --max-tokens 128 --seq-len 512"
             ;;
-        soak)
-            echo "--max-steps 32 --num-prompts 4096 --batch-size 96 --rollouts-per-example 8 --max-tokens 512 --seq-len 1536"
+        long-canary)
+            echo "--max-steps 4 --max-async-level 0 --num-prompts 16 --batch-size 1 --rollouts-per-example 1 --max-tokens 384 --seq-len 1024"
+            ;;
+        mixed-canary)
+            echo "--max-steps 4 --max-async-level 0 --num-prompts 24 --batch-size 1 --rollouts-per-example 1 --max-tokens 384 --seq-len 1024"
+            ;;
+        mixed-soak)
+            echo "--max-steps 16 --max-async-level 1 --num-prompts 128 --batch-size 2 --rollouts-per-example 2 --max-tokens 384 --seq-len 1280"
             ;;
         *)
-            echo "ERROR: unknown ABIDE_RUN_PROFILE=${RUN_PROFILE}. Expected smoke, canary, or soak." >&2
+            echo "ERROR: unknown ABIDE_RUN_PROFILE=${RUN_PROFILE}. Expected smoke, short-canary, long-canary, mixed-canary, canary, mixed-soak, or soak." >&2
             exit 1
             ;;
     esac
 }
+
+FORM_SET="${FORM_SET_OVERRIDE:-$(profile_default_form_set)}"
+OUTPUT_DIR="${OUTPUT_DIR_OVERRIDE:-$(default_output_dir)}"
 
 pick_default_gpus
 
@@ -106,9 +154,10 @@ echo "Abide prime-rl Gemma 4 E2B"
 echo "============================================================"
 echo "Model: $MODEL"
 echo "Form set: $FORM_SET"
-echo "Profile: $RUN_PROFILE"
+echo "Profile: $(canonical_profile_name)"
 echo "Inference GPU: $INFER_GPU"
 echo "Training GPU: $TRAIN_GPU"
+echo "Output: $OUTPUT_DIR"
 echo "Runtime: $PRIME_RL_VENV"
 echo "============================================================"
 

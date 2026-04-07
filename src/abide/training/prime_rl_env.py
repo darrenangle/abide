@@ -13,6 +13,8 @@ from abide.forms.catalog import (
     load_form_instances,
     load_rl_default_form_instances,
     load_well_known_form_instances,
+    load_well_known_long_form_instances,
+    load_well_known_short_form_instances,
 )
 
 if TYPE_CHECKING:
@@ -24,7 +26,14 @@ if TYPE_CHECKING:
 
 DEFAULT_ENV_ID = "abide-poetry-forms"
 PRIME_RL_DEFAULT_MODEL = "google/gemma-4-E2B-it"
-SUPPORTED_FORM_SETS = ("all", "rl_default", "well_known")
+SUPPORTED_FORM_SETS = (
+    "all",
+    "rl_default",
+    "well_known",
+    "well_known_short",
+    "well_known_long",
+)
+_TRAINING_PROFILE_FORM_NAMES = frozenset(RL_DEFAULT_FORM_NAMES) | frozenset(WELL_KNOWN_FORM_NAMES)
 
 _TOPICS = (
     "rain at dusk",
@@ -143,7 +152,7 @@ def resolve_prime_rl_form_instances(
     """Resolve abide forms for the modern prime-rl environment."""
     explicit_names = _parse_form_names(form_names)
     if form_name:
-        training_profile = form_name in set(RL_DEFAULT_FORM_NAMES) | set(WELL_KNOWN_FORM_NAMES)
+        training_profile = form_name in _TRAINING_PROFILE_FORM_NAMES
         return {
             form_name: instantiate_form(
                 form_name,
@@ -155,13 +164,17 @@ def resolve_prime_rl_form_instances(
         return {
             name: instantiate_form(
                 name,
-                training_profile=name in set(RL_DEFAULT_FORM_NAMES) | set(WELL_KNOWN_FORM_NAMES),
+                training_profile=name in _TRAINING_PROFILE_FORM_NAMES,
             )
             for name in explicit_names
         }
 
     if form_set == "well_known":
         return load_well_known_form_instances()
+    if form_set == "well_known_short":
+        return load_well_known_short_form_instances()
+    if form_set == "well_known_long":
+        return load_well_known_long_form_instances()
     if form_set == "rl_default":
         return load_rl_default_form_instances()
     if form_set == "all":

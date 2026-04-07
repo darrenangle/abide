@@ -55,16 +55,29 @@ def test_prepare_prime_rl_runtime_uses_pinned_gemma4_overlay() -> None:
     assert 'type(config).__name__ != "Gemma4Config"' in script
 
 
-def test_prime_rl_runner_uses_conservative_smoke_defaults_and_env_overrides() -> None:
+def test_prime_rl_runner_uses_subset_aware_profiles_and_env_overrides() -> None:
     script = Path("scripts/run_prime_rl_gemma4_e2b.sh").read_text()
 
+    assert 'FORM_SET_OVERRIDE="${ABIDE_FORM_SET:-}"' in script
+    assert 'OUTPUT_DIR_OVERRIDE="${ABIDE_OUTPUT_DIR:-}"' in script
     assert 'MAX_STEPS_OVERRIDE="${ABIDE_MAX_STEPS:-}"' in script
     assert 'NUM_PROMPTS_OVERRIDE="${ABIDE_NUM_PROMPTS:-}"' in script
     assert 'BATCH_SIZE_OVERRIDE="${ABIDE_BATCH_SIZE:-}"' in script
     assert 'MAX_TOKENS_OVERRIDE="${ABIDE_MAX_TOKENS:-}"' in script
     assert 'SEQ_LEN_OVERRIDE="${ABIDE_SEQ_LEN:-}"' in script
+    assert "smoke|short-canary)" in script
+    assert "long-canary)" in script
+    assert "mixed-canary|mixed-soak)" in script
     assert (
-        'echo "--max-steps 1 --max-async-level 0 --num-prompts 2 --batch-size 1 --rollouts-per-example 1 --max-tokens 64 --seq-len 384"'
+        'echo "--max-steps 1 --max-async-level 0 --num-prompts 4 --batch-size 1 --rollouts-per-example 1 --max-tokens 128 --seq-len 512"'
+        in script
+    )
+    assert (
+        'echo "--max-steps 4 --max-async-level 0 --num-prompts 24 --batch-size 2 --rollouts-per-example 2 --max-tokens 128 --seq-len 512"'
+        in script
+    )
+    assert (
+        'echo "--max-steps 4 --max-async-level 0 --num-prompts 16 --batch-size 1 --rollouts-per-example 1 --max-tokens 384 --seq-len 1024"'
         in script
     )
     assert 'EXTRA_PROFILE_ARGS+=("--num-prompts" "$NUM_PROMPTS_OVERRIDE")' in script

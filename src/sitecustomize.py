@@ -213,8 +213,49 @@ def _install_prime_rl_init_app_state_compat() -> None:
     api_server_any.init_app_state = compat_init_app_state
 
 
+def _install_prime_rl_perf_counter_compat() -> None:
+    try:
+        perf = importlib.import_module("prime_rl.trainer.perf")
+    except Exception:
+        return
+
+    perf_counter = getattr(perf, "PerfCounter", None)
+    original_get_active_mm_params = getattr(perf_counter, "get_active_mm_params", None)
+    if (
+        perf_counter is None
+        or original_get_active_mm_params is None
+        or getattr(perf, "__abide_perf_counter_compat__", False)
+    ):
+        return
+
+    def compat_get_active_mm_params(config: Any) -> float:
+        text_config = getattr(config, "text_config", config)
+        patched_attrs: dict[str, Any] = {}
+        for attr_name in (
+            "num_experts",
+            "n_routed_experts",
+            "num_shared_experts",
+            "num_experts_per_tok",
+        ):
+            if hasattr(text_config, attr_name) and getattr(text_config, attr_name) is None:
+                patched_attrs[attr_name] = None
+                setattr(text_config, attr_name, 0)
+
+        try:
+            return original_get_active_mm_params(config)
+        finally:
+            for attr_name, original_value in patched_attrs.items():
+                setattr(text_config, attr_name, original_value)
+
+    perf_counter_any: Any = perf_counter
+    perf_counter_any.get_active_mm_params = staticmethod(compat_get_active_mm_params)
+    perf_any: Any = perf
+    perf_any.__abide_perf_counter_compat__ = True
+
+
 _install_flash_attn_symbol_compat()
 _install_prime_rl_gemma4_compat()
+_install_prime_rl_perf_counter_compat()
 _install_vllm_serve_symbol_compat()
 _install_prime_rl_init_app_state_compat()
 _install_prime_rl_vllm_build_app_compat()

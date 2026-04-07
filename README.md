@@ -311,6 +311,7 @@ We're actively running GRPO (Group Relative Policy Optimization) experiments to 
 |--------|-------|-------|-------|
 | [`scripts/run_grpo_trl.sh`](scripts/run_grpo_trl.sh) | Gemma 3 4B | Top 10 learnable | TRL with beta=0.04 KL regularization |
 | [`scripts/run_grpo_gemma4_e4b.sh`](scripts/run_grpo_gemma4_e4b.sh) | Gemma 4 E4B | RL-default | Resumable TRL runner with `smoke` / `canary` / `soak` profiles and persisted reward telemetry |
+| [`scripts/run_prime_rl_gemma4_e2b.sh`](scripts/run_prime_rl_gemma4_e2b.sh) | Gemma 4 E2B | Well-known short / long / mixed | Modern `prime-rl` runner with subset-aware `smoke`, `short-canary`, `long-canary`, and mixed-form profiles |
 | [`scripts/run_grpo.sh`](scripts/run_grpo.sh) | Gemma 4 E4B | Well-known | Legacy verifiers GRPO; auto-prepares `.venv-verifiers` with the verified Gemma 4 overlay and starts the compatibility vLLM server |
 | [`scripts/run_grpo_gemma3.sh`](scripts/run_grpo_gemma3.sh) | Gemma 3 4B | Well-known | Legacy verifiers fallback runner using the same compatibility vLLM server |
 

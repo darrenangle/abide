@@ -20,10 +20,17 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from model_profiles import resolve_model_profile
 
-from abide.training.prime_rl_env import DEFAULT_ENV_ID, PRIME_RL_DEFAULT_MODEL
+from abide.forms.catalog import WELL_KNOWN_LONG_FORM_NAMES, WELL_KNOWN_SHORT_FORM_NAMES
+from abide.training.prime_rl_env import DEFAULT_ENV_ID, PRIME_RL_DEFAULT_MODEL, SUPPORTED_FORM_SETS
 
 DEFAULT_OUTPUT_DIR = "models/prime_rl_gemma4_e2b_well_known"
 DEFAULT_RUNTIME_VENV = ".venv-prime-rl"
+_SHORT_FORM_SET_NAMES = frozenset(WELL_KNOWN_SHORT_FORM_NAMES)
+_LONG_FORM_SET_NAMES = frozenset(WELL_KNOWN_LONG_FORM_NAMES)
+_MIN_SHORT_MAX_TOKENS = 96
+_MIN_SHORT_SEQ_LEN = 384
+_MIN_LONG_MAX_TOKENS = 256
+_MIN_LONG_SEQ_LEN = 1024
 _WEIGHT_FILE_PATTERNS = (
     "model*.safetensors",
     "pytorch_model*.bin",
@@ -63,9 +70,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default=PRIME_RL_DEFAULT_MODEL)
     parser.add_argument("--model-path", help="Optional local model artifact or snapshot path.")
-    parser.add_argument(
-        "--form-set", default="well_known", choices=("all", "rl_default", "well_known")
-    )
+    parser.add_argument("--form-set", default="well_known", choices=SUPPORTED_FORM_SETS)
     parser.add_argument("--single-form")
     parser.add_argument("--form-names", help="Comma-separated explicit form names.")
     parser.add_argument("--num-prompts", type=int, default=2048)
@@ -115,6 +120,64 @@ def config_from_args(args: argparse.Namespace) -> PrimeRLTrainingConfig:
         run_training=not args.write_config_only,
         dry_run=args.dry_run,
     )
+
+
+def _parse_form_names_csv(form_names: str | None) -> frozenset[str]:
+    if not form_names:
+        return frozenset()
+    return frozenset(name.strip() for name in form_names.split(",") if name.strip())
+
+
+def resolve_length_budget_guard(config: PrimeRLTrainingConfig) -> str | None:
+    if config.single_form:
+        if config.single_form in _LONG_FORM_SET_NAMES:
+            return "long"
+        if config.single_form in _SHORT_FORM_SET_NAMES:
+            return "short"
+        return None
+
+    explicit_form_names = _parse_form_names_csv(config.form_names)
+    if explicit_form_names:
+        if explicit_form_names & _LONG_FORM_SET_NAMES:
+            return "long"
+        if explicit_form_names <= _SHORT_FORM_SET_NAMES:
+            return "short"
+        return None
+
+    if config.form_set == "well_known_short":
+        return "short"
+    if config.form_set in {"well_known_long", "well_known", "rl_default", "all"}:
+        return "long"
+    return None
+
+
+def validate_length_budget(config: PrimeRLTrainingConfig) -> None:
+    guard = resolve_length_budget_guard(config)
+    if guard == "short":
+        if config.max_tokens < _MIN_SHORT_MAX_TOKENS or config.seq_len < _MIN_SHORT_SEQ_LEN:
+            raise ValueError(
+                "Short-form runs need at least "
+                f"max_tokens={_MIN_SHORT_MAX_TOKENS} and seq_len={_MIN_SHORT_SEQ_LEN}; "
+                f"got max_tokens={config.max_tokens}, seq_len={config.seq_len}."
+            )
+        return
+
+    if guard == "long":
+        if config.max_tokens < _MIN_LONG_MAX_TOKENS or config.seq_len < _MIN_LONG_SEQ_LEN:
+            raise ValueError(
+                "Long-form or mixed well-known runs need at least "
+                f"max_tokens={_MIN_LONG_MAX_TOKENS} and seq_len={_MIN_LONG_SEQ_LEN}; "
+                f"got max_tokens={config.max_tokens}, seq_len={config.seq_len}."
+            )
+
+
+def validate_rollout_shape(config: PrimeRLTrainingConfig) -> None:
+    if config.batch_size % config.rollouts_per_example != 0:
+        raise ValueError(
+            "batch_size must be divisible by rollouts_per_example; "
+            f"got batch_size={config.batch_size}, "
+            f"rollouts_per_example={config.rollouts_per_example}."
+        )
 
 
 def _toml_literal(value: Any) -> str:
@@ -229,6 +292,11 @@ def build_prime_rl_toml(config: PrimeRLTrainingConfig, *, model_target: str | No
         f"lr = {config.learning_rate}",
         "",
         "[trainer.ckpt.weights]",
+        'save_format = "torch"',
+        "",
+        "[trainer.weight_broadcast]",
+        'type = "filesystem"',
+        'save_format = "torch"',
         "",
         "[orchestrator]",
         f"batch_size = {config.batch_size}",
@@ -435,6 +503,8 @@ def wait_for_prime_rl_completion(
 def main() -> int:
     parser = build_parser()
     config = config_from_args(parser.parse_args())
+    validate_length_budget(config)
+    validate_rollout_shape(config)
     model_target, use_local_model = resolve_model_target(
         config,
         allow_download=config.run_training and not config.dry_run,
@@ -456,6 +526,7 @@ def main() -> int:
         command,
         env=build_prime_rl_env(config.runtime_venv, use_local_model=use_local_model),
         start_new_session=True,
+        text=True,
     )
     return_code = wait_for_prime_rl_completion(proc, output_dir=Path(config.output_dir))
     if return_code != 0:

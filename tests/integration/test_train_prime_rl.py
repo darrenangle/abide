@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import importlib
+import sys
+import types
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
 from scripts import train_prime_rl
 
 
@@ -16,6 +19,16 @@ def test_prime_rl_defaults_target_gemma4_e2b_and_well_known_subset() -> None:
     assert config.model_path is None
     assert config.form_set == "well_known"
     assert config.use_wandb is False
+
+
+def test_prime_rl_parser_accepts_short_and_long_well_known_form_sets() -> None:
+    parser = train_prime_rl.build_parser()
+
+    short_args = parser.parse_args(["--form-set", "well_known_short", "--no-wandb"])
+    long_args = parser.parse_args(["--form-set", "well_known_long", "--no-wandb"])
+
+    assert train_prime_rl.config_from_args(short_args).form_set == "well_known_short"
+    assert train_prime_rl.config_from_args(long_args).form_set == "well_known_long"
 
 
 def test_build_prime_rl_toml_uses_installable_abide_env() -> None:
@@ -41,7 +54,49 @@ def test_build_prime_rl_toml_uses_installable_abide_env() -> None:
     assert "optim_cpu_offload = true" not in toml_text
     assert "[trainer.model.lora]" not in toml_text
     assert "enable_lora = false" in toml_text
+    assert "[trainer.weight_broadcast]" in toml_text
+    assert "[inference.weight_broadcast]" not in toml_text
+    assert toml_text.count('save_format = "torch"') >= 2
     assert "offline = true" in toml_text
+
+
+def test_build_prime_rl_toml_preserves_long_form_set_in_env_args() -> None:
+    config = train_prime_rl.PrimeRLTrainingConfig(
+        output_dir="models/test_prime_rl_long",
+        form_set="well_known_long",
+    )
+
+    toml_text = train_prime_rl.build_prime_rl_toml(config)
+
+    assert 'form_set = "well_known_long"' in toml_text
+
+
+def test_validate_length_budget_rejects_tiny_mixed_form_budget() -> None:
+    config = train_prime_rl.PrimeRLTrainingConfig(
+        form_set="well_known",
+        max_tokens=128,
+        seq_len=512,
+    )
+
+    with pytest.raises(ValueError, match="Long-form or mixed well-known runs need at least"):
+        train_prime_rl.validate_length_budget(config)
+
+
+def test_validate_length_budget_allows_short_subset_smoke_budget() -> None:
+    config = train_prime_rl.PrimeRLTrainingConfig(
+        form_set="well_known_short",
+        max_tokens=128,
+        seq_len=512,
+    )
+
+    train_prime_rl.validate_length_budget(config)
+
+
+def test_validate_rollout_shape_rejects_indivisible_batch() -> None:
+    config = train_prime_rl.PrimeRLTrainingConfig(batch_size=1, rollouts_per_example=2)
+
+    with pytest.raises(ValueError, match="batch_size must be divisible"):
+        train_prime_rl.validate_rollout_shape(config)
 
 
 def test_build_prime_rl_toml_keeps_lora_for_non_gemma4_models() -> None:
@@ -327,3 +382,30 @@ def test_sitecustomize_resolves_chat_kwargs_for_current_vllm_signature() -> None
     assert kwargs["reasoning_parser"] == "parser"
     assert kwargs["default_chat_template_kwargs"] == {"foo": "bar"}
     assert "log_error_stack" not in kwargs
+
+
+def test_sitecustomize_backfills_prime_rl_perf_counter_for_none_experts(monkeypatch) -> None:
+    import sitecustomize
+
+    fake_prime_rl = types.ModuleType("prime_rl")
+    fake_trainer = types.ModuleType("prime_rl.trainer")
+    fake_perf = types.ModuleType("prime_rl.trainer.perf")
+
+    class FakePerfCounter:
+        @staticmethod
+        def get_active_mm_params(config):
+            if hasattr(config, "text_config"):
+                config = config.text_config
+            return float(config.num_experts * config.hidden_size)
+
+    fake_perf.PerfCounter = FakePerfCounter
+
+    monkeypatch.setitem(sys.modules, "prime_rl", fake_prime_rl)
+    monkeypatch.setitem(sys.modules, "prime_rl.trainer", fake_trainer)
+    monkeypatch.setitem(sys.modules, "prime_rl.trainer.perf", fake_perf)
+
+    importlib.reload(sitecustomize)
+
+    config = SimpleNamespace(text_config=SimpleNamespace(num_experts=None, hidden_size=4))
+
+    assert fake_perf.PerfCounter.get_active_mm_params(config) == 0.0
