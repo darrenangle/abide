@@ -86,3 +86,4 @@ Updated: 2026-04-07
 | RF-080 | P1 | done | | Stabilize legacy verifiers Gemma 4 vLLM weight sync and prove the remaining blocker is packed 4-bit state, not NCCL | RF-079 |
 | RF-081 | P1 | done | | Replace the legacy Gemma trainer with a prime-rl Gemma 4 E2B path using Abide as a verifiers env server | RF-080 |
 | RF-082 | P1 | done | | Replace placeholder prime-rl runner presets with subset-aware short/long canaries and validate realistic token budgets | RF-081 |
+| RF-083 | P1 | done | | Run real Gemma 4 E2B mixed-form training sweeps on the modern prime-rl path and land a stable decent-looking run | RF-082 |

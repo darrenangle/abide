@@ -50,11 +50,11 @@ profile_default_form_set() {
         long-canary)
             echo "well_known_long"
             ;;
-        mixed-canary|mixed-soak)
+        mixed-canary|mixed-stable|mixed-soak)
             echo "well_known"
             ;;
         *)
-            echo "ERROR: unknown ABIDE_RUN_PROFILE=${RUN_PROFILE}. Expected smoke, short-canary, long-canary, mixed-canary, canary, mixed-soak, or soak." >&2
+            echo "ERROR: unknown ABIDE_RUN_PROFILE=${RUN_PROFILE}. Expected smoke, short-canary, long-canary, mixed-canary, mixed-stable, canary, mixed-soak, or soak." >&2
             exit 1
             ;;
     esac
@@ -126,11 +126,14 @@ profile_args() {
         mixed-canary)
             echo "--max-steps 4 --max-async-level 0 --num-prompts 24 --batch-size 1 --rollouts-per-example 1 --max-tokens 384 --seq-len 1024"
             ;;
+        mixed-stable)
+            echo "--max-steps 8 --max-async-level 0 --num-prompts 48 --batch-size 1 --rollouts-per-example 1 --max-tokens 384 --seq-len 1280 --learning-rate 1e-05"
+            ;;
         mixed-soak)
             echo "--max-steps 16 --max-async-level 1 --num-prompts 128 --batch-size 2 --rollouts-per-example 2 --max-tokens 384 --seq-len 1280"
             ;;
         *)
-            echo "ERROR: unknown ABIDE_RUN_PROFILE=${RUN_PROFILE}. Expected smoke, short-canary, long-canary, mixed-canary, canary, mixed-soak, or soak." >&2
+            echo "ERROR: unknown ABIDE_RUN_PROFILE=${RUN_PROFILE}. Expected smoke, short-canary, long-canary, mixed-canary, mixed-stable, canary, mixed-soak, or soak." >&2
             exit 1
             ;;
     esac

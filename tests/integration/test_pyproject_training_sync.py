@@ -67,7 +67,7 @@ def test_prime_rl_runner_uses_subset_aware_profiles_and_env_overrides() -> None:
     assert 'SEQ_LEN_OVERRIDE="${ABIDE_SEQ_LEN:-}"' in script
     assert "smoke|short-canary)" in script
     assert "long-canary)" in script
-    assert "mixed-canary|mixed-soak)" in script
+    assert "mixed-canary|mixed-stable|mixed-soak)" in script
     assert (
         'echo "--max-steps 1 --max-async-level 0 --num-prompts 4 --batch-size 1 --rollouts-per-example 1 --max-tokens 128 --seq-len 512"'
         in script
@@ -78,6 +78,10 @@ def test_prime_rl_runner_uses_subset_aware_profiles_and_env_overrides() -> None:
     )
     assert (
         'echo "--max-steps 4 --max-async-level 0 --num-prompts 16 --batch-size 1 --rollouts-per-example 1 --max-tokens 384 --seq-len 1024"'
+        in script
+    )
+    assert (
+        'echo "--max-steps 8 --max-async-level 0 --num-prompts 48 --batch-size 1 --rollouts-per-example 1 --max-tokens 384 --seq-len 1280 --learning-rate 1e-05"'
         in script
     )
     assert 'EXTRA_PROFILE_ARGS+=("--num-prompts" "$NUM_PROMPTS_OVERRIDE")' in script
