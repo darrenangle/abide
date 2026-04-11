@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from scripts import build_codex_spark_warmup_tasks as build_tasks_cli
 from scripts import validate_codex_spark_warmup
 
+from abide.forms.catalog import load_form_instances
 from abide.training.codex_spark_warmup import (
     build_codex_spark_warmup_tasks as build_tasks,
 )
@@ -42,6 +43,14 @@ def test_build_codex_spark_warmup_tasks_balances_forms() -> None:
     assert {task["form_name"] for task in tasks} == set(_VALID_POEMS_BY_FORM)
     assert all(task["task_id"] for task in tasks)
     assert all(task["messages"][0]["role"] == "user" for task in tasks)
+
+
+def test_build_codex_spark_warmup_tasks_can_target_all_exported_forms() -> None:
+    tasks = build_tasks(form_set="all_forms", tasks_per_form=1, seed=7, prompt_mode="brief_only")
+
+    assert len(tasks) == len(load_form_instances())
+    assert {task["form_name"] for task in tasks} == set(load_form_instances())
+    assert all("exact structural brief" in task["prompt"] for task in tasks)
 
 
 def test_validate_codex_spark_candidates_accepts_valid_poems() -> None:

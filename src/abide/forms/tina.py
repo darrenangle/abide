@@ -367,10 +367,12 @@ class Terzanelle(Constraint):
 
         self._line_count = LineCount(total_lines, weight=2.0)
 
-        # Terza rima pattern: ABA BCB CDC DED EFE FF (for villanelle-length)
+        # Rhyme-only approximation of the standard terzanelle pattern:
+        # ABA / BCB / CDC / DED / EFE / FAFA
+        # The verifier does not yet enforce repeated refrains directly.
 
         self._rhyme = RhymeScheme(
-            "ABA BCB CDC DED EFE FF",
+            "ABA BCB CDC DED EFE FAFA",
             weight=2.0,
             threshold=rhyme_threshold,
         )

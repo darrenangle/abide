@@ -66,3 +66,25 @@ def test_load_form_instances_covers_all_exported_forms() -> None:
     forms = load_form_instances()
 
     assert set(forms) == set(forms_module.__all__)
+
+
+def test_catalog_combined_challenge_defaults_are_satisfiable() -> None:
+    form = instantiate_form("CombinedChallenge")
+
+    assert "EXACTLY 10 vowels total" in form.describe()
+
+    result = form.verify("a ae eau ioui")
+
+    assert result.passed is True
+
+
+def test_catalog_terzanelle_no_longer_has_internal_line_count_mismatch() -> None:
+    form = instantiate_form("Terzanelle")
+    poem = "\n".join([f"line {idx} same rhyme" for idx in range(1, 20)])
+
+    result = form.verify(poem)
+    failed_criteria = {
+        item["criterion"] for item in result.to_dict()["rubric"] if item["passed"] is False
+    }
+
+    assert "[w=2.0] Line count for scheme" not in failed_criteria

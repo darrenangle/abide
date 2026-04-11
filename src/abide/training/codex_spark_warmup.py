@@ -6,14 +6,14 @@ import json
 from collections import Counter
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from abide.training.prime_rl_env import (
     build_prime_rl_prompt_records,
     normalize_generated_poem,
     resolve_prime_rl_form_instances,
 )
-from abide.training.synthetic_sft import _SEED_POEMS
+from abide.training.synthetic_sft import _SEED_POEMS, humanize_form_name
 
 HARD_FORM_NAMES: tuple[str, ...] = (
     "Tanka",
@@ -22,41 +22,78 @@ HARD_FORM_NAMES: tuple[str, ...] = (
     "Ghazal",
     "Sestina",
 )
+FormSet = Literal["hard_forms", "all_forms"]
+PromptMode = Literal["prime_rl", "brief_only"]
+DEFAULT_FORM_SET: FormSet = "hard_forms"
+DEFAULT_PROMPT_MODE: PromptMode = "prime_rl"
 
 
 def _slugify(value: str) -> str:
     return "".join(char.lower() if char.isalnum() else "_" for char in value).strip("_")
 
 
-def build_codex_spark_warmup_tasks(
+def _parse_form_names(
+    form_names: str | list[str] | tuple[str, ...] | None,
     *,
-    form_names: str | list[str] | tuple[str, ...] = HARD_FORM_NAMES,
-    tasks_per_form: int = 25,
-    seed: int = 42,
-) -> list[dict[str, Any]]:
-    """Build deterministic warmup-writing tasks for a fixed set of forms."""
-    if isinstance(form_names, str):
+    form_set: FormSet,
+) -> list[str]:
+    if form_names is None:
+        if form_set == "hard_forms":
+            selected_form_names = list(HARD_FORM_NAMES)
+        elif form_set == "all_forms":
+            selected_form_names = list(resolve_prime_rl_form_instances(form_set="all"))
+        else:
+            raise ValueError(f"Unsupported form_set: {form_set}")
+    elif isinstance(form_names, str):
         selected_form_names = [name.strip() for name in form_names.split(",") if name.strip()]
     else:
         selected_form_names = [name.strip() for name in form_names if name.strip()]
     if not selected_form_names:
         raise ValueError("At least one form is required.")
+    return selected_form_names
+
+
+def _build_brief_only_prompt(form_name: str, structural_brief: str) -> str:
+    form_label = humanize_form_name(form_name)
+    return (
+        f"Write a {form_label} that satisfies this exact structural brief: {structural_brief}. "
+        "Use simple concrete language. Return only the poem."
+    )
+
+
+def build_codex_spark_warmup_tasks(
+    *,
+    form_set: FormSet = DEFAULT_FORM_SET,
+    form_names: str | list[str] | tuple[str, ...] | None = None,
+    tasks_per_form: int = 25,
+    seed: int = 42,
+    prompt_mode: PromptMode = DEFAULT_PROMPT_MODE,
+) -> list[dict[str, Any]]:
+    """Build deterministic warmup-writing tasks for selected forms."""
+    selected_form_names = _parse_form_names(form_names, form_set=form_set)
     if tasks_per_form < 1:
         raise ValueError("tasks_per_form must be at least 1.")
+    if prompt_mode not in {"prime_rl", "brief_only"}:
+        raise ValueError(f"Unsupported prompt_mode: {prompt_mode}")
 
     forms = resolve_prime_rl_form_instances(form_names=selected_form_names)
     tasks: list[dict[str, Any]] = []
 
     for form_index, form_name in enumerate(selected_form_names):
-        prompts = build_prime_rl_prompt_records(
-            num_prompts=tasks_per_form,
-            seed=seed + form_index * 1000,
-            form_name=form_name,
-        )
         structural_brief = forms[form_name].describe()
+        if prompt_mode == "prime_rl":
+            prompt_rows = [
+                str(prompt_record["prompt"][0]["content"])
+                for prompt_record in build_prime_rl_prompt_records(
+                    num_prompts=tasks_per_form,
+                    seed=seed + form_index * 1000,
+                    form_name=form_name,
+                )
+            ]
+        else:
+            prompt_rows = [_build_brief_only_prompt(form_name, structural_brief)] * tasks_per_form
         form_slug = _slugify(form_name)
-        for prompt_index, prompt_record in enumerate(prompts, start=1):
-            prompt = str(prompt_record["prompt"][0]["content"])
+        for prompt_index, prompt in enumerate(prompt_rows, start=1):
             tasks.append(
                 {
                     "task_id": f"{form_slug}-{prompt_index:03d}",
@@ -249,6 +286,8 @@ def write_jsonl_rows(rows: list[dict[str, Any]], output_path: str | Path) -> Pat
 
 
 __all__ = [
+    "DEFAULT_FORM_SET",
+    "DEFAULT_PROMPT_MODE",
     "HARD_FORM_NAMES",
     "build_codex_spark_warmup_tasks",
     "read_jsonl_rows",

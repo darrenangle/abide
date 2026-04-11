@@ -12,7 +12,8 @@ from typing import TYPE_CHECKING
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from abide.training.codex_spark_warmup import (
-    HARD_FORM_NAMES,
+    DEFAULT_FORM_SET,
+    DEFAULT_PROMPT_MODE,
     build_codex_spark_warmup_tasks,
     write_codex_spark_warmup_tasks,
 )
@@ -26,9 +27,13 @@ DEFAULT_OUTPUT = "data/sft/codex_spark_hard_form_tasks.jsonl"
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--form-names", default=",".join(HARD_FORM_NAMES))
+    parser.add_argument("--form-set", choices=("hard_forms", "all_forms"), default=DEFAULT_FORM_SET)
+    parser.add_argument("--form-names")
     parser.add_argument("--tasks-per-form", type=int, default=25)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--prompt-mode", choices=("prime_rl", "brief_only"), default=DEFAULT_PROMPT_MODE
+    )
     parser.add_argument("--output", default=DEFAULT_OUTPUT)
     parser.add_argument("--summary")
     return parser
@@ -38,14 +43,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     tasks = build_codex_spark_warmup_tasks(
+        form_set=args.form_set,
         form_names=args.form_names,
         tasks_per_form=args.tasks_per_form,
         seed=args.seed,
+        prompt_mode=args.prompt_mode,
     )
     output_path = write_codex_spark_warmup_tasks(tasks, args.output)
     summary = {
         "num_tasks": len(tasks),
         "form_names": sorted({task["form_name"] for task in tasks}),
+        "form_set": args.form_set,
+        "prompt_mode": args.prompt_mode,
         "tasks_per_form": args.tasks_per_form,
     }
     summary_path = Path(args.summary) if args.summary else output_path.with_suffix(".summary.json")

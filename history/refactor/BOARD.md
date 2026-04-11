@@ -92,3 +92,4 @@ Updated: 2026-04-11
 | RF-086 | P2 | done | | Run a large W&B-backed `rl_default` Gemma 4 E2B prime-rl training pass with heavier rollout budgets | RF-083, RF-084 |
 | RF-087 | P1 | done | | Build a verifier-gated SFT warmup dataset pipeline across the current training forms | RF-084 |
 | RF-088 | P1 | in_progress | RF-088--codex | Build a hard-form SFT warmup and RL continuation pipeline for Gemma | RF-085, RF-086, RF-087 |
+| RF-089 | P2 | done | | Generate and validate a Codex Spark full-surface corpus covering every exported Abide form | RF-087, RF-088 |

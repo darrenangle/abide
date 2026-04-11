@@ -73,7 +73,7 @@ SPECIAL_FORM_KWARGS: dict[str, dict[str, Any]] = {
     "ArithmeticVerse": {"start_words": 2, "num_lines": 5},
     "AlternatingIsolation": {},
     "DoubleAcrosticPoem": {"first_word": "POEM", "last_word": "RIME"},
-    "CombinedChallenge": {"num_words": 4},
+    "CombinedChallenge": {"num_words": 4, "vowel_count": 10},
     "Lipogram": {"forbidden": "e"},
     "Univocalic": {"vowel": "a"},
     "Mesostic": {"word": "POEM"},
