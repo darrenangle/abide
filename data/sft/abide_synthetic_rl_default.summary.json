@@ -1,0 +1,23 @@
+{
+  "form_counts": {
+    "BluesPoem": 8,
+    "Clerihew": 8,
+    "Ghazal": 8,
+    "Haiku": 8,
+    "Limerick": 8,
+    "Pantoum": 8,
+    "PetrarchanSonnet": 8,
+    "Rondeau": 8,
+    "Sestina": 8,
+    "ShakespeareanSonnet": 8,
+    "Tanka": 8,
+    "TerzaRima": 8,
+    "Triolet": 8,
+    "Villanelle": 8
+  },
+  "num_records": 112,
+  "source_kind_counts": {
+    "public_domain": 24,
+    "synthetic": 88
+  }
+}

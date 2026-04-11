@@ -304,6 +304,7 @@ We're actively running GRPO (Group Relative Policy Optimization) experiments to 
 | [`scripts/train_grpo_trl.py`](scripts/train_grpo_trl.py) | TRL-based GRPO with KL regularization (beta parameter) |
 | [`scripts/find_learnable_forms.py`](scripts/find_learnable_forms.py) | Identify forms with high within-rollout variance (best GRPO signal) |
 | [`scripts/prompt_generator.py`](scripts/prompt_generator.py) | Generate training prompts from the form catalog |
+| [`scripts/build_synthetic_sft_dataset.py`](scripts/build_synthetic_sft_dataset.py) | Export verifier-gated chat-SFT warmup records from the current training form subsets |
 
 ### Run Scripts
 
@@ -314,6 +315,19 @@ We're actively running GRPO (Group Relative Policy Optimization) experiments to 
 | [`scripts/run_prime_rl_gemma4_e2b.sh`](scripts/run_prime_rl_gemma4_e2b.sh) | Gemma 4 E2B | Well-known short / long / mixed | Modern `prime-rl` runner with subset-aware `smoke`, `short-canary`, `long-canary`, `mixed-canary`, and sweep-verified `mixed-stable` profiles |
 | [`scripts/run_grpo.sh`](scripts/run_grpo.sh) | Gemma 4 E4B | Well-known | Legacy verifiers GRPO; auto-prepares `.venv-verifiers` with the verified Gemma 4 overlay and starts the compatibility vLLM server |
 | [`scripts/run_grpo_gemma3.sh`](scripts/run_grpo_gemma3.sh) | Gemma 3 4B | Well-known | Legacy verifiers fallback runner using the same compatibility vLLM server |
+
+### Synthetic SFT Warmup
+
+Use the verifier-gated exporter to create a small warmup corpus before RL:
+
+```bash
+uv run python scripts/build_synthetic_sft_dataset.py \
+  --form-set rl_default \
+  --prompt-variants-per-seed 8 \
+  --output data/sft/abide_synthetic_rl_default.jsonl
+```
+
+That writes chat-style JSONL with `form_name`, verifier metadata, and a matching summary JSON file next to the dataset.
 
 ### Key Findings
 
