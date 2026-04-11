@@ -35,6 +35,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--min-score", type=float, default=0.0)
     parser.add_argument("--allow-failed", action="store_true")
     parser.add_argument("--allow-duplicates", action="store_true")
+    parser.add_argument("--allow-degenerate", action="store_true")
     parser.add_argument("--max-seed-similarity", type=float, default=0.92)
     parser.add_argument("--max-peer-similarity", type=float, default=0.9)
     return parser
@@ -54,6 +55,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         require_unique_per_form=not args.allow_duplicates,
         max_seed_similarity=args.max_seed_similarity,
         max_peer_similarity=args.max_peer_similarity,
+        enforce_quality=not args.allow_degenerate,
     )
     output_path = write_jsonl_rows(validated_rows, args.output)
     summary_path = Path(args.summary) if args.summary else output_path.with_suffix(".summary.json")

@@ -1,0 +1,17 @@
+{
+  "by_label": {
+    "overly_repetitive": 1,
+    "placeholder_text": 4,
+    "poem_like": 34,
+    "semantic_thinness": 2,
+    "template_scaffold": 4
+  },
+  "by_source": {
+    "regenerated_retry": 45
+  },
+  "disagreements": [],
+  "judge_accepts": 34,
+  "judge_rejects": 11,
+  "num_judgments": 45,
+  "num_tasks": 45
+}

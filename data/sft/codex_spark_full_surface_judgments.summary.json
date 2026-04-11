@@ -1,0 +1,156 @@
+{
+  "by_label": {
+    "not_poem_like": 1,
+    "overly_repetitive": 2,
+    "placeholder_text": 20,
+    "poem_like": 13,
+    "semantic_thinness": 2,
+    "template_scaffold": 20
+  },
+  "by_source": {
+    "accepted_control": 20,
+    "heuristic_reject": 38
+  },
+  "disagreements": [
+    {
+      "form_name": "AlphabeticTerminus",
+      "judge_task_id": "alphabeticterminus-001--judge",
+      "label": "template_scaffold",
+      "reason": "It is an alphabet list with the same phrase repeated.",
+      "source": "accepted_control",
+      "task_id": "alphabeticterminus-001"
+    },
+    {
+      "form_name": "BinaryBeat",
+      "judge_task_id": "binarybeat-001--judge",
+      "label": "semantic_thinness",
+      "reason": "The fragments are poetic, but too thin to be useful.",
+      "source": "accepted_control",
+      "task_id": "binarybeat-001"
+    },
+    {
+      "form_name": "Canzone",
+      "judge_task_id": "canzone-001--judge",
+      "label": "template_scaffold",
+      "reason": "The output is a repeated canzone scaffold.",
+      "source": "accepted_control",
+      "task_id": "canzone-001"
+    },
+    {
+      "form_name": "DoubleFibonacci",
+      "judge_task_id": "doublefibonacci-001--judge",
+      "label": "template_scaffold",
+      "reason": "The Fibonacci shape is there, but the content is canned.",
+      "source": "accepted_control",
+      "task_id": "doublefibonacci-001"
+    },
+    {
+      "form_name": "GoldenRatioVerse",
+      "judge_task_id": "goldenratioverse-001--judge",
+      "label": "semantic_thinness",
+      "reason": "The progression is real, but the language is sparse.",
+      "source": "accepted_control",
+      "task_id": "goldenratioverse-001"
+    },
+    {
+      "form_name": "MirrorFrame",
+      "judge_task_id": "mirrorframe-001--judge",
+      "label": "template_scaffold",
+      "reason": "It is a mirrored word list more than a poem.",
+      "source": "accepted_control",
+      "task_id": "mirrorframe-001"
+    },
+    {
+      "form_name": "NumberWord",
+      "judge_task_id": "numberword-001--judge",
+      "label": "not_poem_like",
+      "reason": "It is just a number list.",
+      "source": "accepted_control",
+      "task_id": "numberword-001"
+    },
+    {
+      "form_name": "Quatina",
+      "judge_task_id": "quatina-001--judge",
+      "label": "poem_like",
+      "reason": "It is simple but still reads like a real poem.",
+      "source": "heuristic_reject",
+      "task_id": "quatina-001"
+    },
+    {
+      "form_name": "Quintina",
+      "judge_task_id": "quintina-001--judge",
+      "label": "poem_like",
+      "reason": "It is simple but still reads like a real poem.",
+      "source": "heuristic_reject",
+      "task_id": "quintina-001"
+    },
+    {
+      "form_name": "ReverseEtheree",
+      "judge_task_id": "reverseetheree-001--judge",
+      "label": "template_scaffold",
+      "reason": "It is a pure shortening scaffold.",
+      "source": "accepted_control",
+      "task_id": "reverseetheree-001"
+    },
+    {
+      "form_name": "ReverseFibonacci",
+      "judge_task_id": "reversefibonacci-001--judge",
+      "label": "template_scaffold",
+      "reason": "The shortening pattern is obvious and mechanically repeated.",
+      "source": "accepted_control",
+      "task_id": "reversefibonacci-001"
+    },
+    {
+      "form_name": "Rondeau",
+      "judge_task_id": "rondeau-001--judge",
+      "label": "poem_like",
+      "reason": "It reads like a real poem even with formulaic repetition.",
+      "source": "heuristic_reject",
+      "task_id": "rondeau-001"
+    },
+    {
+      "form_name": "RondeauRedouble",
+      "judge_task_id": "rondeauredouble-001--judge",
+      "label": "poem_like",
+      "reason": "It reads like a real poem even with formulaic repetition.",
+      "source": "heuristic_reject",
+      "task_id": "rondeauredouble-001"
+    },
+    {
+      "form_name": "Rondel",
+      "judge_task_id": "rondel-001--judge",
+      "label": "poem_like",
+      "reason": "It reads like a real poem even with formulaic repetition.",
+      "source": "heuristic_reject",
+      "task_id": "rondel-001"
+    },
+    {
+      "form_name": "SandwichSonnet",
+      "judge_task_id": "sandwichsonnet-001--judge",
+      "label": "template_scaffold",
+      "reason": "It is mostly reused lines and template filling.",
+      "source": "accepted_control",
+      "task_id": "sandwichsonnet-001"
+    },
+    {
+      "form_name": "SpenserianStanza",
+      "judge_task_id": "spenserianstanza-001--judge",
+      "label": "template_scaffold",
+      "reason": "It is a stanza scaffold with repeated phrasing.",
+      "source": "accepted_control",
+      "task_id": "spenserianstanza-001"
+    },
+    {
+      "form_name": "StaircasePoem",
+      "judge_task_id": "staircasepoem-001--judge",
+      "label": "placeholder_text",
+      "reason": "It is just a token string, not a poem.",
+      "source": "accepted_control",
+      "task_id": "staircasepoem-001"
+    }
+  ],
+  "judge_accepts": 13,
+  "judge_rejects": 45,
+  "num_judgments": 58,
+  "num_tasks": 58
+}

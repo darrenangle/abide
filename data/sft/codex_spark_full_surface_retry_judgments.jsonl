@@ -1,0 +1,45 @@
+{"judge_passed": false, "judge_task_id": "alphabeticterminus-001--retry-judge", "label": "template_scaffold", "reason": "Still a repeated phrase list."}
+{"judge_passed": true, "judge_task_id": "binarybeat-001--retry-judge", "label": "poem_like", "reason": "Sparse, but poem-like."}
+{"judge_passed": false, "judge_task_id": "canzone-001--retry-judge", "label": "template_scaffold", "reason": "Stanza pattern dominates."}
+{"judge_passed": false, "judge_task_id": "chantroyal-001--retry-judge", "label": "overly_repetitive", "reason": "Refrain-driven but too formulaic."}
+{"judge_passed": false, "judge_task_id": "crownofsonnets-001--retry-judge", "label": "template_scaffold", "reason": "Linked-line scaffold remains."}
+{"judge_passed": false, "judge_task_id": "doubleballade-001--retry-judge", "label": "template_scaffold", "reason": "Still reads like a pattern generator."}
+{"judge_passed": true, "judge_task_id": "doublefibonacci-001--retry-judge", "label": "poem_like", "reason": "Minimal, but coherent and poetic."}
+{"judge_passed": true, "judge_task_id": "goldenratioverse-001--retry-judge", "label": "poem_like", "reason": "Simple but reads like verse."}
+{"judge_passed": false, "judge_task_id": "horatianode-001--retry-judge", "label": "semantic_thinness", "reason": "Too much word-salad scaffolding."}
+{"judge_passed": true, "judge_task_id": "katauta-001--retry-judge", "label": "poem_like", "reason": "Concise and image-bearing."}
+{"judge_passed": false, "judge_task_id": "kyrielle-001--retry-judge", "label": "placeholder_text", "reason": "Too much filler-token padding."}
+{"judge_passed": false, "judge_task_id": "kyriellesonnet-001--retry-judge", "label": "placeholder_text", "reason": "Still mostly padded tokens."}
+{"judge_passed": false, "judge_task_id": "lai-001--retry-judge", "label": "placeholder_text", "reason": "Mostly padded tokens."}
+{"judge_passed": true, "judge_task_id": "limerick-001--retry-judge", "label": "poem_like", "reason": "Reads as a real limerick."}
+{"judge_passed": true, "judge_task_id": "literaryballad-001--retry-judge", "label": "poem_like", "reason": "Natural and poem-like."}
+{"judge_passed": true, "judge_task_id": "mirrorframe-001--retry-judge", "label": "poem_like", "reason": "Intentional mirrored poem."}
+{"judge_passed": true, "judge_task_id": "modularverse-001--retry-judge", "label": "poem_like", "reason": "Sparse but usable verse."}
+{"judge_passed": true, "judge_task_id": "monotonemountain-001--retry-judge", "label": "poem_like", "reason": "Simple, but poem-like."}
+{"judge_passed": true, "judge_task_id": "naani-001--retry-judge", "label": "poem_like", "reason": "Grounded and readable."}
+{"judge_passed": true, "judge_task_id": "numberword-001--retry-judge", "label": "poem_like", "reason": "A real counting poem."}
+{"judge_passed": true, "judge_task_id": "numericalecho-001--retry-judge", "label": "poem_like", "reason": "Concrete and usable."}
+{"judge_passed": true, "judge_task_id": "oddevendance-001--retry-judge", "label": "poem_like", "reason": "Poem-like despite brevity."}
+{"judge_passed": true, "judge_task_id": "ode-001--retry-judge", "label": "poem_like", "reason": "Clearly poem-like."}
+{"judge_passed": true, "judge_task_id": "oneginstanza-001--retry-judge", "label": "poem_like", "reason": "Natural scene poem; satisfies form without shelling."}
+{"judge_passed": true, "judge_task_id": "ottavarima-001--retry-judge", "label": "poem_like", "reason": "Concrete imagery and stable rhyme; reads like a poem."}
+{"judge_passed": true, "judge_task_id": "petrarchansonnet-001--retry-judge", "label": "poem_like", "reason": "Clean sonnet diction; not just a scaffold."}
+{"judge_passed": true, "judge_task_id": "piku-001--retry-judge", "label": "poem_like", "reason": "Short but coherent; reads like a valid tiny poem."}
+{"judge_passed": true, "judge_task_id": "pindaricode-001--retry-judge", "label": "poem_like", "reason": "Substantive ode with real imagery and movement."}
+{"judge_passed": true, "judge_task_id": "positionalpoem-001--retry-judge", "label": "poem_like", "reason": "Sparse but still poem-like and not a template shell."}
+{"judge_passed": true, "judge_task_id": "precisionverse-001--retry-judge", "label": "poem_like", "reason": "Minimal, but the lines feel genuinely poetic."}
+{"judge_passed": true, "judge_task_id": "primeverse-001--retry-judge", "label": "poem_like", "reason": "Clear verse with real semantic content."}
+{"judge_passed": true, "judge_task_id": "reverseetheree-001--retry-judge", "label": "poem_like", "reason": "Strong form control and readable imagery."}
+{"judge_passed": false, "judge_task_id": "reversefibonacci-001--retry-judge", "label": "semantic_thinness", "reason": "Too skeletal; feels like a form shell."}
+{"judge_passed": true, "judge_task_id": "rondine-001--retry-judge", "label": "poem_like", "reason": "Refrain form is handled with real imagery."}
+{"judge_passed": true, "judge_task_id": "roundel-001--retry-judge", "label": "poem_like", "reason": "Refrain repeats naturally; still poem-like."}
+{"judge_passed": true, "judge_task_id": "rubaiyat-001--retry-judge", "label": "poem_like", "reason": "Plain but complete quatrain sequence."}
+{"judge_passed": true, "judge_task_id": "sandwichsonnet-001--retry-judge", "label": "poem_like", "reason": "Compact sonnet-like poem with concrete detail."}
+{"judge_passed": true, "judge_task_id": "sapphicode-001--retry-judge", "label": "poem_like", "reason": "Clean stanzaic verse with good imagery."}
+{"judge_passed": true, "judge_task_id": "sestina-001--retry-judge", "label": "poem_like", "reason": "Full sestina structure with readable content."}
+{"judge_passed": true, "judge_task_id": "shakespeareansonnet-001--retry-judge", "label": "poem_like", "reason": "Solid sonnet; natural and not padded."}
+{"judge_passed": true, "judge_task_id": "sonnet-001--retry-judge", "label": "poem_like", "reason": "Cohesive sonnet with real poetic language."}
+{"judge_passed": true, "judge_task_id": "spenseriansonnet-001--retry-judge", "label": "poem_like", "reason": "Mostly coherent sonnet diction and structure."}
+{"judge_passed": true, "judge_task_id": "spenserianstanza-001--retry-judge", "label": "poem_like", "reason": "Acceptable stanzaic verse; not a shell."}
+{"judge_passed": false, "judge_task_id": "staircasepoem-001--retry-judge", "label": "placeholder_text", "reason": "Pure scaffold of single words."}
+{"judge_passed": true, "judge_task_id": "univocalic-001--retry-judge", "label": "poem_like", "reason": "Controlled-vowel poem with real line content."}

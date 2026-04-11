@@ -1,0 +1,16 @@
+{
+  "num_curated_poemlike_rows": 38,
+  "num_first_round_judge_accepts": 34,
+  "num_remaining_judge_rejects": 7,
+  "num_second_round_candidates": 11,
+  "num_second_round_judge_accepts": 4,
+  "remaining_reject_forms": [
+    "Canzone",
+    "ChantRoyal",
+    "CrownOfSonnets",
+    "DoubleBallade",
+    "HoratianOde",
+    "Kyrielle",
+    "KyrielleSonnet"
+  ]
+}
