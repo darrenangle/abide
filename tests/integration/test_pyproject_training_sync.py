@@ -62,6 +62,7 @@ def test_prime_rl_runner_uses_subset_aware_profiles_and_env_overrides() -> None:
     assert 'OUTPUT_DIR_OVERRIDE="${ABIDE_OUTPUT_DIR:-}"' in script
     assert 'MAX_STEPS_OVERRIDE="${ABIDE_MAX_STEPS:-}"' in script
     assert 'NUM_PROMPTS_OVERRIDE="${ABIDE_NUM_PROMPTS:-}"' in script
+    assert 'SEED_OVERRIDE="${ABIDE_SEED:-}"' in script
     assert 'BATCH_SIZE_OVERRIDE="${ABIDE_BATCH_SIZE:-}"' in script
     assert 'MAX_TOKENS_OVERRIDE="${ABIDE_MAX_TOKENS:-}"' in script
     assert 'SEQ_LEN_OVERRIDE="${ABIDE_SEQ_LEN:-}"' in script
@@ -85,6 +86,7 @@ def test_prime_rl_runner_uses_subset_aware_profiles_and_env_overrides() -> None:
         in script
     )
     assert 'EXTRA_PROFILE_ARGS+=("--num-prompts" "$NUM_PROMPTS_OVERRIDE")' in script
+    assert 'EXTRA_PROFILE_ARGS+=("--seed" "$SEED_OVERRIDE")' in script
     assert 'EXTRA_PROFILE_ARGS+=("--batch-size" "$BATCH_SIZE_OVERRIDE")' in script
     assert 'EXTRA_PROFILE_ARGS+=("--seq-len" "$SEQ_LEN_OVERRIDE")' in script
 

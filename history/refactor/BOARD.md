@@ -1,6 +1,6 @@
 # Refactor Board
 
-Updated: 2026-04-07
+Updated: 2026-04-10
 
 | ID | Priority | Status | Lock | Summary | Depends On |
 | --- | --- | --- | --- | --- | --- |
@@ -87,3 +87,5 @@ Updated: 2026-04-07
 | RF-081 | P1 | done | | Replace the legacy Gemma trainer with a prime-rl Gemma 4 E2B path using Abide as a verifiers env server | RF-080 |
 | RF-082 | P1 | done | | Replace placeholder prime-rl runner presets with subset-aware short/long canaries and validate realistic token budgets | RF-081 |
 | RF-083 | P1 | done | | Run real Gemma 4 E2B mixed-form training sweeps on the modern prime-rl path and land a stable decent-looking run | RF-082 |
+| RF-084 | P1 | done | | Add multi-seed mixed-stable validation and holdout sample export for the modern Gemma 4 E2B path | RF-083 |
+| RF-085 | P1 | pending | | Use RF-084 holdout artifacts to improve mixed-stable generalization on weak well-known forms | RF-084 |

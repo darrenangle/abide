@@ -35,6 +35,24 @@ def test_load_environment_single_form_routes_metadata_exactly() -> None:
     assert {row["info"]["form_name"] for row in env.dataset} == {"Haiku"}
 
 
+def test_build_prompt_records_are_deterministic_and_evenly_distributed() -> None:
+    records_a = abide_poetry_forms.build_prime_rl_prompt_records(
+        num_prompts=6,
+        seed=19,
+        form_set="well_known_short",
+    )
+    records_b = abide_poetry_forms.build_prime_rl_prompt_records(
+        num_prompts=6,
+        seed=19,
+        form_set="well_known_short",
+    )
+
+    assert records_a == records_b
+    assert [row["info"]["form_name"] for row in records_a].count("Haiku") == 2
+    assert [row["info"]["form_name"] for row in records_a].count("Tanka") == 2
+    assert [row["info"]["form_name"] for row in records_a].count("Limerick") == 2
+
+
 def test_normalize_generated_poem_strips_tags_and_code_fences() -> None:
     raw = "<think>draft</think>```poem\nline one\nline two\n```<end_of_turn>"
 

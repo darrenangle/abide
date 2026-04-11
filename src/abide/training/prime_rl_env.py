@@ -196,20 +196,15 @@ def _build_prompt(form_name: str, description: str, *, rng: random.Random) -> st
     )
 
 
-def build_prime_rl_dataset(
+def build_prime_rl_prompt_records(
     *,
     num_prompts: int = 4096,
     seed: int = 42,
     form_set: str = "well_known",
     form_name: str | None = None,
     form_names: str | Sequence[str] | None = None,
-) -> Any:
-    """Build a single-turn verifiers dataset for prime-rl training."""
-    try:
-        from datasets import Dataset
-    except ImportError as e:
-        raise ImportError("datasets is required to build the prime-rl Abide dataset.") from e
-
+) -> list[dict[str, Any]]:
+    """Build deterministic prompt records for prime-rl training or validation."""
     forms = resolve_prime_rl_form_instances(
         form_set=form_set,
         form_name=form_name,
@@ -234,6 +229,30 @@ def build_prime_rl_dataset(
             }
         )
 
+    return records
+
+
+def build_prime_rl_dataset(
+    *,
+    num_prompts: int = 4096,
+    seed: int = 42,
+    form_set: str = "well_known",
+    form_name: str | None = None,
+    form_names: str | Sequence[str] | None = None,
+) -> Any:
+    """Build a single-turn verifiers dataset for prime-rl training."""
+    try:
+        from datasets import Dataset
+    except ImportError as e:
+        raise ImportError("datasets is required to build the prime-rl Abide dataset.") from e
+
+    records = build_prime_rl_prompt_records(
+        num_prompts=num_prompts,
+        seed=seed,
+        form_set=form_set,
+        form_name=form_name,
+        form_names=form_names,
+    )
     return Dataset.from_list(records)
 
 
@@ -364,6 +383,7 @@ __all__ = [
     "PRIME_RL_DEFAULT_MODEL",
     "SUPPORTED_FORM_SETS",
     "build_prime_rl_dataset",
+    "build_prime_rl_prompt_records",
     "build_prime_rl_rubric",
     "load_environment",
     "load_prime_rl_environment",
