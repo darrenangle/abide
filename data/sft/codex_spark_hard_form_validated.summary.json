@@ -1,0 +1,31 @@
+{
+  "failed_task_ids": [],
+  "failures": [],
+  "max_peer_similarity": 0.803030303030303,
+  "max_seed_similarity": 0.5917602996254682,
+  "num_candidates": 125,
+  "num_failures": 0,
+  "num_tasks": 125,
+  "num_validated": 125,
+  "per_form_candidate_counts": {
+    "Ghazal": 25,
+    "PetrarchanSonnet": 25,
+    "Sestina": 25,
+    "Tanka": 25,
+    "Villanelle": 25
+  },
+  "per_form_pass_counts": {
+    "Ghazal": 25,
+    "PetrarchanSonnet": 25,
+    "Sestina": 25,
+    "Tanka": 25,
+    "Villanelle": 25
+  },
+  "per_form_unique_counts": {
+    "Ghazal": 25,
+    "PetrarchanSonnet": 25,
+    "Sestina": 25,
+    "Tanka": 25,
+    "Villanelle": 25
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "form_names": [
+    "Ghazal",
+    "PetrarchanSonnet",
+    "Sestina",
+    "Tanka",
+    "Villanelle"
+  ],
+  "num_tasks": 125,
+  "tasks_per_form": 25
+}

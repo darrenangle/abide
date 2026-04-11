@@ -89,5 +89,6 @@ Updated: 2026-04-11
 | RF-083 | P1 | done | | Run real Gemma 4 E2B mixed-form training sweeps on the modern prime-rl path and land a stable decent-looking run | RF-082 |
 | RF-084 | P1 | done | | Add multi-seed mixed-stable validation and holdout sample export for the modern Gemma 4 E2B path | RF-083 |
 | RF-085 | P1 | pending | | Use RF-084 holdout artifacts to improve mixed-stable generalization on weak well-known forms | RF-084 |
-| RF-086 | P2 | in_progress | RF-086--codex | Run a large W&B-backed `rl_default` Gemma 4 E2B prime-rl training pass with heavier rollout budgets | RF-083, RF-084 |
+| RF-086 | P2 | done | | Run a large W&B-backed `rl_default` Gemma 4 E2B prime-rl training pass with heavier rollout budgets | RF-083, RF-084 |
 | RF-087 | P1 | done | | Build a verifier-gated SFT warmup dataset pipeline across the current training forms | RF-084 |
+| RF-088 | P1 | in_progress | RF-088--codex | Build a hard-form SFT warmup and RL continuation pipeline for Gemma | RF-085, RF-086, RF-087 |
