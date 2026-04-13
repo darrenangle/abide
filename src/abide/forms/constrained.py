@@ -75,17 +75,25 @@ class Abecedarian(Constraint):
         for i, (expected_letter, line) in enumerate(zip(self.letters, structure.lines)):
             line_stripped = line.strip()
             if line_stripped:
-                actual_first = next(
-                    (char.upper() for char in line_stripped if char.isalpha()), None
-                )
-                if actual_first == expected_letter:
-                    matches += 1
-                    details.append(f"Line {i + 1}: ✓ starts with '{expected_letter}'")
-                elif actual_first is None:
+                first_word_match = re.search(r"[A-Za-z]+", line_stripped)
+                first_word = first_word_match.group(0) if first_word_match else None
+                if first_word is None:
                     details.append(f"Line {i + 1}: ✗ no alphabetic opening")
+                    continue
+
+                actual_first = first_word[0].upper()
+                if len(first_word) == 1 and first_word.upper() not in {"A", "I"}:
+                    details.append(
+                        f"Line {i + 1}: ✗ leading token '{first_word}' is not a valid word opening"
+                    )
+                elif actual_first == expected_letter:
+                    matches += 1
+                    details.append(
+                        f"Line {i + 1}: ✓ starts with '{expected_letter}' via '{first_word}'"
+                    )
                 else:
                     details.append(
-                        f"Line {i + 1}: ✗ expected '{expected_letter}', got '{actual_first}'"
+                        f"Line {i + 1}: ✗ expected '{expected_letter}', got '{first_word}'"
                     )
             else:
                 details.append(f"Line {i + 1}: ✗ empty line")

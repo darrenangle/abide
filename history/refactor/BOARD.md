@@ -96,3 +96,4 @@ Updated: 2026-04-11
 | RF-090 | P1 | done | | Audit the validated full-surface corpus for real semantic/structural compliance beyond pass bits | RF-089 |
 | RF-091 | P1 | in_progress | RF-091--codex | Filter and regenerate degenerate rows in the full-surface Codex corpus | RF-089, RF-090 |
 | RF-092 | P1 | done | | Add a small-model poemness judge layer for SFT corpus filtering | RF-090, RF-091 |
+| RF-093 | P1 | done | | Harden Abecedarian against single-letter leading token exploits | RF-090 |

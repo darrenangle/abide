@@ -20,6 +20,16 @@ def test_abecedarian_ignores_leading_punctuation() -> None:
     assert result.score == 1.0
 
 
+def test_abecedarian_rejects_single_letter_leading_token_shells() -> None:
+    poem = "Alpha\nB quiet field rests\nCharlie"
+
+    result = Abecedarian(letters="ABC").verify(poem)
+
+    assert result.passed is False
+    assert result.details["matches"] == 2
+    assert any("not a valid word opening" in detail for detail in result.details["line_details"])
+
+
 def test_lipogram_and_univocalic_enforce_letter_constraints() -> None:
     lipogram_pass = Lipogram(forbidden="E").verify("A calm dusk\nBright sun")
     lipogram_fail = Lipogram(forbidden="E").verify("See the tree")
