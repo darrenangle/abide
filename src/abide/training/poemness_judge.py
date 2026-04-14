@@ -45,6 +45,7 @@ def build_poemness_judge_tasks(
     validated_rows: list[dict[str, Any]],
     retry_summary: dict[str, Any] | None = None,
     accepted_sample_size: int = 20,
+    include_all_validated: bool = False,
     seed: int = 42,
 ) -> list[dict[str, Any]]:
     """Build judge tasks from the quality-gated corpus plus rejected disagreements."""
@@ -90,9 +91,14 @@ def build_poemness_judge_tasks(
     remaining_rows = [
         row for row in validated_rows if str(row.get("task_id", "")).strip() not in seen_task_ids
     ]
-    rng = random.Random(seed)
-    rng.shuffle(remaining_rows)
-    for row in remaining_rows[:accepted_sample_size]:
+    if include_all_validated:
+        selected_controls = remaining_rows
+    else:
+        rng = random.Random(seed)
+        rng.shuffle(remaining_rows)
+        selected_controls = remaining_rows[:accepted_sample_size]
+
+    for row in selected_controls:
         task_id = str(row["task_id"])
         tasks.append(
             {

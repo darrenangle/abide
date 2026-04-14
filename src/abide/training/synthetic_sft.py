@@ -293,6 +293,34 @@ def build_synthetic_sft_records(
         include_public_domain=include_public_domain,
     )
 
+    return build_synthetic_sft_records_from_seed_poems(
+        seed_poems=seed_poems,
+        prompt_variants_per_seed=prompt_variants_per_seed,
+        seed=seed,
+        require_passed=require_passed,
+        min_score=min_score,
+        form_set=form_set,
+    )
+
+
+def build_synthetic_sft_records_from_seed_poems(
+    *,
+    seed_poems: list[SeedPoem] | tuple[SeedPoem, ...],
+    prompt_variants_per_seed: int = 8,
+    seed: int = 42,
+    require_passed: bool = True,
+    min_score: float = 0.0,
+    form_set: str = "all",
+) -> list[dict[str, Any]]:
+    """Build verifier-gated chat-SFT records from an explicit seed list."""
+    if prompt_variants_per_seed < 1:
+        raise ValueError("prompt_variants_per_seed must be at least 1.")
+
+    selected_form_names = {seed_poem.form_name for seed_poem in seed_poems}
+    forms = resolve_prime_rl_form_instances(
+        form_set=form_set, form_names=sorted(selected_form_names)
+    )
+
     rng = random.Random(seed)
     records: list[dict[str, Any]] = []
     seen_prompts: set[tuple[str, str]] = set()
@@ -375,6 +403,7 @@ def write_synthetic_sft_jsonl(records: list[dict[str, Any]], output_path: str | 
 __all__ = [
     "SeedPoem",
     "build_synthetic_sft_records",
+    "build_synthetic_sft_records_from_seed_poems",
     "humanize_form_name",
     "summarize_synthetic_sft_records",
     "write_synthetic_sft_jsonl",

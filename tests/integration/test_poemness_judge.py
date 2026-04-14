@@ -71,6 +71,18 @@ def test_build_poemness_judge_tasks_includes_rejects_and_controls() -> None:
     assert all("judge_rubric" in task for task in tasks)
 
 
+def test_build_poemness_judge_tasks_can_include_all_validated_rows() -> None:
+    tasks = build_poemness_judge_tasks(
+        validated_rows=_validated_rows(),
+        retry_summary=_retry_summary(),
+        include_all_validated=True,
+    )
+
+    assert len(tasks) == 3
+    assert sum(1 for task in tasks if task["source"] == "accepted_control") == 2
+    assert sum(1 for task in tasks if task["source"] == "heuristic_reject") == 1
+
+
 def test_summarize_poemness_judgments_records_disagreements() -> None:
     tasks = build_poemness_judge_tasks(
         validated_rows=_validated_rows(),
@@ -158,3 +170,30 @@ def test_poemness_judge_clis_round_trip(tmp_path) -> None:
     assert merge_exit == 0
     merged = [json.loads(line) for line in merged_path.read_text().splitlines() if line.strip()]
     assert len(merged) == len(tasks)
+
+
+def test_poemness_judge_cli_supports_all_validated_rows(tmp_path) -> None:
+    validated_path = tmp_path / "validated.jsonl"
+    retry_summary_path = tmp_path / "retry.summary.json"
+    tasks_path = tmp_path / "judge_tasks.jsonl"
+
+    with validated_path.open("w") as handle:
+        for row in _validated_rows():
+            handle.write(json.dumps(row, sort_keys=True) + "\n")
+    retry_summary_path.write_text(json.dumps(_retry_summary(), sort_keys=True))
+
+    build_exit = build_judge_tasks_cli.main(
+        [
+            "--validated",
+            str(validated_path),
+            "--retry-summary",
+            str(retry_summary_path),
+            "--include-all-validated",
+            "--output",
+            str(tasks_path),
+        ]
+    )
+    assert build_exit == 0
+
+    tasks = [json.loads(line) for line in tasks_path.read_text().splitlines() if line.strip()]
+    assert len(tasks) == 3

@@ -1,0 +1,35 @@
+{
+  "form_counts": {
+    "Abecedarian": 12,
+    "BluesPoem": 8,
+    "Clerihew": 8,
+    "Ghazal": 33,
+    "Haiku": 8,
+    "Limerick": 8,
+    "Pantoum": 8,
+    "PetrarchanSonnet": 33,
+    "Rondeau": 8,
+    "Sestina": 33,
+    "ShakespeareanSonnet": 8,
+    "Tanka": 33,
+    "TerzaRima": 8,
+    "Triolet": 8,
+    "Villanelle": 33
+  },
+  "num_records": 249,
+  "shards": [
+    "data/sft/abide_warmup_curated-0001.jsonl",
+    "data/sft/abide_warmup_curated-0002.jsonl",
+    "data/sft/abide_warmup_curated-0003.jsonl",
+    "data/sft/abide_warmup_curated-0004.jsonl"
+  ],
+  "source_dataset_counts": {
+    "abecedarian_curated_seed_variants": 12,
+    "codex_spark_hard_form_validated": 125,
+    "rl_default_seed_variants": 112
+  },
+  "source_kind_counts": {
+    "public_domain": 24,
+    "synthetic": 225
+  }
+}

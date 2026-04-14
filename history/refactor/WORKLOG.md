@@ -1,5 +1,25 @@
 # Refactor Worklog
 
+## 2026-04-14
+
+- Extended the poemness-judge task builder so the repo can judge the full
+  validated surface instead of only a sampled accepted-control slice.
+- Added `build_synthetic_sft_records_from_seed_poems()` so curated external
+  seed poems can be turned into clean prompt/response SFT rows without relying
+  on the built-in seed table alone.
+- Added `scripts/build_warmup_sft_corpus.py` plus integration coverage to
+  assemble a reproducible curated warmup corpus from the stable seed families
+  and the validated hard-form shard.
+- Materialized `data/sft/codex_spark_full_surface_all_judge_tasks.jsonl` as the
+  first complete full-surface poemness-audit task sheet (`141` rows).
+- Materialized the sharded `data/sft/abide_warmup_curated-000*.jsonl` corpus
+  plus `data/sft/abide_warmup_curated.summary.json` as the current legitimate
+  warmup baseline: `249` rows, `225` synthetic / `24` public-domain, with `33`
+  rows each for the five difficult hard forms.
+- Rejected the first long-form replacement shard from the cheap writer path as
+  structurally valid but still scaffold-like, and kept those rows out of the
+  warmup baseline rather than lowering the quality bar.
+
 ## 2026-03-31
 
 - Initialized markdown refactor tracker under `history/refactor/`.

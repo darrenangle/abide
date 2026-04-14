@@ -31,6 +31,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--validated", default=DEFAULT_VALIDATED)
     parser.add_argument("--retry-summary", default=DEFAULT_RETRY_SUMMARY)
     parser.add_argument("--accepted-sample-size", type=int, default=20)
+    parser.add_argument(
+        "--include-all-validated",
+        action="store_true",
+        help="Judge every validated row instead of only a sampled accepted-control slice.",
+    )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output", default=DEFAULT_OUTPUT)
     parser.add_argument("--summary")
@@ -46,6 +51,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         validated_rows=validated_rows,
         retry_summary=retry_summary,
         accepted_sample_size=args.accepted_sample_size,
+        include_all_validated=args.include_all_validated,
         seed=args.seed,
     )
     output_path = write_jsonl_rows(tasks, args.output)
