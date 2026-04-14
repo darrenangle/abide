@@ -39,6 +39,19 @@ def test_build_synthetic_sft_records_reject_missing_synthetic_coverage() -> None
         )
 
 
+def test_build_synthetic_sft_records_support_explicit_abecedarian_form() -> None:
+    records = abide_poetry_forms.build_synthetic_sft_records(
+        form_names="Abecedarian",
+        prompt_variants_per_seed=1,
+        seed=7,
+        include_public_domain=False,
+    )
+
+    assert len(records) == 2
+    assert {record["form_name"] for record in records} == {"Abecedarian"}
+    assert all(record["verifier_passed"] for record in records)
+
+
 def test_build_synthetic_sft_dataset_cli_writes_jsonl_and_summary(tmp_path: Path) -> None:
     output_path = tmp_path / "dataset.jsonl"
     summary_path = tmp_path / "summary.json"

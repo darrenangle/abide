@@ -48,6 +48,15 @@ def test_build_codex_spark_warmup_tasks_balances_forms() -> None:
     assert all("actual poem" in task["prompt"] for task in tasks)
 
 
+def test_abecedarian_tasks_include_form_specific_quality_guidance() -> None:
+    task = build_tasks(
+        form_names="Abecedarian", tasks_per_form=1, seed=7, prompt_mode="brief_only"
+    )[0]
+
+    assert "real opening word" in task["prompt"]
+    assert "coherent scene" in task["prompt"]
+
+
 def test_build_codex_spark_warmup_tasks_can_target_all_exported_forms() -> None:
     tasks = build_tasks(form_set="all_forms", tasks_per_form=1, seed=7, prompt_mode="brief_only")
 

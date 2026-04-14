@@ -16,6 +16,7 @@ SourceKind = Literal["synthetic", "public_domain"]
 _SUPPORTED_SYNTHETIC_SFT_FORM_SETS = ("well_known", "rl_default")
 
 _FORM_LABELS: dict[str, str] = {
+    "Abecedarian": "abecedarian",
     "Haiku": "haiku",
     "Tanka": "tanka",
     "Limerick": "limerick",
@@ -64,6 +65,22 @@ class VerifiedSeedPoem:
 # form-validation test suite, but are kept in src so the SFT exporter remains
 # usable from the installable package instead of depending on tests/.
 _SEED_POEMS: tuple[SeedPoem, ...] = (
+    SeedPoem(
+        form_name="Abecedarian",
+        source_id="abecedarian_city_rain_synth",
+        poem="""After midnight rain, the avenue smells of iron\nBrick stoops keep the last warmth of day\nChildren's chalk blurs pale along the curb\nDistant buses kneel and breathe at the light\nEvening papers soften in the gutter\nFreight whistles drift over the river\nGrocery awnings shine with trapped water\nHeadlights tremble on the blackened street\nI carry oranges home in my coat\nJackets darken on the laundromat rail\nKettles murmur through open kitchen windows\nLantern-colored taxis slide past slowly\nMoths gather where the deli sign flickers\nNeighbors lean out briefly, then disappear\nOld songs rise thinly from the bar below\nPigeons settle under the station eaves\nQueens-bound trains rattle the window glass\nRainwater threads silver through the crosswalk\nSteam climbs from grates beside the pharmacy\nTraffic loosens its grip on the block\nUmbrellas drip beside the narrow stairs\nVendors stack crates in the alley shade\nWindows bloom gold above the sleeping shops\nXylem in the plane trees lifts the wet night air\nYawning porters fold their carts away\nZippers rasp as the city turns toward sleep""",
+        topic="a city block after midnight rain",
+        tone="restrained",
+        source_kind="synthetic",
+    ),
+    SeedPoem(
+        form_name="Abecedarian",
+        source_id="abecedarian_garden_fall_synth",
+        poem="""Amber leaves collect along the garden wall\nBeeches hold a yellow hush at noon\nCold soil darkens under recent rain\nDahlias bow with water on their petals\nEven now the beds remember August\nFinches startle from the brittle fennel\nGravel keeps the print of morning boots\nHollows gather frost before the path\nI kneel beside the rosemary and thyme\nJuniper lifts its peppered breath\nKale stands blue against the paling fence\nLate asters lean where the light is thin\nMulch steams faintly in the first sun\nNasturtiums loosen from the broken trellis\nOld vines scratch at the cedar posts\nPots ring softly when the wind moves through\nQuince bruises gold beneath the hedge\nRakes wait upright by the shed door\nSeeds dry quietly in paper sleeves\nTwine hangs from a nail beside the bench\nUnder the arbor, mint keeps its green\nViolets sleep under a layer of leaves\nWinter squash cure on the back step\nXylem in the bare pear tree still climbs\nYarrow fades to silver at the edge\nZinnias brown slowly, but refuse to fall""",
+        topic="a garden turning toward late autumn",
+        tone="meditative",
+        source_kind="synthetic",
+    ),
     SeedPoem(
         form_name="Haiku",
         source_id="haiku_spring_synth",

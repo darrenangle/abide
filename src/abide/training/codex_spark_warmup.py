@@ -33,6 +33,12 @@ _WARMUP_QUALITY_GUIDANCE = (
     "repeating the same line verbatim, or obvious template scaffolds unless the form itself "
     "explicitly requires repetition."
 )
+_FORM_SPECIFIC_QUALITY_GUIDANCE: dict[str, str] = {
+    "Abecedarian": (
+        "Make each line begin with a real opening word for its required letter, "
+        "and let the poem move through one coherent scene instead of repeating a fixed phrase."
+    ),
+}
 _WORD_RE = re.compile(r"[A-Za-z']+")
 
 
@@ -63,18 +69,22 @@ def _parse_form_names(
 
 def _build_brief_only_prompt(form_name: str, structural_brief: str) -> str:
     form_label = humanize_form_name(form_name)
+    form_specific = _FORM_SPECIFIC_QUALITY_GUIDANCE.get(form_name, "")
+    extra = f" {form_specific}" if form_specific else ""
     return (
         f"Write a {form_label} that satisfies this exact structural brief: {structural_brief}. "
-        f"{_WARMUP_QUALITY_GUIDANCE} Return only the poem."
+        f"{_WARMUP_QUALITY_GUIDANCE}{extra} Return only the poem."
     )
 
 
-def _augment_prompt_for_warmup(prompt: str) -> str:
+def _augment_prompt_for_warmup(form_name: str, prompt: str) -> str:
     stripped = prompt.strip()
+    form_specific = _FORM_SPECIFIC_QUALITY_GUIDANCE.get(form_name, "")
+    extra = f" {form_specific}" if form_specific else ""
     if stripped.endswith("Return only the poem."):
         prefix = stripped.removesuffix("Return only the poem.").rstrip()
-        return f"{prefix} {_WARMUP_QUALITY_GUIDANCE} Return only the poem."
-    return f"{stripped} {_WARMUP_QUALITY_GUIDANCE}"
+        return f"{prefix} {_WARMUP_QUALITY_GUIDANCE}{extra} Return only the poem."
+    return f"{stripped} {_WARMUP_QUALITY_GUIDANCE}{extra}"
 
 
 def _tokenize_words(text: str) -> list[str]:
@@ -181,7 +191,7 @@ def build_codex_spark_warmup_tasks(
         structural_brief = forms[form_name].describe()
         if prompt_mode == "prime_rl":
             prompt_rows = [
-                _augment_prompt_for_warmup(str(prompt_record["prompt"][0]["content"]))
+                _augment_prompt_for_warmup(form_name, str(prompt_record["prompt"][0]["content"]))
                 for prompt_record in build_prime_rl_prompt_records(
                     num_prompts=tasks_per_form,
                     seed=seed + form_index * 1000,
