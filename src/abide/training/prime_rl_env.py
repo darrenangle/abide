@@ -75,6 +75,7 @@ _FRAMINGS = (
     "keeping diction plain and precise",
     "using tactile detail rather than abstraction",
 )
+_REAL_POEM_EXPECTATION = "Write an actual poem, not a list, placeholder, or verifier shell."
 
 
 def normalize_generated_poem(text: str) -> str:
@@ -191,7 +192,8 @@ def _build_prompt(form_name: str, description: str, *, rng: random.Random) -> st
     framing = rng.choice(_FRAMINGS)
     return (
         f"Write a {form_name} about {topic}. Keep the tone {tone}, use {perspective}, "
-        f"and keep the poem {framing}. Satisfy this structural brief: {description}. "
+        f"and keep the poem {framing}. {_REAL_POEM_EXPECTATION} "
+        f"Satisfy this structural brief: {description}. "
         "Return only the poem."
     )
 

@@ -34,12 +34,12 @@ _FORM_LABELS: dict[str, str] = {
 }
 
 _PROMPT_TEMPLATES: tuple[str, ...] = (
-    "Write a {form_label} about {topic}. Keep the tone {tone}. Return only the poem.",
-    "Compose a {tone} {form_label} centered on {topic}. Return only the poem.",
-    "Create a {form_label} on the theme of {topic}. Let it feel {tone}. Return only the poem.",
-    "Write a {form_label}. Theme: {topic}. Tone: {tone}. Return only the poem.",
-    "Write a {form_label} about {topic}. Follow this structural brief: {description}. Return only the poem.",
-    "Compose a {tone} {form_label} about {topic}. Follow this brief: {description}. Return only the poem.",
+    "Write an actual poem in the form of a {form_label} about {topic}. Keep the tone {tone}. Follow this structural brief: {description}. Return only the poem.",
+    "Compose an actual {tone} {form_label} centered on {topic}. Follow this structural brief: {description}. Return only the poem.",
+    "Create an actual poem in the form of a {form_label} on the theme of {topic}. Let it feel {tone}. Follow this structural brief: {description}. Return only the poem.",
+    "Write an actual {form_label}. Theme: {topic}. Tone: {tone}. Follow this structural brief: {description}. Return only the poem.",
+    "Write an actual poem in the form of a {form_label} about {topic}. Use the structural restrictions exactly as given here: {description}. Return only the poem.",
+    "Compose an actual {tone} {form_label} about {topic}. Use this structural brief exactly: {description}. Return only the poem.",
 )
 
 

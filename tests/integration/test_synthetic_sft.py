@@ -28,6 +28,8 @@ def test_build_synthetic_sft_records_cover_rl_default_forms() -> None:
     assert all(record["messages"][0]["role"] == "user" for record in records)
     assert all(record["messages"][1]["role"] == "assistant" for record in records)
     assert all(record["response"] == record["messages"][1]["content"] for record in records)
+    assert all("actual poem" in record["prompt"] for record in records)
+    assert all("structural brief" in record["prompt"] for record in records)
 
 
 def test_build_synthetic_sft_records_reject_missing_synthetic_coverage() -> None:

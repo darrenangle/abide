@@ -51,6 +51,8 @@ def test_build_prompt_records_are_deterministic_and_evenly_distributed() -> None
     assert [row["info"]["form_name"] for row in records_a].count("Haiku") == 2
     assert [row["info"]["form_name"] for row in records_a].count("Tanka") == 2
     assert [row["info"]["form_name"] for row in records_a].count("Limerick") == 2
+    assert all("actual poem" in row["prompt"][0]["content"] for row in records_a)
+    assert all("Satisfy this structural brief:" in row["prompt"][0]["content"] for row in records_a)
 
 
 def test_normalize_generated_poem_strips_tags_and_code_fences() -> None:
