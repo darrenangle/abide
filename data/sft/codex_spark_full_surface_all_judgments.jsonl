@@ -1,0 +1,141 @@
+{"judge_passed": false, "judge_task_id": "abecedarian-001--judge", "label": "template_scaffold", "reason": "A mechanical A-to-Z line shell built by repeating the same fragment; it reads as template substitution rather than a poem."}
+{"judge_passed": false, "judge_task_id": "alphabeticterminus-001--judge", "label": "template_scaffold", "reason": "The response is a near-identifier list with repeated prefix text and terminal words; it is structurally compliant but not poem-like."}
+{"judge_passed": false, "judge_task_id": "alternatingisolation-001--judge", "label": "template_scaffold", "reason": "The alternating two-line pattern is an obvious engineered shell with no poetic development."}
+{"judge_passed": true, "judge_task_id": "anaphora-001--judge", "label": "poem_like", "reason": "It uses simple concrete images and a clear anaphoric structure without collapsing into filler or verifier-gaming."}
+{"judge_passed": true, "judge_task_id": "arithmeticverse-001--judge", "label": "poem_like", "reason": "The lines are sparse but read as a coherent little poem rather than a placeholder scaffold."}
+{"judge_passed": false, "judge_task_id": "aubade-001--judge", "label": "template_scaffold", "reason": "The response is dominated by repetitive phrase permutations and looks mechanically generated to satisfy the proxy form."}
+{"judge_passed": false, "judge_task_id": "ballad-001--judge", "label": "template_scaffold", "reason": "This is heavily templated with repeated line architecture and synthetic rhyme padding, not an actual ballad."}
+{"judge_passed": false, "judge_task_id": "ballade-001--judge", "label": "template_scaffold", "reason": "The refrains and rhyme slots are filled by an obvious scaffold with repetitive lexical padding."}
+{"judge_passed": false, "judge_task_id": "balladstanza-001--judge", "label": "template_scaffold", "reason": "A minimal form-fill response with no real poetic content beyond satisfying the pattern."}
+{"judge_passed": true, "judge_task_id": "binarybeat-001--judge", "label": "poem_like", "reason": "Short and sparse, but the word choices still form a readable, image-like poem."}
+{"judge_passed": true, "judge_task_id": "blankverse-001--judge", "label": "poem_like", "reason": "These are simple blank-verse lines with concrete imagery and no obvious scaffold behavior."}
+{"judge_passed": true, "judge_task_id": "bluespoem-001--judge", "label": "poem_like", "reason": "The repetition matches the blues form and the lines read like a real, if simple, poem."}
+{"judge_passed": true, "judge_task_id": "bop-001--judge", "label": "poem_like", "reason": "The refrain pattern is poem-shaped and the imagery stays readable instead of turning into filler."}
+{"judge_passed": false, "judge_task_id": "broadballad-001--judge", "label": "template_scaffold", "reason": "The repeated synthetic phrasing makes this look like a structural shell rather than a ballad."}
+{"judge_passed": false, "judge_task_id": "burnsstanza-001--judge", "label": "template_scaffold", "reason": "The stanza is mostly metric padding and does not read as a genuine poem."}
+{"judge_passed": false, "judge_task_id": "canzone-001--judge", "label": "template_scaffold", "reason": "The piece is an explicit line-by-line pattern fill with no natural poetic movement."}
+{"judge_passed": false, "judge_task_id": "caudatesonnet-001--judge", "label": "template_scaffold", "reason": "It is a mechanical sonnet-shell with repeated phrasing and synthetic rhyme completion."}
+{"judge_passed": false, "judge_task_id": "chantroyal-001--judge", "label": "template_scaffold", "reason": "The response is heavily formulaic and repetitive, with little substantive poem-like texture."}
+{"judge_passed": false, "judge_task_id": "characterbudgetpoem-001--judge", "label": "semantic_thinness", "reason": "The words are real but the output is too thin to function as a meaningful poem."}
+{"judge_passed": false, "judge_task_id": "characterpalindromepoem-001--judge", "label": "semantic_thinness", "reason": "It is just a short list of palindrome words, which is too thin to count as poem-like training data."}
+{"judge_passed": true, "judge_task_id": "cinquain-001--judge", "label": "poem_like", "reason": "A compact but coherent cinquain with concrete imagery."}
+{"judge_passed": true, "judge_task_id": "clerihew-001--judge", "label": "poem_like", "reason": "This reads as a straightforward, recognizable clerihew with a light poetic feel."}
+{"judge_passed": true, "judge_task_id": "colorspectrum-001--judge", "label": "poem_like", "reason": "The color sequence is simple, but the lines form a coherent poem rather than a shell."}
+{"judge_passed": false, "judge_task_id": "combinedchallenge-001--judge", "label": "placeholder_text", "reason": "This is just a string of vowel fragments and reads like placeholder output, not a poem."}
+{"judge_passed": false, "judge_task_id": "consonantcascade-001--judge", "label": "overly_repetitive", "reason": "The repeated lines dominate the piece and make it feel more like a pattern exercise than a poem."}
+{"judge_passed": false, "judge_task_id": "coprimeverse-001--judge", "label": "semantic_thinness", "reason": "The content is extremely thin and list-like, with too little poem-like substance."}
+{"judge_passed": true, "judge_task_id": "couplet-001--judge", "label": "poem_like", "reason": "A simple rhyming couplet with clear poetic intent."}
+{"judge_passed": false, "judge_task_id": "crownofsonnets-001--judge", "label": "template_scaffold", "reason": "This is a large, repetitive sonnet machine with obvious lexical slot-filling."}
+{"judge_passed": false, "judge_task_id": "curtalsonnet-001--judge", "label": "template_scaffold", "reason": "The response is a rule-following scaffold with repetitive line construction rather than a poem."}
+{"judge_passed": true, "judge_task_id": "descendingstaircase-001--judge", "label": "poem_like", "reason": "The shortening lines still carry concrete imagery and read like a compact poem."}
+{"judge_passed": false, "judge_task_id": "descendingstaircasepoem-001--judge", "label": "not_poem_like", "reason": "A single odd line is not enough to read as a poem and feels like a malformed stub."}
+{"judge_passed": true, "judge_task_id": "diamante-001--judge", "label": "poem_like", "reason": "It follows the form and still reads like a small poem with a clear center."}
+{"judge_passed": true, "judge_task_id": "distich-001--judge", "label": "poem_like", "reason": "A concise couplet with clear poetic language."}
+{"judge_passed": true, "judge_task_id": "doubleacrosticpoem-001--judge", "label": "poem_like", "reason": "Short and simple, but it reads as an actual poem fragment rather than filler."}
+{"judge_passed": false, "judge_task_id": "doubleballade-001--judge", "label": "template_scaffold", "reason": "The repeated line slots and rhyme padding make this an obvious mechanical scaffold."}
+{"judge_passed": false, "judge_task_id": "doublefibonacci-001--judge", "label": "overly_repetitive", "reason": "The reversed repetition is the main content, so the output is more pattern than poem."}
+{"judge_passed": false, "judge_task_id": "dramaticverse-001--judge", "label": "semantic_thinness", "reason": "Too short and underdeveloped to function as a meaningful poem-like example."}
+{"judge_passed": true, "judge_task_id": "echoend-001--judge", "label": "poem_like", "reason": "The lines are spare but coherent and poem-like."}
+{"judge_passed": true, "judge_task_id": "elegiac-001--judge", "label": "poem_like", "reason": "A simple two-line elegiac couplet with clear poetic voice."}
+{"judge_passed": true, "judge_task_id": "elementalverse-001--judge", "label": "poem_like", "reason": "The elemental names anchor a straightforward poem with enough substance to be useful."}
+{"judge_passed": true, "judge_task_id": "envelopequatrain-001--judge", "label": "poem_like", "reason": "A clean quatrain with actual imagery and an evident envelope structure."}
+{"judge_passed": true, "judge_task_id": "epigram-001--judge", "label": "poem_like", "reason": "Brief, but it still works as a small epigram."}
+{"judge_passed": true, "judge_task_id": "etheree-001--judge", "label": "poem_like", "reason": "The sequence is simple and the lines read like a poem rather than an engineered stub."}
+{"judge_passed": true, "judge_task_id": "exactwordpoem-001--judge", "label": "poem_like", "reason": "A plain but coherent short poem with concrete imagery."}
+{"judge_passed": true, "judge_task_id": "exclamationecho-001--judge", "label": "poem_like", "reason": "The exclamatory structure is straightforward and the lines still read as a poem."}
+{"judge_passed": true, "judge_task_id": "fibonaccipoem-001--judge", "label": "poem_like", "reason": "A compact, readable Fibonacci poem with actual imagery."}
+{"judge_passed": true, "judge_task_id": "fibonacciverse-001--judge", "label": "poem_like", "reason": "Simple and form-aware, but still poem-like rather than a placeholder."}
+{"judge_passed": true, "judge_task_id": "freeverse-001--judge", "label": "poem_like", "reason": "Simple free verse with concrete imagery."}
+{"judge_passed": true, "judge_task_id": "ghazal-001--judge", "label": "poem_like", "reason": "Reads as a real ghazal, despite repeated rhyme language."}
+{"judge_passed": true, "judge_task_id": "goldenratio-001--judge", "label": "poem_like", "reason": "Minimal but poem-like stanza progression."}
+{"judge_passed": true, "judge_task_id": "goldenratioverse-001--judge", "label": "poem_like", "reason": "Sparse but still poem-like and not just a shell."}
+{"judge_passed": true, "judge_task_id": "haiku-001--judge", "label": "poem_like", "reason": "A clean haiku-like poem."}
+{"judge_passed": true, "judge_task_id": "heroiccouplet-001--judge", "label": "poem_like", "reason": "A valid couplet with poetic language."}
+{"judge_passed": true, "judge_task_id": "heroicquatrain-001--judge", "label": "poem_like", "reason": "A simple quatrain that reads like a poem."}
+{"judge_passed": false, "judge_task_id": "horatianode-001--judge", "label": "template_scaffold", "reason": "Heavy repeated-template construction across the stanzas."}
+{"judge_passed": true, "judge_task_id": "hourglassverse-001--judge", "label": "poem_like", "reason": "An actual hourglass-shaped lyric, simple but poem-like."}
+{"judge_passed": true, "judge_task_id": "irregularode-001--judge", "label": "poem_like", "reason": "Straightforward free verse with scene and cadence."}
+{"judge_passed": false, "judge_task_id": "isolatedcouplet-001--judge", "label": "semantic_thinness", "reason": "Too thin to function as a poem beyond two isolated words."}
+{"judge_passed": false, "judge_task_id": "katauta-001--judge", "label": "placeholder_text", "reason": "Mostly filler tokens rather than poem-like language."}
+{"judge_passed": false, "judge_task_id": "kyrielle-001--judge", "label": "placeholder_text", "reason": "Repetitive filler with no meaningful poetic content."}
+{"judge_passed": false, "judge_task_id": "kyriellesonnet-001--judge", "label": "placeholder_text", "reason": "Mechanical filler sequence, not poem-like."}
+{"judge_passed": false, "judge_task_id": "lai-001--judge", "label": "placeholder_text", "reason": "Template-like filler with almost no poem content."}
+{"judge_passed": false, "judge_task_id": "limerick-001--judge", "label": "placeholder_text", "reason": "Filler-token limerick shell."}
+{"judge_passed": true, "judge_task_id": "lipogram-001--judge", "label": "poem_like", "reason": "Short but readable as a poem."}
+{"judge_passed": false, "judge_task_id": "literaryballad-001--judge", "label": "placeholder_text", "reason": "Repeated filler blocks, not an actual ballad."}
+{"judge_passed": false, "judge_task_id": "mesostic-001--judge", "label": "placeholder_text", "reason": "Bare filler syllables, not poem-like text."}
+{"judge_passed": true, "judge_task_id": "mirrorframe-001--judge", "label": "poem_like", "reason": "Minimal but still reads like a poem."}
+{"judge_passed": false, "judge_task_id": "modularverse-001--judge", "label": "placeholder_text", "reason": "Pure filler repetition."}
+{"judge_passed": false, "judge_task_id": "monostich-001--judge", "label": "placeholder_text", "reason": "Single-line filler, not poem-like."}
+{"judge_passed": false, "judge_task_id": "monotonemountain-001--judge", "label": "placeholder_text", "reason": "Repetitive filler with no poem content."}
+{"judge_passed": false, "judge_task_id": "naani-001--judge", "label": "placeholder_text", "reason": "Filler sequence, not poem-like."}
+{"judge_passed": false, "judge_task_id": "numberword-001--judge", "label": "not_poem_like", "reason": "A numeral list, not a poem-like example."}
+{"judge_passed": false, "judge_task_id": "numericalecho-001--judge", "label": "template_scaffold", "reason": "Mechanical repetition with no real poetic substance."}
+{"judge_passed": false, "judge_task_id": "oddevendance-001--judge", "label": "template_scaffold", "reason": "Patterned repetition that reads like verifier gaming."}
+{"judge_passed": false, "judge_task_id": "ode-001--judge", "label": "placeholder_text", "reason": "Bare filler tokens, not a poem."}
+{"judge_passed": false, "judge_task_id": "oneginstanza-001--judge", "label": "placeholder_text", "reason": "Filler-token sonnet shell."}
+{"judge_passed": false, "judge_task_id": "ottavarima-001--judge", "label": "placeholder_text", "reason": "Filler-token stanza shell."}
+{"judge_passed": true, "judge_task_id": "palindromepoem-001--judge", "label": "poem_like", "reason": "A short palindrome poem-like piece."}
+{"judge_passed": true, "judge_task_id": "pantoum-001--judge", "label": "poem_like", "reason": "A readable pantoum-like poem."}
+{"judge_passed": false, "judge_task_id": "petrarchansonnet-001--judge", "label": "placeholder_text", "reason": "Mechanical filler sequence, not a sonnet."}
+{"judge_passed": false, "judge_task_id": "piku-001--judge", "label": "placeholder_text", "reason": "Sparse filler, not a poem-like example."}
+{"judge_passed": false, "judge_task_id": "pindaricode-001--judge", "label": "placeholder_text", "reason": "Filler tokens arranged in stanzas."}
+{"judge_passed": false, "judge_task_id": "positionalpoem-001--judge", "label": "overly_repetitive", "reason": "A single repeated word with no poem substance."}
+{"judge_passed": false, "judge_task_id": "precisionhaiku-001--judge", "label": "placeholder_text", "reason": "Filler words with no poem-like structure."}
+{"judge_passed": false, "judge_task_id": "precisionverse-001--judge", "label": "overly_repetitive", "reason": "The same line repeated without meaningful variation."}
+{"judge_passed": false, "judge_task_id": "primeverse-001--judge", "label": "placeholder_text", "reason": "Prime-length filler blocks, not poem-like."}
+{"judge_passed": true, "judge_task_id": "prosepoem-001--judge", "label": "poem_like", "reason": "A prose poem with clear poetic cadence."}
+{"judge_passed": true, "judge_task_id": "pythagoreantercet-001--judge", "label": "poem_like", "reason": "Simple but readable as a tercet sequence."}
+{"judge_passed": true, "judge_task_id": "quatina-001--judge", "label": "poem_like", "reason": "A valid repeating stanza form, still poem-like."}
+{"judge_passed": true, "judge_task_id": "quatrain-001--judge", "label": "poem_like", "reason": "A straightforward quatrain that reads as poetry."}
+{"judge_passed": true, "judge_task_id": "questionquest-001--judge", "label": "poem_like", "reason": "A quatrain with question marks, still poem-like."}
+{"judge_passed": true, "judge_task_id": "quintina-001--judge", "label": "poem_like", "reason": "A quintina-like sequence with poetic phrasing."}
+{"judge_passed": true, "judge_task_id": "reverseetheree-001--judge", "label": "poem_like", "reason": "A valid reverse-etheree-style poem."}
+{"judge_passed": true, "judge_task_id": "reversefibonacci-001--judge", "label": "poem_like", "reason": "A short reverse-Fibonacci-style poem."}
+{"judge_passed": false, "judge_task_id": "rhymeroyal-001--judge", "label": "overly_repetitive", "reason": "The response is almost entirely the same line with only the final word changing, which reads as verifier-gaming rather than a poem."}
+{"judge_passed": false, "judge_task_id": "rispetto-001--judge", "label": "overly_repetitive", "reason": "The response is a repeated template line with only the rhyme word changed, so it is mechanically generated rather than poem-like."}
+{"judge_passed": false, "judge_task_id": "rondeau-001--judge", "label": "overly_repetitive", "reason": "The response is dominated by the same repeated sentence and functions as a shell for the structure instead of an actual poem."}
+{"judge_passed": false, "judge_task_id": "rondeauredouble-001--judge", "label": "overly_repetitive", "reason": "The response is a long chain of near-identical lines with only final words swapped, which is obvious verifier-gaming."}
+{"judge_passed": false, "judge_task_id": "rondel-001--judge", "label": "overly_repetitive", "reason": "The response mostly repeats one sentence pattern and does not read like a real poem beyond satisfying the form mechanically."}
+{"judge_passed": false, "judge_task_id": "rondelet-001--judge", "label": "overly_repetitive", "reason": "This is a minimal repeated-line pattern with no real poetic development, so it is a template shell."}
+{"judge_passed": false, "judge_task_id": "rondine-001--judge", "label": "overly_repetitive", "reason": "The response is heavily repetitive and mechanically varied by single rhyme words rather than actual poem content."}
+{"judge_passed": false, "judge_task_id": "roundel-001--judge", "label": "overly_repetitive", "reason": "The response is a repeated sentence scaffold with only rhyme-word changes and lacks genuine poem-like substance."}
+{"judge_passed": false, "judge_task_id": "rubai-001--judge", "label": "semantic_thinness", "reason": "The response is structurally valid but extremely thin, offering only four near-identical lines without meaningful poetic development."}
+{"judge_passed": false, "judge_task_id": "rubaiyat-001--judge", "label": "overly_repetitive", "reason": "Each quatrain is built from the same repeated sentence pattern, making the whole response a mechanical shell."}
+{"judge_passed": true, "judge_task_id": "sandwichsonnet-001--judge", "label": "poem_like", "reason": "Although simple, it has enough line variation and poem-like phrasing to read as a real short poem rather than a pure scaffold."}
+{"judge_passed": false, "judge_task_id": "sapphicode-001--judge", "label": "overly_repetitive", "reason": "The stanza pattern is filled with a repeated sentence and only superficial word changes, which is more scaffold than poem."}
+{"judge_passed": false, "judge_task_id": "sapphicstanza-001--judge", "label": "semantic_thinness", "reason": "The response is very thin and formulaic, with repeated phrasing that does not carry much poetic content."}
+{"judge_passed": true, "judge_task_id": "sedoka-001--judge", "label": "poem_like", "reason": "This is simple but still reads like a small poem with a clear image and line progression."}
+{"judge_passed": false, "judge_task_id": "seguidilla-001--judge", "label": "overly_repetitive", "reason": "The response repeats the same sentence structure almost every line, so it feels like verifier-gaming rather than a poem."}
+{"judge_passed": false, "judge_task_id": "selfreferential-001--judge", "label": "semantic_thinness", "reason": "The response is compliant but too bare and count-driven to function as an actual poem-like example."}
+{"judge_passed": true, "judge_task_id": "senryu-001--judge", "label": "poem_like", "reason": "It is minimal, but the three lines form a recognizable short poem with a clear image and cadence."}
+{"judge_passed": false, "judge_task_id": "sestina-001--judge", "label": "overly_repetitive", "reason": "The line rotations are almost entirely the same sentence over and over, so the result is a template shell."}
+{"judge_passed": false, "judge_task_id": "shakespeareansonnet-001--judge", "label": "overly_repetitive", "reason": "This is a repeated-line scaffold with only the ending word changing, not a substantive sonnet."}
+{"judge_passed": true, "judge_task_id": "shortcouplet-001--judge", "label": "poem_like", "reason": "The couplet is brief and simple, but it still reads like a poem rather than a pure placeholder."}
+{"judge_passed": false, "judge_task_id": "skeltonic-001--judge", "label": "overly_repetitive", "reason": "The response is just a repeated rhythmic template with word swaps, which is too mechanical to count as poem-like."}
+{"judge_passed": false, "judge_task_id": "sonnet-001--judge", "label": "overly_repetitive", "reason": "The sonnet is built from one repeated sentence pattern and feels like a verifier scaffold."}
+{"judge_passed": false, "judge_task_id": "spenseriansonnet-001--judge", "label": "overly_repetitive", "reason": "The response is a repeated sentence with rhyme-word substitutions rather than an actual sonnet."}
+{"judge_passed": false, "judge_task_id": "spenserianstanza-001--judge", "label": "overly_repetitive", "reason": "This is mechanically generated from one repeated line shape and lacks real poem content."}
+{"judge_passed": true, "judge_task_id": "squarestanzas-001--judge", "label": "poem_like", "reason": "It is spare and structured, but it still reads as a small poem with distinct stanza movement."}
+{"judge_passed": false, "judge_task_id": "staircasepoem-001--judge", "label": "template_scaffold", "reason": "The response is just a word ladder satisfying the counting rule, with no meaningful poem-like content."}
+{"judge_passed": true, "judge_task_id": "tanaga-001--judge", "label": "poem_like", "reason": "Simple and repetitive, but it still functions as a short poem with recognizable line structure."}
+{"judge_passed": true, "judge_task_id": "tanka-001--judge", "label": "poem_like", "reason": "This is a straightforward, compact tanka with concrete imagery and a readable poetic shape."}
+{"judge_passed": false, "judge_task_id": "temporalverse-001--judge", "label": "placeholder_text", "reason": "The response is only a list of time words and lacks poem-like development or imagery."}
+{"judge_passed": true, "judge_task_id": "tercet-001--judge", "label": "poem_like", "reason": "A short, clear tercet with enough image and rhyme play to count as poem-like."}
+{"judge_passed": true, "judge_task_id": "terzanelle-001--judge", "label": "poem_like", "reason": "This reads like a genuine poem with varied lines and coherent imagery, not just a structural shell."}
+{"judge_passed": false, "judge_task_id": "terzarima-001--judge", "label": "template_scaffold", "reason": "The response is only a few rhyming words arranged by scheme, so it is more scaffold than poem."}
+{"judge_passed": true, "judge_task_id": "thunderverse-001--judge", "label": "poem_like", "reason": "The repeated syntax is substantial but still forms a coherent, image-bearing poem rather than a blank template."}
+{"judge_passed": false, "judge_task_id": "totalcharacterpoem-001--judge", "label": "semantic_thinness", "reason": "The response is heavily repetitive and only exists to meet the character count, so it is too thin to count as a poem-like example."}
+{"judge_passed": true, "judge_task_id": "triangularverse-001--judge", "label": "poem_like", "reason": "The line progression is simple, but it has enough image and structure to read as a small poem."}
+{"judge_passed": false, "judge_task_id": "triolet-001--judge", "label": "template_scaffold", "reason": "This is just a set of rhyme words with required repetitions, not a poem-like response."}
+{"judge_passed": true, "judge_task_id": "triplet-001--judge", "label": "poem_like", "reason": "It is minimal, but it still reads as a small monorhyme poem rather than a blank scaffold."}
+{"judge_passed": false, "judge_task_id": "tritina-001--judge", "label": "template_scaffold", "reason": "The response is only rotating end words and an envoi, with no poem content beyond the mechanism."}
+{"judge_passed": false, "judge_task_id": "uniqueutterance-001--judge", "label": "semantic_thinness", "reason": "The response is a bare word list and does not have enough poetic substance to count as poem-like."}
+{"judge_passed": false, "judge_task_id": "univocalic-001--judge", "label": "placeholder_text", "reason": "The response is only repeated single letters, which is effectively placeholder output."}
+{"judge_passed": false, "judge_task_id": "villanelle-001--judge", "label": "template_scaffold", "reason": "The response is a sequence of rhyme words and repeated terminals, so it is a form shell rather than a poem."}
+{"judge_passed": false, "judge_task_id": "virelai-001--judge", "label": "template_scaffold", "reason": "This is a word-list scaffold arranged by the form, not a poem-like response."}
+{"judge_passed": true, "judge_task_id": "voidverse-001--judge", "label": "poem_like", "reason": "The response is extremely sparse, but it does read as a deliberate absence poem with a coherent idea."}
+{"judge_passed": false, "judge_task_id": "vowelbudgetpoem-001--judge", "label": "overly_repetitive", "reason": "The same line is repeated with only minor variation, making the response feel mechanically generated."}
+{"judge_passed": true, "judge_task_id": "vowelpilgrimage-001--judge", "label": "poem_like", "reason": "This is short and direct, but the sequence of starting vowels still forms a recognizable poem-like piece."}
+{"judge_passed": true, "judge_task_id": "whisperpoem-001--judge", "label": "poem_like", "reason": "The short clipped lines are simple, but they work as a compact poem with a consistent mood."}
+{"judge_passed": true, "judge_task_id": "wordcinquain-001--judge", "label": "poem_like", "reason": "This is a concise, image-based cinquain that reads as an actual poem."}

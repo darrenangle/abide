@@ -20,6 +20,28 @@
   structurally valid but still scaffold-like, and kept those rows out of the
   warmup baseline rather than lowering the quality bar.
 
+## 2026-04-15
+
+- Hardened `codex_spark_warmup` so `brief_only` generation tasks now include a
+  creative seed, explicit anti-scaffold guidance, and family-specific warnings
+  against exposed constraint tricks.
+- Added focused integration coverage for the stronger prompt contract and for
+  the new full-surface supplemental seed builder.
+- Recomputed the filtered full-surface coverage layer after dropping
+  poemness-rejected manual seeds; the honest starting point for this pass was
+  `106 / 141` combined covered forms.
+- Generated one targeted task for each still-missing exported form and
+  revalidated the returned batch locally instead of trusting raw writer output.
+- Promoted the structurally accepted recovery batch plus a small manually fixed
+  follow-up set into `data/sft/full_surface_manual_override_seeds.jsonl`.
+- Rebuilt `data/sft/full_surface_supplemental_seeds.jsonl`, raising the
+  supplemental layer to `123` covered forms and the combined warmup coverage to
+  `128 / 141`.
+- Narrowed the remaining uncovered set to `13` forms:
+  `Aubade`, `Ballad`, `Ballade`, `BroadBallad`, `Canzone`, `CurtalSonnet`,
+  `HoratianOde`, `Kyrielle`, `RhymeRoyal`, `RondeauRedouble`, `Rondel`,
+  `Tritina`, and `VowelBudgetPoem`.
+
 ## 2026-03-31
 
 - Initialized markdown refactor tracker under `history/refactor/`.

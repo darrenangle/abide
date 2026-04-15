@@ -1,0 +1,659 @@
+{
+  "by_label": {
+    "not_poem_like": 2,
+    "overly_repetitive": 22,
+    "placeholder_text": 22,
+    "poem_like": 61,
+    "semantic_thinness": 10,
+    "template_scaffold": 24
+  },
+  "by_source": {
+    "accepted_control": 141
+  },
+  "disagreements": [
+    {
+      "form_name": "Abecedarian",
+      "judge_task_id": "abecedarian-001--judge",
+      "label": "template_scaffold",
+      "reason": "A mechanical A-to-Z line shell built by repeating the same fragment; it reads as template substitution rather than a poem.",
+      "source": "accepted_control",
+      "task_id": "abecedarian-001"
+    },
+    {
+      "form_name": "AlphabeticTerminus",
+      "judge_task_id": "alphabeticterminus-001--judge",
+      "label": "template_scaffold",
+      "reason": "The response is a near-identifier list with repeated prefix text and terminal words; it is structurally compliant but not poem-like.",
+      "source": "accepted_control",
+      "task_id": "alphabeticterminus-001"
+    },
+    {
+      "form_name": "AlternatingIsolation",
+      "judge_task_id": "alternatingisolation-001--judge",
+      "label": "template_scaffold",
+      "reason": "The alternating two-line pattern is an obvious engineered shell with no poetic development.",
+      "source": "accepted_control",
+      "task_id": "alternatingisolation-001"
+    },
+    {
+      "form_name": "Aubade",
+      "judge_task_id": "aubade-001--judge",
+      "label": "template_scaffold",
+      "reason": "The response is dominated by repetitive phrase permutations and looks mechanically generated to satisfy the proxy form.",
+      "source": "accepted_control",
+      "task_id": "aubade-001"
+    },
+    {
+      "form_name": "Ballad",
+      "judge_task_id": "ballad-001--judge",
+      "label": "template_scaffold",
+      "reason": "This is heavily templated with repeated line architecture and synthetic rhyme padding, not an actual ballad.",
+      "source": "accepted_control",
+      "task_id": "ballad-001"
+    },
+    {
+      "form_name": "Ballade",
+      "judge_task_id": "ballade-001--judge",
+      "label": "template_scaffold",
+      "reason": "The refrains and rhyme slots are filled by an obvious scaffold with repetitive lexical padding.",
+      "source": "accepted_control",
+      "task_id": "ballade-001"
+    },
+    {
+      "form_name": "BalladStanza",
+      "judge_task_id": "balladstanza-001--judge",
+      "label": "template_scaffold",
+      "reason": "A minimal form-fill response with no real poetic content beyond satisfying the pattern.",
+      "source": "accepted_control",
+      "task_id": "balladstanza-001"
+    },
+    {
+      "form_name": "BroadBallad",
+      "judge_task_id": "broadballad-001--judge",
+      "label": "template_scaffold",
+      "reason": "The repeated synthetic phrasing makes this look like a structural shell rather than a ballad.",
+      "source": "accepted_control",
+      "task_id": "broadballad-001"
+    },
+    {
+      "form_name": "BurnsStanza",
+      "judge_task_id": "burnsstanza-001--judge",
+      "label": "template_scaffold",
+      "reason": "The stanza is mostly metric padding and does not read as a genuine poem.",
+      "source": "accepted_control",
+      "task_id": "burnsstanza-001"
+    },
+    {
+      "form_name": "Canzone",
+      "judge_task_id": "canzone-001--judge",
+      "label": "template_scaffold",
+      "reason": "The piece is an explicit line-by-line pattern fill with no natural poetic movement.",
+      "source": "accepted_control",
+      "task_id": "canzone-001"
+    },
+    {
+      "form_name": "CaudateSonnet",
+      "judge_task_id": "caudatesonnet-001--judge",
+      "label": "template_scaffold",
+      "reason": "It is a mechanical sonnet-shell with repeated phrasing and synthetic rhyme completion.",
+      "source": "accepted_control",
+      "task_id": "caudatesonnet-001"
+    },
+    {
+      "form_name": "ChantRoyal",
+      "judge_task_id": "chantroyal-001--judge",
+      "label": "template_scaffold",
+      "reason": "The response is heavily formulaic and repetitive, with little substantive poem-like texture.",
+      "source": "accepted_control",
+      "task_id": "chantroyal-001"
+    },
+    {
+      "form_name": "CharacterBudgetPoem",
+      "judge_task_id": "characterbudgetpoem-001--judge",
+      "label": "semantic_thinness",
+      "reason": "The words are real but the output is too thin to function as a meaningful poem.",
+      "source": "accepted_control",
+      "task_id": "characterbudgetpoem-001"
+    },
+    {
+      "form_name": "CharacterPalindromePoem",
+      "judge_task_id": "characterpalindromepoem-001--judge",
+      "label": "semantic_thinness",
+      "reason": "It is just a short list of palindrome words, which is too thin to count as poem-like training data.",
+      "source": "accepted_control",
+      "task_id": "characterpalindromepoem-001"
+    },
+    {
+      "form_name": "CombinedChallenge",
+      "judge_task_id": "combinedchallenge-001--judge",
+      "label": "placeholder_text",
+      "reason": "This is just a string of vowel fragments and reads like placeholder output, not a poem.",
+      "source": "accepted_control",
+      "task_id": "combinedchallenge-001"
+    },
+    {
+      "form_name": "ConsonantCascade",
+      "judge_task_id": "consonantcascade-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The repeated lines dominate the piece and make it feel more like a pattern exercise than a poem.",
+      "source": "accepted_control",
+      "task_id": "consonantcascade-001"
+    },
+    {
+      "form_name": "CoprimeVerse",
+      "judge_task_id": "coprimeverse-001--judge",
+      "label": "semantic_thinness",
+      "reason": "The content is extremely thin and list-like, with too little poem-like substance.",
+      "source": "accepted_control",
+      "task_id": "coprimeverse-001"
+    },
+    {
+      "form_name": "CrownOfSonnets",
+      "judge_task_id": "crownofsonnets-001--judge",
+      "label": "template_scaffold",
+      "reason": "This is a large, repetitive sonnet machine with obvious lexical slot-filling.",
+      "source": "accepted_control",
+      "task_id": "crownofsonnets-001"
+    },
+    {
+      "form_name": "CurtalSonnet",
+      "judge_task_id": "curtalsonnet-001--judge",
+      "label": "template_scaffold",
+      "reason": "The response is a rule-following scaffold with repetitive line construction rather than a poem.",
+      "source": "accepted_control",
+      "task_id": "curtalsonnet-001"
+    },
+    {
+      "form_name": "DescendingStaircasePoem",
+      "judge_task_id": "descendingstaircasepoem-001--judge",
+      "label": "not_poem_like",
+      "reason": "A single odd line is not enough to read as a poem and feels like a malformed stub.",
+      "source": "accepted_control",
+      "task_id": "descendingstaircasepoem-001"
+    },
+    {
+      "form_name": "DoubleBallade",
+      "judge_task_id": "doubleballade-001--judge",
+      "label": "template_scaffold",
+      "reason": "The repeated line slots and rhyme padding make this an obvious mechanical scaffold.",
+      "source": "accepted_control",
+      "task_id": "doubleballade-001"
+    },
+    {
+      "form_name": "DoubleFibonacci",
+      "judge_task_id": "doublefibonacci-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The reversed repetition is the main content, so the output is more pattern than poem.",
+      "source": "accepted_control",
+      "task_id": "doublefibonacci-001"
+    },
+    {
+      "form_name": "DramaticVerse",
+      "judge_task_id": "dramaticverse-001--judge",
+      "label": "semantic_thinness",
+      "reason": "Too short and underdeveloped to function as a meaningful poem-like example.",
+      "source": "accepted_control",
+      "task_id": "dramaticverse-001"
+    },
+    {
+      "form_name": "HoratianOde",
+      "judge_task_id": "horatianode-001--judge",
+      "label": "template_scaffold",
+      "reason": "Heavy repeated-template construction across the stanzas.",
+      "source": "accepted_control",
+      "task_id": "horatianode-001"
+    },
+    {
+      "form_name": "IsolatedCouplet",
+      "judge_task_id": "isolatedcouplet-001--judge",
+      "label": "semantic_thinness",
+      "reason": "Too thin to function as a poem beyond two isolated words.",
+      "source": "accepted_control",
+      "task_id": "isolatedcouplet-001"
+    },
+    {
+      "form_name": "Katauta",
+      "judge_task_id": "katauta-001--judge",
+      "label": "placeholder_text",
+      "reason": "Mostly filler tokens rather than poem-like language.",
+      "source": "accepted_control",
+      "task_id": "katauta-001"
+    },
+    {
+      "form_name": "Kyrielle",
+      "judge_task_id": "kyrielle-001--judge",
+      "label": "placeholder_text",
+      "reason": "Repetitive filler with no meaningful poetic content.",
+      "source": "accepted_control",
+      "task_id": "kyrielle-001"
+    },
+    {
+      "form_name": "KyrielleSonnet",
+      "judge_task_id": "kyriellesonnet-001--judge",
+      "label": "placeholder_text",
+      "reason": "Mechanical filler sequence, not poem-like.",
+      "source": "accepted_control",
+      "task_id": "kyriellesonnet-001"
+    },
+    {
+      "form_name": "Lai",
+      "judge_task_id": "lai-001--judge",
+      "label": "placeholder_text",
+      "reason": "Template-like filler with almost no poem content.",
+      "source": "accepted_control",
+      "task_id": "lai-001"
+    },
+    {
+      "form_name": "Limerick",
+      "judge_task_id": "limerick-001--judge",
+      "label": "placeholder_text",
+      "reason": "Filler-token limerick shell.",
+      "source": "accepted_control",
+      "task_id": "limerick-001"
+    },
+    {
+      "form_name": "LiteraryBallad",
+      "judge_task_id": "literaryballad-001--judge",
+      "label": "placeholder_text",
+      "reason": "Repeated filler blocks, not an actual ballad.",
+      "source": "accepted_control",
+      "task_id": "literaryballad-001"
+    },
+    {
+      "form_name": "Mesostic",
+      "judge_task_id": "mesostic-001--judge",
+      "label": "placeholder_text",
+      "reason": "Bare filler syllables, not poem-like text.",
+      "source": "accepted_control",
+      "task_id": "mesostic-001"
+    },
+    {
+      "form_name": "ModularVerse",
+      "judge_task_id": "modularverse-001--judge",
+      "label": "placeholder_text",
+      "reason": "Pure filler repetition.",
+      "source": "accepted_control",
+      "task_id": "modularverse-001"
+    },
+    {
+      "form_name": "Monostich",
+      "judge_task_id": "monostich-001--judge",
+      "label": "placeholder_text",
+      "reason": "Single-line filler, not poem-like.",
+      "source": "accepted_control",
+      "task_id": "monostich-001"
+    },
+    {
+      "form_name": "MonotoneMountain",
+      "judge_task_id": "monotonemountain-001--judge",
+      "label": "placeholder_text",
+      "reason": "Repetitive filler with no poem content.",
+      "source": "accepted_control",
+      "task_id": "monotonemountain-001"
+    },
+    {
+      "form_name": "Naani",
+      "judge_task_id": "naani-001--judge",
+      "label": "placeholder_text",
+      "reason": "Filler sequence, not poem-like.",
+      "source": "accepted_control",
+      "task_id": "naani-001"
+    },
+    {
+      "form_name": "NumberWord",
+      "judge_task_id": "numberword-001--judge",
+      "label": "not_poem_like",
+      "reason": "A numeral list, not a poem-like example.",
+      "source": "accepted_control",
+      "task_id": "numberword-001"
+    },
+    {
+      "form_name": "NumericalEcho",
+      "judge_task_id": "numericalecho-001--judge",
+      "label": "template_scaffold",
+      "reason": "Mechanical repetition with no real poetic substance.",
+      "source": "accepted_control",
+      "task_id": "numericalecho-001"
+    },
+    {
+      "form_name": "OddEvenDance",
+      "judge_task_id": "oddevendance-001--judge",
+      "label": "template_scaffold",
+      "reason": "Patterned repetition that reads like verifier gaming.",
+      "source": "accepted_control",
+      "task_id": "oddevendance-001"
+    },
+    {
+      "form_name": "Ode",
+      "judge_task_id": "ode-001--judge",
+      "label": "placeholder_text",
+      "reason": "Bare filler tokens, not a poem.",
+      "source": "accepted_control",
+      "task_id": "ode-001"
+    },
+    {
+      "form_name": "OneginStanza",
+      "judge_task_id": "oneginstanza-001--judge",
+      "label": "placeholder_text",
+      "reason": "Filler-token sonnet shell.",
+      "source": "accepted_control",
+      "task_id": "oneginstanza-001"
+    },
+    {
+      "form_name": "OttavaRima",
+      "judge_task_id": "ottavarima-001--judge",
+      "label": "placeholder_text",
+      "reason": "Filler-token stanza shell.",
+      "source": "accepted_control",
+      "task_id": "ottavarima-001"
+    },
+    {
+      "form_name": "PetrarchanSonnet",
+      "judge_task_id": "petrarchansonnet-001--judge",
+      "label": "placeholder_text",
+      "reason": "Mechanical filler sequence, not a sonnet.",
+      "source": "accepted_control",
+      "task_id": "petrarchansonnet-001"
+    },
+    {
+      "form_name": "PiKu",
+      "judge_task_id": "piku-001--judge",
+      "label": "placeholder_text",
+      "reason": "Sparse filler, not a poem-like example.",
+      "source": "accepted_control",
+      "task_id": "piku-001"
+    },
+    {
+      "form_name": "PindaricOde",
+      "judge_task_id": "pindaricode-001--judge",
+      "label": "placeholder_text",
+      "reason": "Filler tokens arranged in stanzas.",
+      "source": "accepted_control",
+      "task_id": "pindaricode-001"
+    },
+    {
+      "form_name": "PositionalPoem",
+      "judge_task_id": "positionalpoem-001--judge",
+      "label": "overly_repetitive",
+      "reason": "A single repeated word with no poem substance.",
+      "source": "accepted_control",
+      "task_id": "positionalpoem-001"
+    },
+    {
+      "form_name": "PrecisionHaiku",
+      "judge_task_id": "precisionhaiku-001--judge",
+      "label": "placeholder_text",
+      "reason": "Filler words with no poem-like structure.",
+      "source": "accepted_control",
+      "task_id": "precisionhaiku-001"
+    },
+    {
+      "form_name": "PrecisionVerse",
+      "judge_task_id": "precisionverse-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The same line repeated without meaningful variation.",
+      "source": "accepted_control",
+      "task_id": "precisionverse-001"
+    },
+    {
+      "form_name": "PrimeVerse",
+      "judge_task_id": "primeverse-001--judge",
+      "label": "placeholder_text",
+      "reason": "Prime-length filler blocks, not poem-like.",
+      "source": "accepted_control",
+      "task_id": "primeverse-001"
+    },
+    {
+      "form_name": "RhymeRoyal",
+      "judge_task_id": "rhymeroyal-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The response is almost entirely the same line with only the final word changing, which reads as verifier-gaming rather than a poem.",
+      "source": "accepted_control",
+      "task_id": "rhymeroyal-001"
+    },
+    {
+      "form_name": "Rispetto",
+      "judge_task_id": "rispetto-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The response is a repeated template line with only the rhyme word changed, so it is mechanically generated rather than poem-like.",
+      "source": "accepted_control",
+      "task_id": "rispetto-001"
+    },
+    {
+      "form_name": "Rondeau",
+      "judge_task_id": "rondeau-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The response is dominated by the same repeated sentence and functions as a shell for the structure instead of an actual poem.",
+      "source": "accepted_control",
+      "task_id": "rondeau-001"
+    },
+    {
+      "form_name": "RondeauRedouble",
+      "judge_task_id": "rondeauredouble-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The response is a long chain of near-identical lines with only final words swapped, which is obvious verifier-gaming.",
+      "source": "accepted_control",
+      "task_id": "rondeauredouble-001"
+    },
+    {
+      "form_name": "Rondel",
+      "judge_task_id": "rondel-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The response mostly repeats one sentence pattern and does not read like a real poem beyond satisfying the form mechanically.",
+      "source": "accepted_control",
+      "task_id": "rondel-001"
+    },
+    {
+      "form_name": "Rondelet",
+      "judge_task_id": "rondelet-001--judge",
+      "label": "overly_repetitive",
+      "reason": "This is a minimal repeated-line pattern with no real poetic development, so it is a template shell.",
+      "source": "accepted_control",
+      "task_id": "rondelet-001"
+    },
+    {
+      "form_name": "Rondine",
+      "judge_task_id": "rondine-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The response is heavily repetitive and mechanically varied by single rhyme words rather than actual poem content.",
+      "source": "accepted_control",
+      "task_id": "rondine-001"
+    },
+    {
+      "form_name": "Roundel",
+      "judge_task_id": "roundel-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The response is a repeated sentence scaffold with only rhyme-word changes and lacks genuine poem-like substance.",
+      "source": "accepted_control",
+      "task_id": "roundel-001"
+    },
+    {
+      "form_name": "Rubai",
+      "judge_task_id": "rubai-001--judge",
+      "label": "semantic_thinness",
+      "reason": "The response is structurally valid but extremely thin, offering only four near-identical lines without meaningful poetic development.",
+      "source": "accepted_control",
+      "task_id": "rubai-001"
+    },
+    {
+      "form_name": "Rubaiyat",
+      "judge_task_id": "rubaiyat-001--judge",
+      "label": "overly_repetitive",
+      "reason": "Each quatrain is built from the same repeated sentence pattern, making the whole response a mechanical shell.",
+      "source": "accepted_control",
+      "task_id": "rubaiyat-001"
+    },
+    {
+      "form_name": "SapphicOde",
+      "judge_task_id": "sapphicode-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The stanza pattern is filled with a repeated sentence and only superficial word changes, which is more scaffold than poem.",
+      "source": "accepted_control",
+      "task_id": "sapphicode-001"
+    },
+    {
+      "form_name": "SapphicStanza",
+      "judge_task_id": "sapphicstanza-001--judge",
+      "label": "semantic_thinness",
+      "reason": "The response is very thin and formulaic, with repeated phrasing that does not carry much poetic content.",
+      "source": "accepted_control",
+      "task_id": "sapphicstanza-001"
+    },
+    {
+      "form_name": "Seguidilla",
+      "judge_task_id": "seguidilla-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The response repeats the same sentence structure almost every line, so it feels like verifier-gaming rather than a poem.",
+      "source": "accepted_control",
+      "task_id": "seguidilla-001"
+    },
+    {
+      "form_name": "SelfReferential",
+      "judge_task_id": "selfreferential-001--judge",
+      "label": "semantic_thinness",
+      "reason": "The response is compliant but too bare and count-driven to function as an actual poem-like example.",
+      "source": "accepted_control",
+      "task_id": "selfreferential-001"
+    },
+    {
+      "form_name": "Sestina",
+      "judge_task_id": "sestina-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The line rotations are almost entirely the same sentence over and over, so the result is a template shell.",
+      "source": "accepted_control",
+      "task_id": "sestina-001"
+    },
+    {
+      "form_name": "ShakespeareanSonnet",
+      "judge_task_id": "shakespeareansonnet-001--judge",
+      "label": "overly_repetitive",
+      "reason": "This is a repeated-line scaffold with only the ending word changing, not a substantive sonnet.",
+      "source": "accepted_control",
+      "task_id": "shakespeareansonnet-001"
+    },
+    {
+      "form_name": "Skeltonic",
+      "judge_task_id": "skeltonic-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The response is just a repeated rhythmic template with word swaps, which is too mechanical to count as poem-like.",
+      "source": "accepted_control",
+      "task_id": "skeltonic-001"
+    },
+    {
+      "form_name": "Sonnet",
+      "judge_task_id": "sonnet-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The sonnet is built from one repeated sentence pattern and feels like a verifier scaffold.",
+      "source": "accepted_control",
+      "task_id": "sonnet-001"
+    },
+    {
+      "form_name": "SpenserianSonnet",
+      "judge_task_id": "spenseriansonnet-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The response is a repeated sentence with rhyme-word substitutions rather than an actual sonnet.",
+      "source": "accepted_control",
+      "task_id": "spenseriansonnet-001"
+    },
+    {
+      "form_name": "SpenserianStanza",
+      "judge_task_id": "spenserianstanza-001--judge",
+      "label": "overly_repetitive",
+      "reason": "This is mechanically generated from one repeated line shape and lacks real poem content.",
+      "source": "accepted_control",
+      "task_id": "spenserianstanza-001"
+    },
+    {
+      "form_name": "StaircasePoem",
+      "judge_task_id": "staircasepoem-001--judge",
+      "label": "template_scaffold",
+      "reason": "The response is just a word ladder satisfying the counting rule, with no meaningful poem-like content.",
+      "source": "accepted_control",
+      "task_id": "staircasepoem-001"
+    },
+    {
+      "form_name": "TemporalVerse",
+      "judge_task_id": "temporalverse-001--judge",
+      "label": "placeholder_text",
+      "reason": "The response is only a list of time words and lacks poem-like development or imagery.",
+      "source": "accepted_control",
+      "task_id": "temporalverse-001"
+    },
+    {
+      "form_name": "TerzaRima",
+      "judge_task_id": "terzarima-001--judge",
+      "label": "template_scaffold",
+      "reason": "The response is only a few rhyming words arranged by scheme, so it is more scaffold than poem.",
+      "source": "accepted_control",
+      "task_id": "terzarima-001"
+    },
+    {
+      "form_name": "TotalCharacterPoem",
+      "judge_task_id": "totalcharacterpoem-001--judge",
+      "label": "semantic_thinness",
+      "reason": "The response is heavily repetitive and only exists to meet the character count, so it is too thin to count as a poem-like example.",
+      "source": "accepted_control",
+      "task_id": "totalcharacterpoem-001"
+    },
+    {
+      "form_name": "Triolet",
+      "judge_task_id": "triolet-001--judge",
+      "label": "template_scaffold",
+      "reason": "This is just a set of rhyme words with required repetitions, not a poem-like response.",
+      "source": "accepted_control",
+      "task_id": "triolet-001"
+    },
+    {
+      "form_name": "Tritina",
+      "judge_task_id": "tritina-001--judge",
+      "label": "template_scaffold",
+      "reason": "The response is only rotating end words and an envoi, with no poem content beyond the mechanism.",
+      "source": "accepted_control",
+      "task_id": "tritina-001"
+    },
+    {
+      "form_name": "UniqueUtterance",
+      "judge_task_id": "uniqueutterance-001--judge",
+      "label": "semantic_thinness",
+      "reason": "The response is a bare word list and does not have enough poetic substance to count as poem-like.",
+      "source": "accepted_control",
+      "task_id": "uniqueutterance-001"
+    },
+    {
+      "form_name": "Univocalic",
+      "judge_task_id": "univocalic-001--judge",
+      "label": "placeholder_text",
+      "reason": "The response is only repeated single letters, which is effectively placeholder output.",
+      "source": "accepted_control",
+      "task_id": "univocalic-001"
+    },
+    {
+      "form_name": "Villanelle",
+      "judge_task_id": "villanelle-001--judge",
+      "label": "template_scaffold",
+      "reason": "The response is a sequence of rhyme words and repeated terminals, so it is a form shell rather than a poem.",
+      "source": "accepted_control",
+      "task_id": "villanelle-001"
+    },
+    {
+      "form_name": "Virelai",
+      "judge_task_id": "virelai-001--judge",
+      "label": "template_scaffold",
+      "reason": "This is a word-list scaffold arranged by the form, not a poem-like response.",
+      "source": "accepted_control",
+      "task_id": "virelai-001"
+    },
+    {
+      "form_name": "VowelBudgetPoem",
+      "judge_task_id": "vowelbudgetpoem-001--judge",
+      "label": "overly_repetitive",
+      "reason": "The same line is repeated with only minor variation, making the response feel mechanically generated.",
+      "source": "accepted_control",
+      "task_id": "vowelbudgetpoem-001"
+    }
+  ],
+  "judge_accepts": 61,
+  "judge_rejects": 80,
+  "num_judgments": 141,
+  "num_tasks": 141
+}

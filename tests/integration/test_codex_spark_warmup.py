@@ -55,6 +55,16 @@ def test_abecedarian_tasks_include_form_specific_quality_guidance() -> None:
 
     assert "real opening word" in task["prompt"]
     assert "coherent scene" in task["prompt"]
+    assert "Theme:" in task["prompt"]
+    assert "Tone:" in task["prompt"]
+
+
+def test_missing_hard_forms_get_explicit_anti_scaffold_guidance() -> None:
+    task = build_tasks(form_names="Canzone", tasks_per_form=1, seed=7, prompt_mode="brief_only")[0]
+
+    assert "actual poem" in task["prompt"]
+    assert "label, counter, heading, or exposed constraint trick" in task["prompt"]
+    assert "earned inside the poem" in task["prompt"]
 
 
 def test_build_codex_spark_warmup_tasks_can_target_all_exported_forms() -> None:

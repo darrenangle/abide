@@ -27,11 +27,40 @@ FormSet = Literal["hard_forms", "all_forms"]
 PromptMode = Literal["prime_rl", "brief_only"]
 DEFAULT_FORM_SET: FormSet = "hard_forms"
 DEFAULT_PROMPT_MODE: PromptMode = "prime_rl"
+_WARMUP_TOPICS: tuple[str, ...] = (
+    "river stones and patience",
+    "a porch after hard rain",
+    "winter light in a kitchen",
+    "a night train leaving town",
+    "a garden after first frost",
+    "streetlights above empty pavement",
+    "music crossing an apartment wall",
+    "a harbor before dawn",
+)
+_WARMUP_TONES: tuple[str, ...] = (
+    "restrained",
+    "meditative",
+    "tender",
+    "severe",
+    "wry",
+    "melancholic",
+)
+_WARMUP_FRAMINGS: tuple[str, ...] = (
+    "anchored in one coherent scene",
+    "moving from concrete detail toward reflection",
+    "using plain but vivid diction",
+    "letting each line read as natural poetic language",
+)
 _WARMUP_QUALITY_GUIDANCE = (
     "Write an actual poem, not a placeholder or verifier shell. "
     "Use concrete language, vary the diction, and avoid filler like repeated single letters, "
     "repeating the same line verbatim, or obvious template scaffolds unless the form itself "
     "explicitly requires repetition."
+)
+_ANTI_GAMING_GUIDANCE = (
+    "Each line must read like real poetic language, not a label, counter, heading, or exposed "
+    "constraint trick. Do not use bare letters, numbering, stanza markers, or repeated sentence "
+    "frames as content."
 )
 _FORM_SPECIFIC_QUALITY_GUIDANCE: dict[str, str] = {
     "Abecedarian": (
@@ -39,6 +68,18 @@ _FORM_SPECIFIC_QUALITY_GUIDANCE: dict[str, str] = {
         "and let the poem move through one coherent scene instead of repeating a fixed phrase."
     ),
 }
+_LONG_FORM_GUIDANCE = (
+    "Carry one situation or emotional thread across the whole poem. If the form uses refrains or "
+    "linked end words, make them feel earned inside the poem instead of pasted in as a scaffold."
+)
+_CONSTRAINT_FAMILY_GUIDANCE = (
+    "Hide the constraint inside normal poetic language. Do not announce the trick or make the poem "
+    "read like a demo of the rule."
+)
+_FIXED_FORM_GUIDANCE = (
+    "Let rhyme, refrain, and stanza structure serve the poem rather than turning into repeated "
+    "template sentences."
+)
 _WORD_RE = re.compile(r"[A-Za-z']+")
 
 
@@ -67,24 +108,88 @@ def _parse_form_names(
     return selected_form_names
 
 
-def _build_brief_only_prompt(form_name: str, structural_brief: str) -> str:
+_LONG_FORM_NAMES = {
+    "Ballad",
+    "Ballade",
+    "BroadBallad",
+    "BurnsStanza",
+    "Canzone",
+    "CaudateSonnet",
+    "ChantRoyal",
+    "CrownOfSonnets",
+    "CurtalSonnet",
+    "DoubleBallade",
+    "HoratianOde",
+    "Kyrielle",
+    "KyrielleSonnet",
+    "RhymeRoyal",
+    "RondeauRedouble",
+    "Rondel",
+    "Rondelet",
+    "Rubai",
+    "Rispetto",
+    "SapphicStanza",
+    "Seguidilla",
+    "Skeltonic",
+    "Tritina",
+    "Virelai",
+}
+_CONSTRAINT_FAMILY_NAMES = {
+    "AlternatingIsolation",
+    "CharacterPalindromePoem",
+    "CombinedChallenge",
+    "DescendingStaircasePoem",
+    "PrecisionHaiku",
+    "SelfReferential",
+    "TotalCharacterPoem",
+    "UniqueUtterance",
+    "VowelBudgetPoem",
+}
+_FIXED_FORM_NAMES = {
+    "Aubade",
+    "BalladStanza",
+}
+
+
+def _creative_seed_for(form_name: str, *, variant_index: int) -> str:
+    topic = _WARMUP_TOPICS[(variant_index + len(form_name)) % len(_WARMUP_TOPICS)]
+    tone = _WARMUP_TONES[(variant_index * 3 + len(form_name)) % len(_WARMUP_TONES)]
+    framing = _WARMUP_FRAMINGS[(variant_index * 5 + len(form_name)) % len(_WARMUP_FRAMINGS)]
+    return f"Theme: {topic}. Tone: {tone}. Keep it {framing}."
+
+
+def _form_specific_quality_guidance(form_name: str) -> str:
+    guidance_parts = [_ANTI_GAMING_GUIDANCE]
+    if form_name in _LONG_FORM_NAMES:
+        guidance_parts.append(_LONG_FORM_GUIDANCE)
+    if form_name in _CONSTRAINT_FAMILY_NAMES:
+        guidance_parts.append(_CONSTRAINT_FAMILY_GUIDANCE)
+    if form_name in _FIXED_FORM_NAMES:
+        guidance_parts.append(_FIXED_FORM_GUIDANCE)
+    custom = _FORM_SPECIFIC_QUALITY_GUIDANCE.get(form_name)
+    if custom:
+        guidance_parts.append(custom)
+    return " ".join(guidance_parts)
+
+
+def _build_brief_only_prompt(form_name: str, structural_brief: str, *, variant_index: int) -> str:
     form_label = humanize_form_name(form_name)
-    form_specific = _FORM_SPECIFIC_QUALITY_GUIDANCE.get(form_name, "")
-    extra = f" {form_specific}" if form_specific else ""
+    creative_seed = _creative_seed_for(form_name, variant_index=variant_index)
+    form_specific = _form_specific_quality_guidance(form_name)
     return (
-        f"Write a {form_label} that satisfies this exact structural brief: {structural_brief}. "
-        f"{_WARMUP_QUALITY_GUIDANCE}{extra} Return only the poem."
+        f"Write an actual poem in the form of a {form_label}. {creative_seed} "
+        f"Satisfy this exact structural brief: {structural_brief}. "
+        f"{_WARMUP_QUALITY_GUIDANCE} {form_specific} Return only the poem."
     )
 
 
 def _augment_prompt_for_warmup(form_name: str, prompt: str) -> str:
     stripped = prompt.strip()
-    form_specific = _FORM_SPECIFIC_QUALITY_GUIDANCE.get(form_name, "")
-    extra = f" {form_specific}" if form_specific else ""
+    form_specific = _form_specific_quality_guidance(form_name)
     if stripped.endswith("Return only the poem."):
         prefix = stripped.removesuffix("Return only the poem.").rstrip()
-        return f"{prefix} {_WARMUP_QUALITY_GUIDANCE}{extra} Return only the poem."
-    return f"{stripped} {_WARMUP_QUALITY_GUIDANCE}{extra}"
+        return f"{prefix} {_WARMUP_QUALITY_GUIDANCE} {form_specific} Return only the poem."
+    return f"{stripped} {_WARMUP_QUALITY_GUIDANCE} {form_specific}"
 
 
 def _tokenize_words(text: str) -> list[str]:
@@ -199,7 +304,14 @@ def build_codex_spark_warmup_tasks(
                 )
             ]
         else:
-            prompt_rows = [_build_brief_only_prompt(form_name, structural_brief)] * tasks_per_form
+            prompt_rows = [
+                _build_brief_only_prompt(
+                    form_name,
+                    structural_brief,
+                    variant_index=prompt_index,
+                )
+                for prompt_index in range(tasks_per_form)
+            ]
         form_slug = _slugify(form_name)
         for prompt_index, prompt in enumerate(prompt_rows, start=1):
             tasks.append(
@@ -409,7 +521,8 @@ def build_codex_spark_retry_tasks(
         feedback = _build_retry_feedback(failure)
         retry_prompt = (
             f"{feedback} Original structural brief: {task['structural_brief']}. "
-            f"{_WARMUP_QUALITY_GUIDANCE} Return only the new poem."
+            f"{_WARMUP_QUALITY_GUIDANCE} {_form_specific_quality_guidance(str(task['form_name']))} "
+            "Return only the new poem."
         )
         retry_tasks.append(
             {
