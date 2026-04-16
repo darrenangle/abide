@@ -38,6 +38,7 @@ from abide.forms import (
     RhymeRoyal,
     Rispetto,
     Rondeau,
+    RondeauRedouble,
     Rondelet,
     Rubai,
     Rubaiyat,
@@ -1096,6 +1097,41 @@ def test_rondeau_single_block_layout_is_still_accepted() -> None:
     poem = RONDEAU_MCCRAE_FLANDERS.replace("\n\n", "\n")
     result = verify(poem, Rondeau(strict=False, rhyme_threshold=0.5, refrain_threshold=0.7))
     assert result.score >= 0.5
+
+
+def test_rondeau_redouble_requires_stanza_layout() -> None:
+    """Rondeau Redoublé should not accept a flattened single-block layout."""
+    poem = "\n".join(
+        [
+            "The harbor keeps one lantern in the light",
+            "Your cup still warms beside the waking quay",
+            "The gulls turn once and vanish into night",
+            "The tide keeps speaking under sheets of gray",
+            "A wet rope taps the rail and will not sway",
+            "I watch one skiff pull slowly into bright",
+            "The dock boards breathe the weather of the bay",
+            "The harbor keeps one lantern in the white",
+            "The moon lets go of every borrowed flight",
+            "The cranes stand still above the cargo day",
+            "My hands remember how your hands were slight",
+            "Your cup still warms beside the waking spray",
+            "The east unthreads the smoke and thin array",
+            "The oars divide the channel with their might",
+            "A bell goes far beyond the ferry play",
+            "The gulls turn once and vanish into sight",
+            "Now dawn puts silver on the pilings' height",
+            "And salt returns in small deliberate stay",
+            "I keep your name against the coming starlight",
+            "The tide keeps speaking under sheets of clay",
+            "So morning takes the roofs from patient away",
+            "Yet leaves one hush that glimmers into twilight",
+            "The harbor opens where we used to pray",
+            "And carries all our parting toward daylight",
+        ]
+    )
+    result = verify(poem, RondeauRedouble(strict=False))
+    assert result.score == 0.05
+    assert result.passed is False
 
 
 @pytest.mark.parametrize(

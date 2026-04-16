@@ -1,6 +1,6 @@
 # Refactor Board
 
-Updated: 2026-04-14
+Updated: 2026-04-15
 
 | ID | Priority | Status | Lock | Summary | Depends On |
 | --- | --- | --- | --- | --- | --- |
@@ -94,6 +94,6 @@ Updated: 2026-04-14
 | RF-088 | P1 | in_progress | RF-088--codex | Build a hard-form SFT warmup and RL continuation pipeline for Gemma | RF-085, RF-086, RF-087 |
 | RF-089 | P2 | done | | Generate and validate a Codex Spark full-surface corpus covering every exported Abide form | RF-087, RF-088 |
 | RF-090 | P1 | done | | Audit the validated full-surface corpus for real semantic/structural compliance beyond pass bits | RF-089 |
-| RF-091 | P1 | in_progress | RF-091--codex | Filter and regenerate degenerate rows in the full-surface Codex corpus | RF-089, RF-090 |
+| RF-091 | P1 | done | | Filter and regenerate degenerate rows in the full-surface Codex corpus | RF-089, RF-090 |
 | RF-092 | P1 | done | | Add a small-model poemness judge layer for SFT corpus filtering | RF-090, RF-091 |
 | RF-093 | P1 | done | | Harden Abecedarian against single-letter leading token exploits | RF-090 |

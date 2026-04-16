@@ -17,6 +17,7 @@ from abide.constraints import (
     Refrain,
     RhymeScheme,
     StanzaCount,
+    StanzaSizes,
     VerificationResult,
     WeightedSum,
 )
@@ -475,6 +476,7 @@ class RondeauRedouble(Constraint):
         # But the rentrement is often counted as part of line 25
         self._line_count = LineCount(24, weight=2.0)
         self._stanza_count = StanzaCount(6, weight=1.0)
+        self._stanza_sizes = StanzaSizes([4, 4, 4, 4, 4, 4], weight=1.0)
 
         self._rhyme = RhymeScheme(
             "ABAB BABA ABAB BABA ABAB BABA",
@@ -494,6 +496,8 @@ class RondeauRedouble(Constraint):
 
         constraints = [
             (self._line_count, 2.0),
+            (self._stanza_count, 1.0),
+            (self._stanza_sizes, 1.0),
             (self._rhyme, 2.0),
             (self._refrain1, 1.0),
             (self._refrain2, 1.0),
